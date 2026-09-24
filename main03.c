@@ -52,6 +52,15 @@ int main() {
     // Habilitando o mouse
     if (!al_install_mouse()) {
         printf("Falha ao inicializar o mouse!\n");
+        al_destroy_timer(timer);
+        al_destroy_display(tela);
+        return -1;
+    }
+
+    // Habilitando o teclado 
+    if (!al_install_keyboard()) {
+        printf("Falha ao inicializar o teclado!\n");
+        al_destroy_timer(timer);
         al_destroy_display(tela);
         return -1;
     }
@@ -75,6 +84,7 @@ int main() {
 
     // Registrando as fontes de eventos
     al_register_event_source(fila_eventos, al_get_mouse_event_source());
+    al_register_event_source(fila_eventos, al_get_keyboard_event_source());
     al_register_event_source(fila_eventos, al_get_display_event_source(tela));
     al_register_event_source(fila_eventos, al_get_timer_event_source(timer));
 
@@ -85,23 +95,24 @@ int main() {
     ALLEGRO_COLOR branco = al_map_rgb(255, 255, 255);
     ALLEGRO_COLOR preto = al_map_rgb(0, 0, 0);
 
-    // Limpa a tela inicial para preto
-    al_clear_to_color(preto);
+    // Limpa a tela inicial para branco
+    al_clear_to_color(branco);
     al_flip_display();
 
     //Criando a imagem do canvas
     ALLEGRO_BITMAP *canvas = al_create_bitmap(LARGURA_TELA, LARGURA_TELA);
     al_set_target_bitmap(canvas);//Todo comando de desenho vai pra imagem
-    al_clear_to_color(preto);
+    al_clear_to_color(branco);
     al_set_target_backbuffer(tela);//Volta os comandos para a tela
 
-    /*Desenha no canvas  -> pinta o fundo dele de preto -> passa pra tela*/
+    /*Desenha no canvas  -> pinta o fundo dele de branco -> passa pra tela*/
 
     int x0, y0;
 
     while (round) {
         ALLEGRO_EVENT evento;
         al_wait_for_event(fila_eventos, &evento);
+
 
         if (evento.type == ALLEGRO_EVENT_TIMER) {
             redesenhar = true;
@@ -112,7 +123,7 @@ int main() {
             if (desenhar) {
                 //Desenhando no canvas
                 al_set_target_bitmap(canvas);
-                desenharCirc(x0, y0,x,y, branco);
+                desenharCirc(x0, y0,x,y, preto);
                 al_set_target_backbuffer(tela);
 
                 x0 = x, y0 = y;
@@ -125,7 +136,7 @@ int main() {
                 desenhar = true;
 
                 al_set_target_bitmap(canvas);
-                al_draw_filled_circle(x, y, 5, branco);
+                al_draw_filled_circle(x, y, 5, preto);
                 al_set_target_backbuffer(tela);
 
             }
@@ -135,7 +146,22 @@ int main() {
                 desenhar = false;
             }
         }
-
+        
+        // Lógica para comandos e teclado (ctrl + Q) && (ctrk + R)
+        else if (evento.type == ALLEGRO_EVENT_KEY_DOWN) {
+            if (evento.keyboard.keycode == ALLEGRO_KEY_Q) {
+                if(evento.keyboard.modifiers & ALLEGRO_KEYMOD_CTRL){
+                  round = false; // fecha o programa
+                }
+            }
+            else if (evento.keyboard.keycode == ALLEGRO_KEY_R) {
+                if(evento.keyboard.modifiers & ALLEGRO_KEYMOD_CTRL){
+                  al_set_target_bitmap(canvas);//Todo comando de desenho vai pra imagem
+                  al_clear_to_color(branco);
+                  al_set_target_backbuffer(tela);//Volta os comandos para a tela
+                }
+            }
+        }
 
         if (evento.type == ALLEGRO_EVENT_DISPLAY_CLOSE) {
             round = false;
