@@ -25,7 +25,7 @@ typedef struct TELA {
 int main() {
 
     bool round = true, desenhar = false, redesenhar = false;
-    int x = 0, y = 0;
+    int x = 0, y = 0, canvas_x, canvas_y;
 
     // Inicializando o Allegro
     if (!al_init()) {
@@ -139,11 +139,16 @@ int main() {
     border[2] = telinha.x- border[0]; // canto direito 
     border[3] = telinha.y - border[1]; // canto inferior 
 
-    int canvas_h = border[3] - border [1];
     int canvas_w = border[2] - border [0];
-    printf("altura do canvas: %d\n", canvas_h);
+    int canvas_h = border[3] - border [1];
     printf("largura do canvas: %d\n", canvas_w);
+    printf("altura do canvas: %d\n", canvas_h);
 
+
+    //Converter sistema de coordenada da tela para o Canvas:
+
+    int x_offset = border[0];
+    int y_offset = border[1];
 
     al_clear_to_color(VERDE);
 
@@ -160,8 +165,10 @@ int main() {
 
     al_set_target_bitmap(canvas);//Todo comando de desenho vai pra imagem
     al_clear_to_color(BRANCO);
-    //al_draw_filled_rectangle(border[0], border[1], border[2], border[3], BRANCO);
+
+
     //Lixinho
+    //al_draw_filled_rectangle(border[0], border[1], border[2], border[3], BRANCO);
 
 
 
@@ -170,7 +177,7 @@ int main() {
     /*Desenha no canvas  -> pinta o fundo dele de preto -> passa pra tela*/
 
     int x0, y0;
-    COR = PRETO;
+    COR = AZUL;
 
     /*
    * ========================================================================
@@ -180,9 +187,13 @@ int main() {
 
 
     while (round) {
+        
 
         ALLEGRO_EVENT evento;
         al_wait_for_event(fila_eventos, &evento);
+        
+        canvas_x = x - x_offset;
+        canvas_y = y - y_offset;
 
         if (evento.type == ALLEGRO_EVENT_MOUSE_BUTTON_DOWN) {
             if (evento.mouse.button == 1) {
@@ -205,12 +216,12 @@ int main() {
         else if (evento.type == ALLEGRO_EVENT_MOUSE_AXES) {
             x = evento.mouse.x, y = evento.mouse.y;
 
-            bool dentroCanvas = (x >= border[0] + 10 && x <= border[2] - 10  && y >= border[1]  + 10 && y <= border[3] - 10);
+            //bool dentroCanvas = (x >= border[0] + 10 && x <= border[2] - 10  && y >= border[1]  + 10 && y <= border[3] - 10);
 
             if (desenhar) {
                 //Desenhando no canvas
                 al_set_target_bitmap(canvas);
-                desenharCirc(x0, y0,x,y, COR);
+                desenharCirc(x0, y0,canvas_x,canvas_y, COR);
                 al_set_target_backbuffer(tela);
 
                 x0 = x, y0 = y;
@@ -226,7 +237,7 @@ int main() {
                     desenhar = true;
 
                     al_set_target_bitmap(canvas);
-                    al_draw_filled_circle(x, y, 5, COR);
+                    //al_draw_filled_circle(x, y, 5, COR);
                     al_set_target_backbuffer(tela);
                 }
             }
@@ -239,7 +250,7 @@ int main() {
         else if (evento.type == ALLEGRO_EVENT_KEY_DOWN) {
             if (evento.keyboard.keycode == ALLEGRO_KEY_Q) {
                 if(evento.keyboard.modifiers & ALLEGRO_KEYMOD_CTRL){
-                  if (!al_save_bitmap("teste.jpg", canvas)){
+                  if (!al_save_bitmap("teste.bmp", canvas)){
                     printf("Erro ao salvar o arquivo!\n");
                   }
                     round = false; // fecha o programa
@@ -264,8 +275,9 @@ int main() {
 
         if (redesenhar  && al_is_event_queue_empty(fila_eventos)) {
             redesenhar = false;
-
-            al_draw_bitmap(canvas, border[0], border[1], 0);
+            
+            // Importante desenhar o canvas usando o border de Referência.
+            al_draw_bitmap(canvas, x_offset, y_offset, 0);
             al_flip_display();
         }
 
