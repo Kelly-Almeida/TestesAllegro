@@ -260,10 +260,10 @@ int main() {
                 if(evento.keyboard.modifiers & ALLEGRO_KEYMOD_CTRL){
                     al_set_target_bitmap(canvas);//Todo comando de desenho vai pra imagem
                     //al_draw_filled_rectangle(border[0], border[1], border[2], border[3], BRANCO);
-                    al_draw_filled_rectangle(border[0], border[1], border[2], border[3], BRANCO);
+                    al_clear_to_color(BRANCO);
                     al_set_target_backbuffer(tela);//Volta os comandos para a tela
 
-                    printf("ok");
+                    printf("ok\n");
                 }
             }
         }
