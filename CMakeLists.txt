@@ -6,7 +6,7 @@ set(CMAKE_C_STANDARD 11)
 find_package(PkgConfig REQUIRED)
 
 pkg_check_modules(ALLEGRO REQUIRED allegro-5 allegro_main-5)
-pkg_check_modules(ALLEGRO REQUIRED allegro-5 allegro_main-5 allegro_primitives-5)
+pkg_check_modules(ALLEGRO REQUIRED allegro-5 allegro_main-5 allegro_primitives-5 allegro_image-5)
 
 include_directories(${ALLEGRO_INCLUDE_DIRS})
 

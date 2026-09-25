@@ -7,6 +7,7 @@
 
 #include <stdio.h>
 #include <allegro5/allegro.h>
+#include <allegro5/allegro_image.h>
 #include <allegro5/allegro_primitives.h>
 
 #define FPS 60
@@ -35,6 +36,12 @@ int main() {
     // Inicializando a biblioteca de primitivas gráficas
     if (!al_init_primitives_addon()) {
         printf("Falha ao inicializar a biblioteca de primitivas!\n");
+        return -1;
+    }
+
+    // Inicializando a biblioteca de IO de imagens
+    if (!al_init_image_addon()) {
+        printf("Falha ao inicializar a biblioteca de IO de imagens!\n");
         return -1;
     }
 
@@ -116,7 +123,7 @@ int main() {
     ALLEGRO_COLOR COR;
 
 
-    // Limpa a tela inicial para preto
+    // Limpa a tela inicial para branco
     al_clear_to_color(BRANCO);
     al_flip_display();
 
@@ -226,7 +233,10 @@ int main() {
         else if (evento.type == ALLEGRO_EVENT_KEY_DOWN) {
             if (evento.keyboard.keycode == ALLEGRO_KEY_Q) {
                 if(evento.keyboard.modifiers & ALLEGRO_KEYMOD_CTRL){
+                  
+                  if (al_save_bitmap("teste.jpg", canvas)){
                     round = false; // fecha o programa
+                  }
                 }
             }
             else if (evento.keyboard.keycode == ALLEGRO_KEY_R) {
