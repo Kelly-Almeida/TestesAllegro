@@ -133,28 +133,35 @@ int main() {
      * ========================================================================
      */
 
+    float border[4];
+    border[0] = telinha.x *0.15; //canto esquerdo 
+    border[1] = telinha.y*0.15; // canto superior 
+    border[2] = telinha.x- border[0]; // canto direito 
+    border[3] = telinha.y - border[1]; // canto inferior 
+
+    int canvas_h = border[3] - border [1];
+    int canvas_w = border[2] - border [0];
+    printf("altura do canvas: %d\n", canvas_h);
+    printf("largura do canvas: %d\n", canvas_w);
+
+
+    al_clear_to_color(VERDE);
+
+
+    //Cartela de cores
+    al_draw_filled_rectangle(20, 20, 100, 100, PRETO);
+    al_draw_filled_rectangle(20, 140, 100, 220, VERMELHO);
+    al_draw_filled_rectangle(20, 260, 100, 340, AMARELO);
+    al_draw_filled_rectangle(20, 380, 100, 460, AZUL);
 
     //Criando a imagem do canvas
-    ALLEGRO_BITMAP *canvas = al_create_bitmap(telinha.x, telinha.x);
+    ALLEGRO_BITMAP *canvas = al_create_bitmap(canvas_w, canvas_h);
+
+
     al_set_target_bitmap(canvas);//Todo comando de desenho vai pra imagem
-
-        al_clear_to_color(VERDE);
-
-        float border[4];
-        border[0] = telinha.x *0.15;
-        border[1] = telinha.y*0.15;
-        border[2] = telinha.x- border[0];
-        border[3] = telinha.y - border[1];
-
-        al_draw_filled_rectangle(border[0], border[1], border[2], border[3], BRANCO);
-
-        //Cartela de cores
-        al_draw_filled_rectangle(20, 20, 100, 100, PRETO);
-        al_draw_filled_rectangle(20, 140, 100, 220, VERMELHO);
-        al_draw_filled_rectangle(20, 260, 100, 340, AMARELO);
-        al_draw_filled_rectangle(20, 380, 100, 460, AZUL);
-
-        //Lixinho
+    al_clear_to_color(BRANCO);
+    //al_draw_filled_rectangle(border[0], border[1], border[2], border[3], BRANCO);
+    //Lixinho
 
 
 
@@ -174,7 +181,6 @@ int main() {
 
     while (round) {
 
-
         ALLEGRO_EVENT evento;
         al_wait_for_event(fila_eventos, &evento);
 
@@ -192,17 +198,16 @@ int main() {
             }
         }
 
-
         if (evento.type == ALLEGRO_EVENT_TIMER) {
             redesenhar = true;
         }
+
         else if (evento.type == ALLEGRO_EVENT_MOUSE_AXES) {
             x = evento.mouse.x, y = evento.mouse.y;
 
             bool dentroCanvas = (x >= border[0] + 10 && x <= border[2] - 10  && y >= border[1]  + 10 && y <= border[3] - 10);
 
-
-            if (desenhar && dentroCanvas) {
+            if (desenhar) {
                 //Desenhando no canvas
                 al_set_target_bitmap(canvas);
                 desenharCirc(x0, y0,x,y, COR);
@@ -211,6 +216,7 @@ int main() {
                 x0 = x, y0 = y;
             }
         }
+
         else if (evento.type == ALLEGRO_EVENT_MOUSE_BUTTON_DOWN) {
             if (evento.mouse.button == 1) {
                 x = evento.mouse.x, y = evento.mouse.y;
@@ -233,10 +239,10 @@ int main() {
         else if (evento.type == ALLEGRO_EVENT_KEY_DOWN) {
             if (evento.keyboard.keycode == ALLEGRO_KEY_Q) {
                 if(evento.keyboard.modifiers & ALLEGRO_KEYMOD_CTRL){
-                  
-                  if (al_save_bitmap("teste.jpg", canvas)){
-                    round = false; // fecha o programa
+                  if (!al_save_bitmap("teste.jpg", canvas)){
+                    printf("Erro ao salvar o arquivo!\n");
                   }
+                    round = false; // fecha o programa
                 }
             }
             else if (evento.keyboard.keycode == ALLEGRO_KEY_R) {
@@ -259,7 +265,7 @@ int main() {
         if (redesenhar  && al_is_event_queue_empty(fila_eventos)) {
             redesenhar = false;
 
-            al_draw_bitmap(canvas, 0, 0,0);
+            al_draw_bitmap(canvas, border[0], border[1], 0);
             al_flip_display();
         }
 
