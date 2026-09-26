@@ -2,14 +2,31 @@ cmake_minimum_required(VERSION 3.20)
 project(TestC C)
 
 set(CMAKE_C_STANDARD 11)
-
-find_package(PkgConfig REQUIRED)
-
-pkg_check_modules(ALLEGRO REQUIRED allegro-5 allegro_main-5)
-pkg_check_modules(ALLEGRO REQUIRED allegro-5 allegro_main-5 allegro_primitives-5 allegro_image-5)
-
-include_directories(${ALLEGRO_INCLUDE_DIRS})
+set(CMAKE_C_STANDARD_REQUIRED True)
 
 add_executable(Test teste04.c)
 
-target_link_libraries(Test PRIVATE ${ALLEGRO_LIBRARIES})
+# -- Cross Platform Library Finding --
+
+# 1. Try finding Allegro the native vcpkg way
+find_package(unofficial-allegro5 CONFIG QUIET)
+
+if(unofficial-allegro5_FOUND)
+    # Windows / Visual Studio path
+    target_link_libraries(Test PRIVATE 
+        allegro 
+        allegro_main 
+        allegro_primitives
+        allegro_image
+    )
+else()
+    # 2. Fall back to Linux pkg-config path
+    find_package(PkgConfig REQUIRED)
+    pkg_check_modules(ALLEGRO REQUIRED IMPORTED_TARGET 
+        allegro-5 
+        allegro_main-5 
+        allegro_primitives-5
+        allegro_image-5
+    )
+    target_link_libraries(Test PRIVATE PkgConfig::ALLEGRO)
+endif()
