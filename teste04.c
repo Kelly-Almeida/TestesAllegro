@@ -12,20 +12,24 @@
 
 #define FPS 60
 
-void desenharCirc(int x0, int y0, int x, int y, ALLEGRO_COLOR cor, int espessura) {
-    al_draw_line(x0, y0, x, y, cor, espessura * 2);
-    al_draw_filled_circle(x, y, espessura, cor);
 
-}
 
 typedef struct TELA {
     int x, y;
 }TELA;
 
+typedef struct vec2 {
+    int x, y;
+}vec2;
+
+void desenharCirc(vec2 ponto_inicial, vec2 ponto, ALLEGRO_COLOR cor, int espessura) {
+    al_draw_line(ponto_inicial.x, ponto_inicial.y, ponto.x, ponto.y, cor, espessura * 2);
+    al_draw_filled_circle(ponto.x, ponto.y, espessura, cor);
+
+}
 int main() {
 
     bool round = true, desenhar = false, redesenhar = false;
-    int x = 0, y = 0, canvas_x, canvas_y;
 
     // Inicializando o Allegro
     if (!al_init()) {
@@ -178,7 +182,9 @@ int main() {
 
     /*Desenha no canvas  -> pinta o fundo dele de preto -> passa pra tela*/
 
-    int x0, y0;
+    vec2 ponto = { 0,0 };
+    vec2 ponto_inicial;
+    vec2 ponto_canvas;
     COR = AZUL;
     espessura = 3;
     /*
@@ -194,17 +200,17 @@ int main() {
         ALLEGRO_EVENT evento;
         al_wait_for_event(fila_eventos, &evento);
 
-        canvas_x = x - x_offset;
-        canvas_y = y - y_offset;
+        ponto_canvas.x = ponto.x - x_offset;
+        ponto_canvas.y = ponto.y - y_offset;
 
         if (evento.type == ALLEGRO_EVENT_MOUSE_BUTTON_DOWN) {
             if (evento.mouse.button == 1) {
-                x = evento.mouse.x, y = evento.mouse.y;
-                if (x >= 20 && x <= 100 && y >= 20 && y <= 100) { COR = PRETO; }
-                else if (x >= 20 && x <= 100 && y >= 140 && y <= 220) { COR = VERMELHO; }
-                else if (x >= 20 && x <= 100 && y >= 260 && y <= 340) { COR = AMARELO; }
-                else if (x >= 20 && x <= 100 && y >= 380 && y <= 460) { COR = AZUL; }
-                else if (x >= 20 && x <= 100 && y >= 500 && y <= 580) { COR = BRANCO; }
+                ponto.x = evento.mouse.x, ponto.y = evento.mouse.y;
+                if (ponto.x >= 20 && ponto.x <= 100 && ponto.y >= 20 && ponto.y <= 100) { COR = PRETO; }
+                else if (ponto.x >= 20 && ponto.x <= 100 && ponto.y >= 140 && ponto.y <= 220) { COR = VERMELHO; }
+                else if (ponto.x >= 20 && ponto.x <= 100 && ponto.y >= 260 && ponto.y <= 340) { COR = AMARELO; }
+                else if (ponto.x >= 20 && ponto.x <= 100 && ponto.y >= 380 && ponto.y <= 460) { COR = AZUL; }
+                else if (ponto.x >= 20 && ponto.x <= 100 && ponto.y >= 500 && ponto.y <= 580) { COR = BRANCO; }
             }
         }
 
@@ -213,29 +219,29 @@ int main() {
         }
 
         else if (evento.type == ALLEGRO_EVENT_MOUSE_AXES) {
-            x = evento.mouse.x, y = evento.mouse.y;
+            ponto.x = evento.mouse.x, ponto.y = evento.mouse.y;
 
             if (desenhar) {
 
                 //Desenhando no canvas
                 al_set_target_bitmap(canvas);
-                desenharCirc(x0, y0, canvas_x, canvas_y, COR, espessura);
+                desenharCirc(ponto_inicial, ponto_canvas, COR, espessura);
                 al_set_target_backbuffer(tela);
 
-                x0 = canvas_x, y0 = canvas_y;
+                ponto_inicial.x = ponto_canvas.x, ponto_inicial.y = ponto_canvas.y;
             }
         }
 
         else if (evento.type == ALLEGRO_EVENT_MOUSE_BUTTON_DOWN) {
             if (evento.mouse.button == 1) {
-                x = evento.mouse.x, y = evento.mouse.y;
+                ponto.x = evento.mouse.x, ponto.y = evento.mouse.y;
 
-                if (x >= border[0] && x <= border[2] && y >= border[1] && y <= border[3]) {
-                    x0 = canvas_x, y0 = canvas_y;
+                if (ponto.x >= border[0] && ponto.x <= border[2] && ponto.y >= border[1] && ponto.y <= border[3]) {
+                    ponto_inicial.x = ponto_canvas.x, ponto_inicial.y = ponto_canvas.y;
                     desenhar = true;
 
                     al_set_target_bitmap(canvas);
-                    al_draw_filled_circle(canvas_x, canvas_y, espessura, COR);
+                    al_draw_filled_circle(ponto_canvas.x, ponto_canvas.y, espessura, COR);
                     al_set_target_backbuffer(tela);
                 }
             }
