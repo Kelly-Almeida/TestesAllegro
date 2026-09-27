@@ -35,22 +35,22 @@ typedef struct traco {
 }traco;
 
 traco* criarTraco(ALLEGRO_COLOR cor, int espessura, vec2 ponto) {
-    traco* traco = malloc(sizeof(traco));
-    if (!traco) return NULL;
+    traco* tracoNovo = malloc(sizeof(traco));
+    if (!tracoNovo) return NULL;
 
-    traco->inicio.cor = cor;
-    traco->inicio.espessura = espessura;
-    traco->inicio.ponto = ponto;
-    traco->tamanho = 0; // ainda não tem nada guardado
-    traco->capacidade = 16; //capacidade inicial para 16 coordenadas
-    traco->pontos = malloc(traco->capacidade * sizeof(vec2)); //alocando espaço para o array dinâmico que será redimensionado
+    tracoNovo->inicio.cor = cor;
+    tracoNovo->inicio.espessura = espessura;
+    tracoNovo->inicio.ponto = ponto;
+    tracoNovo->tamanho = 0; // ainda não tem nada guardado
+    tracoNovo->capacidade = 16; //capacidade inicial para 16 coordenadas
+    tracoNovo->pontos = malloc(tracoNovo->capacidade * sizeof(vec2)); //alocando espaço para o array dinâmico que será redimensionado
 
-    if (!traco->pontos) {
-        free(traco);
+    if (!tracoNovo->pontos) {
+        free(tracoNovo);
         return NULL;
     }
     printf("novo traço\n");
-    return traco;
+    return tracoNovo;
 }
 
 void adicionarPontos(traco* traco, vec2 coordenada) {
@@ -108,6 +108,7 @@ int main() {
     //al_set_new_display_flags(ALLEGRO_FULLSCREEN_WINDOW); //Coloca um restrição do ponteiro somente na tela e tira o fechar
 
     // Inicializando a tela
+    al_set_new_display_flags(ALLEGRO_OPENGL);
     ALLEGRO_DISPLAY* tela = al_create_display(telinha.x, telinha.y);
     if (!tela) {
         printf("Falha ao criar a tela!\n");
@@ -213,7 +214,10 @@ int main() {
 
     //Criando a imagem do canvas
     ALLEGRO_BITMAP* canvas = al_create_bitmap(canvas_w, canvas_h);
-
+    if (!canvas) {
+        printf("Erro ao criar o canvas!\n");
+        return -1;
+    }
 
     al_set_target_bitmap(canvas);//Todo comando de desenho vai pra imagem
     al_clear_to_color(BRANCO);
@@ -234,6 +238,8 @@ int main() {
     COR = AZUL;
     espessura = 3;
 
+    traco* traco_novo = NULL;
+
     traco *filaDeTracos;
     filaDeTracos = (traco*)malloc(16 * sizeof(traco)); // iniciando o array de traços com capacidade inicial para 16 traços
     if (filaDeTracos == NULL) {
@@ -253,35 +259,30 @@ int main() {
         ALLEGRO_EVENT evento;
         al_wait_for_event(fila_eventos, &evento);
 
-        ponto_canvas.x = ponto.x - x_offset;
-        ponto_canvas.y = ponto.y - y_offset;
-        traco* traco_novo;
+        if (evento.type == ALLEGRO_EVENT_TIMER) {
+            redesenhar = true;
+        }
 
         if (evento.type == ALLEGRO_EVENT_MOUSE_BUTTON_DOWN) {
             if (evento.mouse.button == 1) {
-                ponto.x = evento.mouse.x, ponto.y = evento.mouse.y;
+                ponto.x = evento.mouse.x;
+                ponto.y = evento.mouse.y;
+
                 if (ponto.x >= 20 && ponto.x <= 100 && ponto.y >= 20 && ponto.y <= 100) { COR = PRETO; }
                 else if (ponto.x >= 20 && ponto.x <= 100 && ponto.y >= 140 && ponto.y <= 220) { COR = VERMELHO; }
                 else if (ponto.x >= 20 && ponto.x <= 100 && ponto.y >= 260 && ponto.y <= 340) { COR = AMARELO; }
                 else if (ponto.x >= 20 && ponto.x <= 100 && ponto.y >= 380 && ponto.y <= 460) { COR = AZUL; }
                 else if (ponto.x >= 20 && ponto.x <= 100 && ponto.y >= 500 && ponto.y <= 580) { COR = BRANCO; }
-            }
-        }
+            
+                else if (ponto.x >= border[0] && ponto.x <= border[2] && ponto.y >= border[1] && ponto.y <= border[3]) {
+                    ponto_canvas.x = ponto.x - x_offset;
+                    ponto_canvas.y = ponto.y - y_offset;
 
-        if (evento.type == ALLEGRO_EVENT_TIMER) {
-            redesenhar = true;
-        }
-
-        else if (evento.type == ALLEGRO_EVENT_MOUSE_BUTTON_DOWN) {
-            if (evento.mouse.button == 1) {
-                ponto.x = evento.mouse.x, ponto.y = evento.mouse.y;
-
-                if (ponto.x >= border[0] && ponto.x <= border[2] && ponto.y >= border[1] && ponto.y <= border[3]) {
                     ponto_inicial.x = ponto_canvas.x, ponto_inicial.y = ponto_canvas.y;
-                    desenhar = true;
                     traco_novo = criarTraco(COR, espessura, ponto_canvas);
-                    al_set_target_bitmap(canvas);
+                    desenhar = true;
 
+                    al_set_target_bitmap(canvas);
                     printf("ponto inicial: {%d, %d}, espessura: %d, cor: {r:%f g:%f b:%f a:%f} \n", ponto_canvas.x, ponto_canvas.y, espessura, COR.r, COR.g, COR.b, COR.a);
                     al_draw_filled_circle(ponto_canvas.x, ponto_canvas.y, espessura, COR);
                     al_set_target_backbuffer(tela);
@@ -290,23 +291,30 @@ int main() {
         }
 
         else if (evento.type == ALLEGRO_EVENT_MOUSE_AXES) {
-            ponto.x = evento.mouse.x, ponto.y = evento.mouse.y;
+            ponto.x = evento.mouse.x;
+            ponto.y = evento.mouse.y;
 
-            if (desenhar) {
+            ponto_canvas.x = ponto.x - x_offset;
+            ponto_canvas.y = ponto.y - y_offset;
 
-                //Desenhando no canvas
-                al_set_target_bitmap(canvas);
-                adicionarPontos(traco_novo, ponto_canvas);
-                printf("ponto atual: {%d, %d}\n", ponto_canvas.x, ponto_canvas.y);
-                desenharCirc(ponto_inicial, ponto_canvas, COR, espessura);
-                al_set_target_backbuffer(tela);
+            if (desenhar && traco_novo) {
 
-                ponto_inicial.x = ponto_canvas.x, ponto_inicial.y = ponto_canvas.y;
+                if (ponto_canvas.x >= 0 && ponto_canvas.x <= canvas_w &&
+                    ponto_canvas.y >= 0 && ponto_canvas.y <= canvas_h) {
+                    //Desenhando no canvas
+                    al_set_target_bitmap(canvas);
+                    adicionarPontos(traco_novo, ponto_canvas);
+                    printf("ponto atual: {%d, %d}\n", ponto_canvas.x, ponto_canvas.y);
+                    desenharCirc(ponto_inicial, ponto_canvas, COR, espessura);
+                    al_set_target_backbuffer(tela);
+                }
+                ponto_inicial = ponto_canvas;
             }
         }
 
         else if (evento.type == ALLEGRO_EVENT_MOUSE_BUTTON_UP) {
             if (evento.mouse.button == 1 && desenhar) {
+                traco_novo->ponto_final = ponto_canvas;
                 printf("ponto final: {%d, %d}\n", ponto_canvas.x, ponto_canvas.y);
                 desenhar = false;
             } 
@@ -339,6 +347,15 @@ int main() {
         if (redesenhar && al_is_event_queue_empty(fila_eventos)) {
             redesenhar = false;
 
+            al_clear_to_color(VERDE);
+
+
+            //Cartela de cores
+            al_draw_filled_rectangle(20, 20, 100, 100, PRETO);
+            al_draw_filled_rectangle(20, 140, 100, 220, VERMELHO);
+            al_draw_filled_rectangle(20, 260, 100, 340, AMARELO);
+            al_draw_filled_rectangle(20, 380, 100, 460, AZUL);
+            al_draw_filled_rectangle(20, 500, 100, 580, BRANCO);
             // Importante desenhar o canvas usando o border de Referência.
             al_draw_bitmap(canvas, x_offset, y_offset, 0);
             al_flip_display();
