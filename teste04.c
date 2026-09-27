@@ -49,6 +49,7 @@ traco* criarTraco(ALLEGRO_COLOR cor, int espessura, vec2 ponto) {
         free(traco);
         return NULL;
     }
+    printf("novo traço\n");
     return traco;
 }
 
@@ -58,7 +59,7 @@ void adicionarPontos(traco* traco, vec2 coordenada) {
         vec2* temp = realloc(traco->pontos, traco->capacidade * sizeof(vec2));
         if (temp == NULL) {
             printf("Erro ao realocar memória!!");
-            return -1;
+            exit(EXIT_FAILURE);
         }
         traco->pontos = temp;
     }
@@ -101,8 +102,8 @@ int main() {
 
     al_get_monitor_info(0, &info); //Estrutura que pega os valores da tela do computador
 
-    telinha.x = info.x2 - info.x1;
-    telinha.y = info.y2 - info.y1;
+    telinha.x = info.x2 - info.x1 - 500;
+    telinha.y = info.y2 - info.y1 - 500;
 
     //al_set_new_display_flags(ALLEGRO_FULLSCREEN_WINDOW); //Coloca um restrição do ponteiro somente na tela e tira o fechar
 
@@ -249,12 +250,12 @@ int main() {
 
     while (round) {
 
-
         ALLEGRO_EVENT evento;
         al_wait_for_event(fila_eventos, &evento);
 
         ponto_canvas.x = ponto.x - x_offset;
         ponto_canvas.y = ponto.y - y_offset;
+        traco* traco_novo;
 
         if (evento.type == ALLEGRO_EVENT_MOUSE_BUTTON_DOWN) {
             if (evento.mouse.button == 1) {
@@ -271,6 +272,23 @@ int main() {
             redesenhar = true;
         }
 
+        else if (evento.type == ALLEGRO_EVENT_MOUSE_BUTTON_DOWN) {
+            if (evento.mouse.button == 1) {
+                ponto.x = evento.mouse.x, ponto.y = evento.mouse.y;
+
+                if (ponto.x >= border[0] && ponto.x <= border[2] && ponto.y >= border[1] && ponto.y <= border[3]) {
+                    ponto_inicial.x = ponto_canvas.x, ponto_inicial.y = ponto_canvas.y;
+                    desenhar = true;
+                    traco_novo = criarTraco(COR, espessura, ponto_canvas);
+                    al_set_target_bitmap(canvas);
+
+                    printf("ponto inicial: {%d, %d}, espessura: %d, cor: {r:%f g:%f b:%f a:%f} \n", ponto_canvas.x, ponto_canvas.y, espessura, COR.r, COR.g, COR.b, COR.a);
+                    al_draw_filled_circle(ponto_canvas.x, ponto_canvas.y, espessura, COR);
+                    al_set_target_backbuffer(tela);
+                }
+            }
+        }
+
         else if (evento.type == ALLEGRO_EVENT_MOUSE_AXES) {
             ponto.x = evento.mouse.x, ponto.y = evento.mouse.y;
 
@@ -278,6 +296,7 @@ int main() {
 
                 //Desenhando no canvas
                 al_set_target_bitmap(canvas);
+                adicionarPontos(traco_novo, ponto_canvas);
                 printf("ponto atual: {%d, %d}\n", ponto_canvas.x, ponto_canvas.y);
                 desenharCirc(ponto_inicial, ponto_canvas, COR, espessura);
                 al_set_target_backbuffer(tela);
@@ -286,22 +305,6 @@ int main() {
             }
         }
 
-        else if (evento.type == ALLEGRO_EVENT_MOUSE_BUTTON_DOWN) {
-            if (evento.mouse.button == 1) {
-                ponto.x = evento.mouse.x, ponto.y = evento.mouse.y;
-
-                if (ponto.x >= border[0] && ponto.x <= border[2] && ponto.y >= border[1] && ponto.y <= border[3]) {
-                    ponto_inicial.x = ponto_canvas.x, ponto_inicial.y = ponto_canvas.y;
-                    desenhar = true;
-
-                    al_set_target_bitmap(canvas);
-                    traco *traco = criarTraco(cor, espessura, ponto_canvas);
-                    printf("ponto inicial: {%d, %d}, espessura: %d, cor: {r:%f g:%f b:%f a:%f} \n", ponto_canvas.x, ponto_canvas.y, espessura, COR.r, COR.g,COR.b, COR.a);
-                    al_draw_filled_circle(ponto_canvas.x, ponto_canvas.y, espessura, COR);
-                    al_set_target_backbuffer(tela);
-                }
-            }
-        }
         else if (evento.type == ALLEGRO_EVENT_MOUSE_BUTTON_UP) {
             if (evento.mouse.button == 1 && desenhar) {
                 printf("ponto final: {%d, %d}\n", ponto_canvas.x, ponto_canvas.y);
