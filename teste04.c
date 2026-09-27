@@ -35,7 +35,7 @@ typedef struct traco {
 }traco;
 
 typedef struct fila {
-    traco* tracos;
+    traco** tracos;
     int traco_atual;
     size_t tamanho;
     size_t capacidade;
@@ -82,7 +82,7 @@ fila* criarFila() {
 
     filaNova->traco_atual = 0;
     filaNova->capacidade = 16;
-    filaNova->tracos = malloc(filaNova->capacidade * sizeof(traco));
+    filaNova->tracos = malloc(filaNova->capacidade * sizeof(traco*));
 
     if (!filaNova->tracos) {
         free(filaNova);
@@ -92,10 +92,10 @@ fila* criarFila() {
     return filaNova;
 }
 
-void aumentarFila(fila* filaDeTracos, traco traco_novo) {
+void aumentarFila(fila* filaDeTracos, traco *traco_novo) {
     if (filaDeTracos->traco_atual >= filaDeTracos->capacidade) {
         filaDeTracos->capacidade *= 2; //dobra a capacidade da fila
-        traco* temp = realloc(filaDeTracos->tracos, filaDeTracos->capacidade * sizeof(traco));
+        traco** temp = realloc(filaDeTracos->tracos, filaDeTracos->capacidade * sizeof(traco*));
         if (temp == NULL) {
             printf("Erro ao realocar memória!!");
             exit(EXIT_FAILURE);
@@ -349,7 +349,7 @@ int main() {
             if (evento.mouse.button == 1 && desenhar) {
                 traco_novo->ponto_final = ponto_canvas;
                 printf("ponto final: {%d, %d}\n", ponto_canvas.x, ponto_canvas.y);
-                aumentarFila(filaDeTracos,*traco_novo);
+                aumentarFila(filaDeTracos,traco_novo);
                 desenhar = false;
             } 
         }
@@ -373,18 +373,26 @@ int main() {
             }
             else if (evento.keyboard.keycode == ALLEGRO_KEY_Z) {
                 if (evento.keyboard.modifiers & ALLEGRO_KEYMOD_CTRL) {
-                    al_set_target_bitmap(canvas);//Todo comando de desenho vai pra imagem
-                    al_clear_to_color(BRANCO);
+                    if (filaDeTracos->traco_atual > 0) {
+                        filaDeTracos->traco_atual--;
+                        int ultimo = filaDeTracos->traco_atual;
+                        //libera a memória do último traço desfeito
+                        free(filaDeTracos->tracos[ultimo]->pontos);
+                        free(filaDeTracos->tracos[ultimo]);
+                        filaDeTracos->tracos[ultimo] = NULL;
 
-                    free(filaDeTracos->tracos[filaDeTracos->traco_atual].pontos);
-                    free(&filaDeTracos->tracos[filaDeTracos->traco_atual]);
-                    for (int i = 0; i < filaDeTracos->traco_atual; i++) {
-                        printf("Redesenhar!");
+                        al_set_target_bitmap(canvas);//Todo comando de desenho vai pra imagem
+                        al_clear_to_color(BRANCO);
 
+
+                        for (int i = 0; i < filaDeTracos->traco_atual; i++) {
+                            printf("Redesenhar!");
+
+                        }
+                        al_set_target_backbuffer(tela);//Volta os comandos para a tela
+
+                        printf("Limpar_tela\n");
                     }
-                    al_set_target_backbuffer(tela);//Volta os comandos para a tela
-
-                    printf("Limpar_tela\n");
                 }
             }
         }
