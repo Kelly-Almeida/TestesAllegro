@@ -34,6 +34,13 @@ typedef struct traco {
     size_t capacidade;
 }traco;
 
+typedef struct fila {
+    traco* tracos;
+    int traco_atual;
+    size_t tamanho;
+    size_t capacidade;
+}fila;
+
 traco* criarTraco(ALLEGRO_COLOR cor, int espessura, vec2 ponto) {
     traco* tracoNovo = malloc(sizeof(traco));
     if (!tracoNovo) return NULL;
@@ -49,7 +56,7 @@ traco* criarTraco(ALLEGRO_COLOR cor, int espessura, vec2 ponto) {
         free(tracoNovo);
         return NULL;
     }
-    printf("novo traço\n");
+    printf("Novo Traço, Ponto Inicial: {%d, %d}, espessura: %d, cor: {r:%f g:%f b:%f a:%f} \n", ponto.x, ponto.y, espessura, cor.r, cor.g, cor.b, cor.a);
     return tracoNovo;
 }
 
@@ -66,6 +73,39 @@ void adicionarPontos(traco* traco, vec2 coordenada) {
     traco->pontos[traco->tamanho].x = coordenada.x;
     traco->pontos[traco->tamanho].y = coordenada.y;
     traco->tamanho++;
+    printf("novo ponto: {%d, %d}\n", coordenada.x, coordenada.y);
+}
+
+fila* criarFila() {
+    fila* filaNova = malloc(sizeof(fila));
+    if (!filaNova) return NULL;
+
+    filaNova->traco_atual = 0;
+    filaNova->capacidade = 16;
+    filaNova->tracos = malloc(filaNova->capacidade * sizeof(traco));
+
+    if (!filaNova->tracos) {
+        free(filaNova);
+        return NULL;
+    }
+    printf("Fila Criada!\n");
+    return filaNova;
+}
+
+void aumentarFila(fila* filaDeTracos, traco traco_novo) {
+    if (filaDeTracos->traco_atual >= filaDeTracos->capacidade) {
+        filaDeTracos->capacidade *= 2; //dobra a capacidade da fila
+        traco* temp = realloc(filaDeTracos->tracos, filaDeTracos->capacidade * sizeof(traco));
+        if (temp == NULL) {
+            printf("Erro ao realocar memória!!");
+            exit(EXIT_FAILURE);
+        }
+        filaDeTracos->tracos = temp;
+    }
+    filaDeTracos->tracos[filaDeTracos->traco_atual] = traco_novo;
+    filaDeTracos->traco_atual++;
+    printf("novo traco adicionado com sucesso!\n");
+    printf("%d tracos guardados ao total.\n", filaDeTracos->traco_atual);
 }
 
 void desenharCirc(vec2 ponto_inicial, vec2 ponto, ALLEGRO_COLOR cor, int espessura) {
@@ -240,13 +280,7 @@ int main() {
 
     traco* traco_novo = NULL;
 
-    traco *filaDeTracos;
-    filaDeTracos = (traco*)malloc(16 * sizeof(traco)); // iniciando o array de traços com capacidade inicial para 16 traços
-    if (filaDeTracos == NULL) {
-        printf("Erro ao alocar memória!\n");
-        return -1;
-    }
-    int numeroDeTracos = 0; // variável para controlar quantos traços estão guardados
+    fila *filaDeTracos = criarFila();
 
     /*
    * ========================================================================
@@ -280,10 +314,10 @@ int main() {
 
                     ponto_inicial.x = ponto_canvas.x, ponto_inicial.y = ponto_canvas.y;
                     traco_novo = criarTraco(COR, espessura, ponto_canvas);
+
                     desenhar = true;
 
                     al_set_target_bitmap(canvas);
-                    printf("ponto inicial: {%d, %d}, espessura: %d, cor: {r:%f g:%f b:%f a:%f} \n", ponto_canvas.x, ponto_canvas.y, espessura, COR.r, COR.g, COR.b, COR.a);
                     al_draw_filled_circle(ponto_canvas.x, ponto_canvas.y, espessura, COR);
                     al_set_target_backbuffer(tela);
                 }
@@ -304,7 +338,6 @@ int main() {
                     //Desenhando no canvas
                     al_set_target_bitmap(canvas);
                     adicionarPontos(traco_novo, ponto_canvas);
-                    printf("ponto atual: {%d, %d}\n", ponto_canvas.x, ponto_canvas.y);
                     desenharCirc(ponto_inicial, ponto_canvas, COR, espessura);
                     al_set_target_backbuffer(tela);
                 }
@@ -316,6 +349,7 @@ int main() {
             if (evento.mouse.button == 1 && desenhar) {
                 traco_novo->ponto_final = ponto_canvas;
                 printf("ponto final: {%d, %d}\n", ponto_canvas.x, ponto_canvas.y);
+                aumentarFila(filaDeTracos,*traco_novo);
                 desenhar = false;
             } 
         }
@@ -332,6 +366,22 @@ int main() {
                 if (evento.keyboard.modifiers & ALLEGRO_KEYMOD_CTRL) {
                     al_set_target_bitmap(canvas);//Todo comando de desenho vai pra imagem
                     al_clear_to_color(BRANCO);
+                    al_set_target_backbuffer(tela);//Volta os comandos para a tela
+
+                    printf("Limpar_tela\n");
+                }
+            }
+            else if (evento.keyboard.keycode == ALLEGRO_KEY_Z) {
+                if (evento.keyboard.modifiers & ALLEGRO_KEYMOD_CTRL) {
+                    al_set_target_bitmap(canvas);//Todo comando de desenho vai pra imagem
+                    al_clear_to_color(BRANCO);
+
+                    free(filaDeTracos->tracos[filaDeTracos->traco_atual].pontos);
+                    free(&filaDeTracos->tracos[filaDeTracos->traco_atual]);
+                    for (int i = 0; i < filaDeTracos->traco_atual; i++) {
+                        printf("Redesenhar!");
+
+                    }
                     al_set_target_backbuffer(tela);//Volta os comandos para a tela
 
                     printf("Limpar_tela\n");
