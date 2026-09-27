@@ -34,13 +34,13 @@ typedef struct traco {
     size_t capacidade;
 }traco;
 
-traco* criarTraco(struct INICIO inicio_pacote) {
+traco* criarTraco(ALLEGRO_COLOR cor, int espessura, vec2 ponto) {
     traco* traco = malloc(sizeof(traco));
     if (!traco) return NULL;
 
-    traco->inicio.cor = inicio_pacote.cor;
-    traco->inicio.espessura = inicio_pacote.espessura;
-    traco->inicio.ponto = inicio_pacote.ponto;
+    traco->inicio.cor = cor;
+    traco->inicio.espessura = espessura;
+    traco->inicio.ponto = ponto;
     traco->tamanho = 0; // ainda não tem nada guardado
     traco->capacidade = 16; //capacidade inicial para 16 coordenadas
     traco->pontos = malloc(traco->capacidade * sizeof(vec2)); //alocando espaço para o array dinâmico que será redimensionado
@@ -52,7 +52,6 @@ traco* criarTraco(struct INICIO inicio_pacote) {
     return traco;
 }
 
-//TODO
 void adicionarPontos(traco* traco, vec2 coordenada) {
     if (traco->tamanho >= traco->capacidade) {
         traco->capacidade *= 2; //dobra a capacidade do traço
@@ -233,12 +232,20 @@ int main() {
     vec2 ponto_canvas;
     COR = AZUL;
     espessura = 3;
+
+    traco *filaDeTracos;
+    filaDeTracos = (traco*)malloc(16 * sizeof(traco)); // iniciando o array de traços com capacidade inicial para 16 traços
+    if (filaDeTracos == NULL) {
+        printf("Erro ao alocar memória!\n");
+        return -1;
+    }
+    int numeroDeTracos = 0; // variável para controlar quantos traços estão guardados
+
     /*
    * ========================================================================
    *                             LOOP DO JOGO
    * ========================================================================
    */
-
 
     while (round) {
 
@@ -288,6 +295,7 @@ int main() {
                     desenhar = true;
 
                     al_set_target_bitmap(canvas);
+                    traco *traco = criarTraco(cor, espessura, ponto_canvas);
                     printf("ponto inicial: {%d, %d}, espessura: %d, cor: {r:%f g:%f b:%f a:%f} \n", ponto_canvas.x, ponto_canvas.y, espessura, COR.r, COR.g,COR.b, COR.a);
                     al_draw_filled_circle(ponto_canvas.x, ponto_canvas.y, espessura, COR);
                     al_set_target_backbuffer(tela);
