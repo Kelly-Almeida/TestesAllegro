@@ -12,8 +12,6 @@
 
 #define FPS 60
 
-
-
 typedef struct TELA {
     int x, y;
 }TELA;
@@ -21,6 +19,18 @@ typedef struct TELA {
 typedef struct vec2 {
     int x, y;
 }vec2;
+
+struct INICIO {
+    ALLEGRO_COLOR cor;
+    int espessura;
+    vec2 ponto;
+}INICIO;
+
+typedef struct traco {
+    struct INICIO inicio;
+    vec2 ponto[256];
+    vec2 ponto_final;
+}traco;
 
 void desenharCirc(vec2 ponto_inicial, vec2 ponto, ALLEGRO_COLOR cor, int espessura) {
     al_draw_line(ponto_inicial.x, ponto_inicial.y, ponto.x, ponto.y, cor, espessura * 2);
@@ -69,7 +79,7 @@ int main() {
     }
 
     ALLEGRO_TIMER* timer = al_create_timer(1.0 / FPS);
-
+    
     if (!timer) {
         al_destroy_timer(timer);
         al_destroy_display(tela);
@@ -225,6 +235,7 @@ int main() {
 
                 //Desenhando no canvas
                 al_set_target_bitmap(canvas);
+                printf("ponto atual: {%d, %d}\n", ponto_canvas.x, ponto_canvas.y);
                 desenharCirc(ponto_inicial, ponto_canvas, COR, espessura);
                 al_set_target_backbuffer(tela);
 
@@ -241,15 +252,17 @@ int main() {
                     desenhar = true;
 
                     al_set_target_bitmap(canvas);
+                    printf("ponto inicial: {%d, %d}, espessura: %d, cor: {r:%f g:%f b:%f a:%f} \n", ponto_canvas.x, ponto_canvas.y, espessura, COR.r, COR.g,COR.b, COR.a);
                     al_draw_filled_circle(ponto_canvas.x, ponto_canvas.y, espessura, COR);
                     al_set_target_backbuffer(tela);
                 }
             }
         }
         else if (evento.type == ALLEGRO_EVENT_MOUSE_BUTTON_UP) {
-            if (evento.mouse.button == 1) {
+            if (evento.mouse.button == 1 && desenhar) {
+                printf("ponto final: {%d, %d}\n", ponto_canvas.x, ponto_canvas.y);
                 desenhar = false;
-            }
+            } 
         }
         else if (evento.type == ALLEGRO_EVENT_KEY_DOWN) {
             if (evento.keyboard.keycode == ALLEGRO_KEY_Q) {
@@ -266,7 +279,7 @@ int main() {
                     al_clear_to_color(BRANCO);
                     al_set_target_backbuffer(tela);//Volta os comandos para a tela
 
-                    printf("ok\n");
+                    printf("Limpar_tela\n");
                 }
             }
         }
