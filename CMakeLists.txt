@@ -9,15 +9,17 @@ add_executable(Test teste04.c)
 # -- Cross Platform Library Finding --
 
 # 1. Try finding Allegro the native vcpkg way
-find_package(unofficial-allegro5 CONFIG QUIET)
 
-if(unofficial-allegro5_FOUND)
+
+if(WIN32)
     # Windows / Visual Studio path
+    find_package(Allegro CONFIG REQUIRED)
     target_link_libraries(Test PRIVATE 
-        allegro 
-        allegro_main 
-        allegro_primitives
-        allegro_image
+        Allegro::allegro 
+        Allegro::allegro_main
+        Allegro::allegro_primitives
+        Allegro::allegro_image
+        ws2_32
     )
 else()
     # 2. Fall back to Linux pkg-config path
