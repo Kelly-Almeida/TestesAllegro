@@ -386,12 +386,21 @@ int main() {
 
 
                         for (int i = 0; i < filaDeTracos->traco_atual; i++) {
-                            printf("Redesenhar!");
+                            traco* t = filaDeTracos->tracos[i];
 
+                            // Redesenha o ponto inicial (clique do mouse)
+                            al_draw_filled_circle(t->inicio.ponto.x, t->inicio.ponto.y, t->inicio.espessura, t->inicio.cor);
+
+                            // Redesenha o resto da linha
+                            vec2 ponto_anterior = t->inicio.ponto;
+                            for (size_t j = 0; j < t->tamanho; j++) {
+                                desenharCirc(ponto_anterior, t->pontos[j], t->inicio.cor, t->inicio.espessura);
+                                ponto_anterior = t->pontos[j];
+                            }
                         }
                         al_set_target_backbuffer(tela);//Volta os comandos para a tela
 
-                        printf("Limpar_tela\n");
+                        printf("CTRL+Z executado! Restam %d tracos.\n", filaDeTracos->traco_atual);
                     }
                 }
             }
