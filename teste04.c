@@ -4,7 +4,7 @@
 //https://www.allegro.cc/manual/5/ALLEGRO_MONITOR_INFO
 //https://www.youtube.com/watch?v=EI6z4I8PfUc Para configurações do monitor
 
-
+#include <stdlib.h>
 #include <stdio.h>
 #include <allegro5/allegro.h>
 #include <allegro5/allegro_image.h>
@@ -24,13 +24,49 @@ struct INICIO {
     ALLEGRO_COLOR cor;
     int espessura;
     vec2 ponto;
-}INICIO;
+};
 
 typedef struct traco {
     struct INICIO inicio;
-    vec2 ponto[256];
+    vec2 *pontos;
     vec2 ponto_final;
+    size_t tamanho;
+    size_t capacidade;
 }traco;
+
+traco* criarTraco(struct INICIO inicio_pacote) {
+    traco* traco = malloc(sizeof(traco));
+    if (!traco) return NULL;
+
+    traco->inicio.cor = inicio_pacote.cor;
+    traco->inicio.espessura = inicio_pacote.espessura;
+    traco->inicio.ponto = inicio_pacote.ponto;
+    traco->tamanho = 0; // ainda não tem nada guardado
+    traco->capacidade = 16; //capacidade inicial para 16 coordenadas
+    traco->pontos = malloc(traco->capacidade * sizeof(vec2)); //alocando espaço para o array dinâmico que será redimensionado
+
+    if (!traco->pontos) {
+        free(traco);
+        return NULL;
+    }
+    return traco;
+}
+
+//TODO
+void adicionarPontos(traco* traco, vec2 coordenada) {
+    if (traco->tamanho >= traco->capacidade) {
+        traco->capacidade *= 2; //dobra a capacidade do traço
+        vec2* temp = realloc(traco->pontos, traco->capacidade * sizeof(vec2));
+        if (temp == NULL) {
+            printf("Erro ao realocar memória!!");
+            return -1;
+        }
+        traco->pontos = temp;
+    }
+    traco->pontos[traco->tamanho].x = coordenada.x;
+    traco->pontos[traco->tamanho].y = coordenada.y;
+    traco->tamanho++;
+}
 
 void desenharCirc(vec2 ponto_inicial, vec2 ponto, ALLEGRO_COLOR cor, int espessura) {
     al_draw_line(ponto_inicial.x, ponto_inicial.y, ponto.x, ponto.y, cor, espessura * 2);
