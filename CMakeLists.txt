@@ -4,7 +4,7 @@ project(TestC C)
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED True)
 
-add_executable(Test teste04.c)
+add_executable(Test teste05.c)
 
 # -- Cross Platform Library Finding --
 
@@ -29,6 +29,7 @@ else()
         allegro_main-5 
         allegro_primitives-5
         allegro_image-5
+        allegro_ttf-5
     )
     target_link_libraries(Test PRIVATE PkgConfig::ALLEGRO)
 endif()

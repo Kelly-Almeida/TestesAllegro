@@ -1,0 +1,459 @@
+//Referências: https://rafaeltoledonet.wordpress.com/2011/11/30/tutorial-allegro-5-5-utilizando-o-mouse/
+//https://liballeg.org/stabledocs/en/alleg009.html
+//https://liballeg.org/a5docs/5.2.1/events.html
+//https://www.allegro.cc/manual/5/ALLEGRO_MONITOR_INFO
+//https://www.youtube.com/watch?v=EI6z4I8PfUc Para configurações do monitor
+//https://rafaeltoledonet.wordpress.com/2011/11/10/tutorial-allegro-5-4-escrevendo-texto-usando-fontes-true-type-ttf/
+
+#include <stdlib.h>
+#include <stdio.h>
+#include <allegro5/allegro.h>
+#include <allegro5/allegro_image.h>
+#include <allegro5/allegro_primitives.h>
+#include <allegro5/allegro_ttf.h>
+
+#define FPS 60
+
+typedef struct TELA {
+    int x, y;
+}TELA;
+
+typedef struct VEC {
+    int x, y;
+}VEC;
+
+struct INICIO {
+    ALLEGRO_COLOR cor;
+    int espessura;
+    VEC ponto;
+};
+
+typedef struct TRACO {
+    struct INICIO inicio;
+    VEC *pontos;
+    VEC ponto_final;
+    size_t tamanho;
+    size_t capacidade;
+}TRACO;
+
+typedef struct FILA {
+    TRACO** tracos;
+    int traco_atual;
+    size_t tamanho;
+    size_t capacidade;
+}FILA;
+
+typedef struct COR {
+    ALLEGRO_COLOR cor;
+    int coordenadas[4];
+}COR;
+
+TRACO* criarTraco(ALLEGRO_COLOR cor, int espessura, VEC ponto) {
+    TRACO* tracoNovo = malloc(sizeof(TRACO));
+    if (!tracoNovo) return NULL;
+
+    tracoNovo->inicio.cor = cor;
+    tracoNovo->inicio.espessura = espessura;
+    tracoNovo->inicio.ponto = ponto;
+    tracoNovo->tamanho = 0; // ainda não tem nada guardado
+    tracoNovo->capacidade = 16; //capacidade inicial para 16 coordenadas
+    tracoNovo->pontos = malloc(tracoNovo->capacidade * sizeof(VEC)); //alocando espaço para o array dinâmico que será redimensionado
+
+    if (!tracoNovo->pontos) {
+        free(tracoNovo);
+        return NULL;
+    }
+    return tracoNovo;
+}
+
+void addPontos(TRACO* traco, VEC coordenada) {
+    if (traco->tamanho >= traco->capacidade) {
+        traco->capacidade *= 2; //dobra a capacidade do traço
+        VEC* temp = realloc(traco->pontos, traco->capacidade * sizeof(VEC));
+        if (temp == NULL) {
+            printf("Erro ao realocar memória!!");
+            exit(EXIT_FAILURE);
+        }
+        traco->pontos = temp;
+    }
+    traco->pontos[traco->tamanho].x = coordenada.x;
+    traco->pontos[traco->tamanho].y = coordenada.y;
+    traco->tamanho++;
+}
+
+FILA* criarFila() {
+    FILA* filaNova = malloc(sizeof(FILA));
+    if (!filaNova) return NULL;
+
+    filaNova->traco_atual = 0;
+    filaNova->capacidade = 16;
+    filaNova->tracos = malloc(filaNova->capacidade * sizeof(TRACO*));
+
+    if (!filaNova->tracos) {
+        free(filaNova);
+        return NULL;
+    }
+    return filaNova;
+}
+
+void pushFila(FILA* filaDeTracos, TRACO *traco_novo) {
+    if (filaDeTracos->traco_atual >= filaDeTracos->capacidade) {
+        filaDeTracos->capacidade *= 2; //dobra a capacidade da fila
+        TRACO** temp = realloc(filaDeTracos->tracos, filaDeTracos->capacidade * sizeof(TRACO*));
+        if (temp == NULL) {
+            printf("Erro ao realocar memória!!");
+            exit(EXIT_FAILURE);
+        }
+        filaDeTracos->tracos = temp;
+    }
+    filaDeTracos->tracos[filaDeTracos->traco_atual] = traco_novo;
+    filaDeTracos->traco_atual++;
+}
+
+void desenharCirc(VEC ponto_inicial, VEC ponto, ALLEGRO_COLOR cor, int espessura) {
+    al_draw_line(ponto_inicial.x, ponto_inicial.y, ponto.x, ponto.y, cor, espessura * 2);
+    al_draw_filled_circle(ponto.x, ponto.y, espessura, cor);
+
+}
+int main() {
+
+    bool round = true, desenhar = false, redesenhar = false;
+
+    // Inicializando o Allegro
+    if (!al_init()) {
+        printf("Falha ao inicializar o Allegro!\n");
+        return -1;
+    }
+
+    // Inicializando a biblioteca de primitivas gráficas
+    if (!al_init_primitives_addon()) {
+        printf("Falha ao inicializar a biblioteca de primitivas!\n");
+        return -1;
+    }
+
+    // Inicializando a biblioteca de IO de imagens
+    if (!al_init_image_addon()) {
+        printf("Falha ao inicializar a biblioteca de IO de imagens!\n");
+        return -1;
+    }
+
+    //Descobrindo tamanho da tela
+    ALLEGRO_MONITOR_INFO info;
+
+    TELA telinha;
+
+    al_get_monitor_info(0, &info); //Estrutura que pega os valores da tela do computador
+
+    telinha.x = info.x2 - info.x1 - 100;
+    telinha.y = info.y2 - info.y1 - 50;
+
+    //al_set_new_display_flags(ALLEGRO_FULLSCREEN_WINDOW); //Coloca um restrição do ponteiro somente na tela e tira o fechar
+
+    // Inicializando a tela
+    al_set_new_display_flags(ALLEGRO_OPENGL);
+    ALLEGRO_DISPLAY* tela = al_create_display(telinha.x, telinha.y);
+    if (!tela) {
+        printf("Falha ao criar a tela!\n");
+        return -1;
+    }
+
+    ALLEGRO_TIMER* timer = al_create_timer(1.0 / FPS);
+
+    if (!timer) {
+        al_destroy_timer(timer);
+        al_destroy_display(tela);
+        return -1;
+    }
+
+    // Habilitando o mouse
+    if (!al_install_mouse()) {
+        printf("Falha ao inicializar o mouse!\n");
+        al_destroy_display(tela);
+        return -1;
+    }
+
+    // Atribuindo o cursor padrão
+    if (!al_set_system_mouse_cursor(tela, ALLEGRO_SYSTEM_MOUSE_CURSOR_DEFAULT)) {
+        printf("Falha ao atribuir o ponteiro do mouse!\n");
+        al_destroy_timer(timer);
+        al_destroy_display(tela);
+        return -1;
+    }
+
+    if (!al_install_keyboard()) {
+        printf("Falha ao inicializar o keyboard!\n");
+        al_destroy_timer(timer);
+        al_destroy_display(tela);
+        return -1;
+    }
+
+    // Inicializando a fila de eventos
+    ALLEGRO_EVENT_QUEUE* fila_eventos = al_create_event_queue();
+    if (!fila_eventos) {
+        printf("Erro ao criar fila de eventos!\n");
+        al_destroy_timer(timer);
+        al_destroy_display(tela);
+        return -1;
+    }
+
+    //Inicializando as fontes
+    if (!al_init_font_addon()) {
+        printf("Erro ao carregar as fontes\n");
+        al_destroy_timer(timer);
+        al_destroy_display(tela);
+        return -1;
+    }
+
+
+    ALLEGRO_FONT *font = al_load_font("../Roboto-VariableFont_wdth,wght.ttf", 48, 0);
+    if (!font) {
+        printf("Erro ao carregar a fonte\n");
+        al_destroy_timer(timer);
+        al_destroy_display(tela);
+        return -1;
+    }
+
+    // Registrando as fontes de eventos
+    al_register_event_source(fila_eventos, al_get_mouse_event_source());
+    al_register_event_source(fila_eventos, al_get_display_event_source(tela));
+    al_register_event_source(fila_eventos, al_get_timer_event_source(timer));
+    al_register_event_source(fila_eventos, al_get_keyboard_event_source());
+
+    //Iniciando o timer
+    al_start_timer(timer);
+
+    // Cores
+
+    ALLEGRO_COLOR VERDE = al_map_rgb(172, 225, 57);
+    ALLEGRO_COLOR VERMELHO = al_map_rgb(255, 0, 0);
+    ALLEGRO_COLOR AZUL = al_map_rgb(0, 0, 255);
+    ALLEGRO_COLOR AMARELO = al_map_rgb(255, 255, 0);
+    ALLEGRO_COLOR BRANCO = al_map_rgb(255, 255, 255);
+    ALLEGRO_COLOR PRETO = al_map_rgb(0, 0, 0);
+    ALLEGRO_COLOR LARANJA = al_map_rgb(255, 128, 0);
+    ALLEGRO_COLOR ROXO = al_map_rgb(128, 0, 255);
+
+
+    struct COR PRETO_PALE = {PRETO,{20, 20, 90, 75}};
+    struct COR VERMELHO_PALE = {VERMELHO, {20, 160, 90, 105} };
+    struct  COR AMARELO_PALE = {AMARELO, {20, 190, 90, 245}};
+    struct COR AZUL_PALE = {AZUL, {20, 280, 90, 335}};
+    struct COR LARANJA_PALE = {LARANJA, {20, 370, 90, 425}};
+    struct COR ROXO_PALE = {ROXO, {20, 450, 90, 500}};
+
+    struct COR BRANCO_PALE = {BRANCO, {20, 530, 90, 580}};
+
+
+    ALLEGRO_COLOR COR;
+    int espessura;
+
+
+    // Limpa a tela inicial para branco
+    al_clear_to_color(BRANCO);
+    al_flip_display();
+
+
+    //Converter sistema de coordenada da tela para o Canvas:
+
+    int x_offset = 0;
+    int y_offset = 0;
+
+
+    //Criando a imagem do canvas
+    ALLEGRO_BITMAP* canvas = al_create_bitmap(telinha.x, telinha.y);
+    if (!canvas) {
+        printf("Erro ao criar o canvas!\n");
+        return -1;
+    }
+
+    al_set_target_bitmap(canvas);//Todo comando de desenho vai pra imagem
+    al_clear_to_color(BRANCO);
+
+    al_set_target_backbuffer(tela);//Volta os comandos para a tela
+
+
+    VEC ponto = { 0,0 };
+    VEC ponto_inicial;
+    VEC ponto_canvas;
+    COR = AZUL;
+    espessura = 3;
+
+    TRACO* traco_novo = NULL;
+
+    FILA *filaDeTracos = criarFila();
+
+
+
+    while (round) {
+
+        ALLEGRO_EVENT evento;
+        al_wait_for_event(fila_eventos, &evento);
+
+        if (evento.type == ALLEGRO_EVENT_TIMER) {
+            redesenhar = true;
+        }
+
+        if (evento.type == ALLEGRO_EVENT_MOUSE_BUTTON_DOWN) {
+            if (evento.mouse.button == 1) {
+                ponto.x = evento.mouse.x;
+                ponto.y = evento.mouse.y;
+
+                if (ponto.x >= PRETO_PALE.coordenadas[0] && ponto.x <= PRETO_PALE.coordenadas[2] && ponto.y >= PRETO_PALE.coordenadas[1] && ponto.y <= PRETO_PALE.coordenadas[3]) { COR = PRETO; }
+                else if (ponto.x >= VERMELHO_PALE.coordenadas[0] && ponto.x <= VERMELHO_PALE.coordenadas[2] && ponto.y >= VERMELHO_PALE.coordenadas[1] && ponto.y <= VERMELHO_PALE.coordenadas[3]) { COR = VERMELHO; }
+                else if (ponto.x >= AMARELO_PALE.coordenadas[0] && ponto.x <= AMARELO_PALE.coordenadas[2] && ponto.y >= AMARELO_PALE.coordenadas[1] && ponto.y <= AMARELO_PALE.coordenadas[3]) { COR = AMARELO; }
+                else if (ponto.x >= AZUL_PALE.coordenadas[0] && ponto.x <= AZUL_PALE.coordenadas[2] && ponto.y >= AZUL_PALE.coordenadas[1] && ponto.y <= AZUL_PALE.coordenadas[3]) { COR = AZUL; }
+                else if (ponto.x >= BRANCO_PALE.coordenadas[0] && ponto.x <= BRANCO_PALE.coordenadas[2] && ponto.y >= BRANCO_PALE.coordenadas[1] && ponto.y <= BRANCO_PALE.coordenadas[3]) { COR = BRANCO; }
+                else if (ponto.x >= LARANJA_PALE.coordenadas[0] && ponto.x <= LARANJA_PALE.coordenadas[2] && ponto.y >= LARANJA_PALE.coordenadas[1] && ponto.y <= LARANJA_PALE.coordenadas[3]) { COR = LARANJA; }
+                else if (ponto.x >= ROXO_PALE.coordenadas[0] && ponto.x <= ROXO_PALE.coordenadas[2] && ponto.y >= ROXO_PALE.coordenadas[1] && ponto.y <= ROXO_PALE.coordenadas[3]) { COR = ROXO; }
+
+
+                ponto_canvas.x = ponto.x - x_offset;
+                ponto_canvas.y = ponto.y - y_offset;
+
+                ponto_inicial.x = ponto_canvas.x, ponto_inicial.y = ponto_canvas.y;
+                traco_novo = criarTraco(COR, espessura, ponto_canvas);
+
+                desenhar = true;
+
+                al_set_target_bitmap(canvas);
+                al_draw_filled_circle(ponto_canvas.x, ponto_canvas.y, espessura, COR);
+                al_set_target_backbuffer(tela);
+            }
+        }
+
+        else if (evento.type == ALLEGRO_EVENT_MOUSE_AXES) {
+            ponto.x = evento.mouse.x;
+            ponto.y = evento.mouse.y;
+
+            ponto_canvas.x = ponto.x - x_offset;
+            ponto_canvas.y = ponto.y - y_offset;
+
+            if (desenhar && traco_novo) {
+
+                al_set_target_bitmap(canvas);
+                addPontos(traco_novo, ponto_canvas);
+                desenharCirc(ponto_inicial, ponto_canvas, COR, espessura);
+                al_set_target_backbuffer(tela);
+                ponto_inicial = ponto_canvas;
+            }
+        }
+
+        else if (evento.type == ALLEGRO_EVENT_MOUSE_BUTTON_UP) {
+            if (evento.mouse.button == 1 && desenhar) {
+                traco_novo->ponto_final = ponto_canvas;
+                printf("ponto final: {%d, %d}\n", ponto_canvas.x, ponto_canvas.y);
+                pushFila(filaDeTracos,traco_novo);
+                desenhar = false;
+            }
+        }
+        else if (evento.type == ALLEGRO_EVENT_KEY_DOWN) {
+            if (evento.keyboard.keycode == ALLEGRO_KEY_Q) {
+                if (evento.keyboard.modifiers & ALLEGRO_KEYMOD_CTRL) {
+                    if (!al_save_bitmap("teste.bmp", canvas)) {
+                        printf("Erro ao salvar o arquivo!\n");
+                    }
+                    round = false; // fecha o programa
+                }
+            }
+            else if (evento.keyboard.keycode == ALLEGRO_KEY_R) {
+                if (evento.keyboard.modifiers & ALLEGRO_KEYMOD_CTRL) {
+                    al_set_target_bitmap(canvas);//Todo comando de desenho vai pra imagem
+                    al_clear_to_color(BRANCO);
+                    al_set_target_backbuffer(tela);//Volta os comandos para a tela
+
+                    printf("Limpar_tela\n");
+                }
+            }
+            else if (evento.keyboard.keycode == ALLEGRO_KEY_PAD_PLUS) {
+                if (evento.keyboard.modifiers & ALLEGRO_KEYMOD_CTRL) {
+                    printf("+++");
+                    espessura++;
+                }
+            }
+            else if (evento.keyboard.keycode == ALLEGRO_KEY_PAD_MINUS) {
+                if (evento.keyboard.modifiers & ALLEGRO_KEYMOD_CTRL) {
+                    espessura--;
+                    if (espessura < 0) espessura = 0;
+                }
+            }
+            else if (evento.keyboard.keycode == ALLEGRO_KEY_Z) {
+                if (evento.keyboard.modifiers & ALLEGRO_KEYMOD_CTRL) {
+                    if (filaDeTracos->traco_atual > 0) {
+                        filaDeTracos->traco_atual--;
+                        int ultimo = filaDeTracos->traco_atual;
+                        //libera a memória do último traço desfeito
+                        free(filaDeTracos->tracos[ultimo]->pontos);
+                        free(filaDeTracos->tracos[ultimo]);
+                        filaDeTracos->tracos[ultimo] = NULL;
+
+                        al_set_target_bitmap(canvas);//Todo comando de desenho vai pra imagem
+                        al_clear_to_color(BRANCO);
+
+
+                        for (int i = 0; i < filaDeTracos->traco_atual; i++) {
+                            TRACO* t = filaDeTracos->tracos[i];
+
+                            // Redesenha o ponto inicial (clique do mouse)
+                            al_draw_filled_circle(t->inicio.ponto.x, t->inicio.ponto.y, t->inicio.espessura, t->inicio.cor);
+
+                            // Redesenha o resto da linha
+                            VEC ponto_anterior = t->inicio.ponto;
+                            for (size_t j = 0; j < t->tamanho; j++) {
+                                desenharCirc(ponto_anterior, t->pontos[j], t->inicio.cor, t->inicio.espessura);
+                                ponto_anterior = t->pontos[j];
+                            }
+                        }
+                        al_set_target_backbuffer(tela);//Volta os comandos para a tela
+
+                        printf("CTRL+Z executado! Restam %d tracos.\n", filaDeTracos->traco_atual);
+                    }
+                }
+            }
+        }
+
+
+        if (evento.type == ALLEGRO_EVENT_DISPLAY_CLOSE) {
+            round = false;
+        }
+
+        if (redesenhar && al_is_event_queue_empty(fila_eventos)) {
+            redesenhar = false;
+            x_offset = 0, y_offset = 0;
+            al_draw_bitmap(canvas, x_offset, y_offset, 0);
+
+            al_draw_filled_rectangle(0, 0, telinha.x * 0.15, telinha.y, VERDE);
+            al_draw_filled_rectangle(0, 0, telinha.x, telinha.y * 0.15, VERDE);
+            al_draw_filled_rectangle(0, telinha.y, telinha.x, telinha.y * 0.85, VERDE );
+            al_draw_filled_rectangle(telinha.x, 0, telinha.x *0.85, telinha.y, VERDE);
+
+            /*cores*/
+            al_draw_filled_rectangle(PRETO_PALE.coordenadas[0],PRETO_PALE.coordenadas[1], PRETO_PALE.coordenadas[2], PRETO_PALE.coordenadas[3], PRETO_PALE.cor);
+            al_draw_filled_rectangle(VERMELHO_PALE.coordenadas[0],VERMELHO_PALE.coordenadas[1], VERMELHO_PALE.coordenadas[2], VERMELHO_PALE.coordenadas[3], VERMELHO_PALE.cor);
+            al_draw_filled_rectangle(AMARELO_PALE.coordenadas[0],AMARELO_PALE.coordenadas[1], AMARELO_PALE.coordenadas[2], AMARELO_PALE.coordenadas[3], AMARELO_PALE.cor);
+            al_draw_filled_rectangle(AZUL_PALE.coordenadas[0],AZUL_PALE.coordenadas[1], AZUL_PALE.coordenadas[2], AZUL_PALE.coordenadas[3], AZUL_PALE.cor);
+            al_draw_filled_rectangle(BRANCO_PALE.coordenadas[0],BRANCO_PALE.coordenadas[1], BRANCO_PALE.coordenadas[2], BRANCO_PALE.coordenadas[3], BRANCO_PALE.cor);
+            al_draw_filled_rectangle(LARANJA_PALE.coordenadas[0], LARANJA_PALE.coordenadas[1], LARANJA_PALE.coordenadas[2], LARANJA_PALE.coordenadas[3], LARANJA_PALE.cor);
+            al_draw_filled_rectangle(ROXO_PALE.coordenadas[0], ROXO_PALE.coordenadas[1], ROXO_PALE.coordenadas[2], ROXO_PALE.coordenadas[3], ROXO_PALE.cor);
+
+            /*espessura*/
+            al_draw_filled_rectangle(telinha.x * 0.01, telinha.y * 0.85, telinha.x *0.01 + 75, (telinha.y * 0.85) + 75, BRANCO);
+            al_draw_filled_circle(telinha.x * 0.01 + 35.5, telinha.y * 0.85 + 35.5,espessura, COR);
+
+
+
+            al_flip_display();
+        }
+
+
+    }
+
+    // Liberação de memória
+    al_destroy_font(font);
+    al_destroy_bitmap(canvas);
+    al_destroy_event_queue(fila_eventos);
+    al_destroy_timer(timer);
+    al_destroy_display(tela);
+
+    return 0;
+}
+

@@ -16,33 +16,33 @@ typedef struct TELA {
     int x, y;
 }TELA;
 
-typedef struct vec2 {
+typedef struct VEC {
     int x, y;
-}vec2;
+}VEC;
 
 struct INICIO {
     ALLEGRO_COLOR cor;
     int espessura;
-    vec2 ponto;
+    VEC ponto;
 };
 
-typedef struct traco {
+typedef struct TRACO {
     struct INICIO inicio;
-    vec2 *pontos;
-    vec2 ponto_final;
+    VEC *pontos;
+    VEC ponto_final;
     size_t tamanho;
     size_t capacidade;
-}traco;
+}TRACO;
 
-typedef struct fila {
-    traco** tracos;
+typedef struct FILA {
+    TRACO** tracos;
     int traco_atual;
     size_t tamanho;
     size_t capacidade;
-}fila;
+}FILA;
 
-traco* criarTraco(ALLEGRO_COLOR cor, int espessura, vec2 ponto) {
-    traco* tracoNovo = malloc(sizeof(traco));
+TRACO* criarTraco(ALLEGRO_COLOR cor, int espessura, VEC ponto) {
+    TRACO* tracoNovo = malloc(sizeof(TRACO));
     if (!tracoNovo) return NULL;
 
     tracoNovo->inicio.cor = cor;
@@ -50,20 +50,19 @@ traco* criarTraco(ALLEGRO_COLOR cor, int espessura, vec2 ponto) {
     tracoNovo->inicio.ponto = ponto;
     tracoNovo->tamanho = 0; // ainda não tem nada guardado
     tracoNovo->capacidade = 16; //capacidade inicial para 16 coordenadas
-    tracoNovo->pontos = malloc(tracoNovo->capacidade * sizeof(vec2)); //alocando espaço para o array dinâmico que será redimensionado
+    tracoNovo->pontos = malloc(tracoNovo->capacidade * sizeof(VEC)); //alocando espaço para o array dinâmico que será redimensionado
 
     if (!tracoNovo->pontos) {
         free(tracoNovo);
         return NULL;
     }
-    printf("Novo Traço, Ponto Inicial: {%d, %d}, espessura: %d, cor: {r:%f g:%f b:%f a:%f} \n", ponto.x, ponto.y, espessura, cor.r, cor.g, cor.b, cor.a);
     return tracoNovo;
 }
 
-void adicionarPontos(traco* traco, vec2 coordenada) {
+void addPontos(TRACO* traco, VEC coordenada) {
     if (traco->tamanho >= traco->capacidade) {
         traco->capacidade *= 2; //dobra a capacidade do traço
-        vec2* temp = realloc(traco->pontos, traco->capacidade * sizeof(vec2));
+        VEC* temp = realloc(traco->pontos, traco->capacidade * sizeof(VEC));
         if (temp == NULL) {
             printf("Erro ao realocar memória!!");
             exit(EXIT_FAILURE);
@@ -73,29 +72,27 @@ void adicionarPontos(traco* traco, vec2 coordenada) {
     traco->pontos[traco->tamanho].x = coordenada.x;
     traco->pontos[traco->tamanho].y = coordenada.y;
     traco->tamanho++;
-    printf("novo ponto: {%d, %d}\n", coordenada.x, coordenada.y);
 }
 
-fila* criarFila() {
-    fila* filaNova = malloc(sizeof(fila));
+FILA* criarFila() {
+    FILA* filaNova = malloc(sizeof(FILA));
     if (!filaNova) return NULL;
 
     filaNova->traco_atual = 0;
     filaNova->capacidade = 16;
-    filaNova->tracos = malloc(filaNova->capacidade * sizeof(traco*));
+    filaNova->tracos = malloc(filaNova->capacidade * sizeof(TRACO*));
 
     if (!filaNova->tracos) {
         free(filaNova);
         return NULL;
     }
-    printf("Fila Criada!\n");
     return filaNova;
 }
 
-void aumentarFila(fila* filaDeTracos, traco *traco_novo) {
+void pushFila(FILA* filaDeTracos, TRACO *traco_novo) {
     if (filaDeTracos->traco_atual >= filaDeTracos->capacidade) {
         filaDeTracos->capacidade *= 2; //dobra a capacidade da fila
-        traco** temp = realloc(filaDeTracos->tracos, filaDeTracos->capacidade * sizeof(traco*));
+        TRACO** temp = realloc(filaDeTracos->tracos, filaDeTracos->capacidade * sizeof(TRACO*));
         if (temp == NULL) {
             printf("Erro ao realocar memória!!");
             exit(EXIT_FAILURE);
@@ -104,11 +101,9 @@ void aumentarFila(fila* filaDeTracos, traco *traco_novo) {
     }
     filaDeTracos->tracos[filaDeTracos->traco_atual] = traco_novo;
     filaDeTracos->traco_atual++;
-    printf("novo traco adicionado com sucesso!\n");
-    printf("%d tracos guardados ao total.\n", filaDeTracos->traco_atual);
 }
 
-void desenharCirc(vec2 ponto_inicial, vec2 ponto, ALLEGRO_COLOR cor, int espessura) {
+void desenharCirc(VEC ponto_inicial, VEC ponto, ALLEGRO_COLOR cor, int espessura) {
     al_draw_line(ponto_inicial.x, ponto_inicial.y, ponto.x, ponto.y, cor, espessura * 2);
     al_draw_filled_circle(ponto.x, ponto.y, espessura, cor);
 
@@ -272,15 +267,15 @@ int main() {
 
     /*Desenha no canvas  -> pinta o fundo dele de preto -> passa pra tela*/
 
-    vec2 ponto = { 0,0 };
-    vec2 ponto_inicial;
-    vec2 ponto_canvas;
+    VEC ponto = { 0,0 };
+    VEC ponto_inicial;
+    VEC ponto_canvas;
     COR = AZUL;
     espessura = 3;
 
-    traco* traco_novo = NULL;
+    TRACO* traco_novo = NULL;
 
-    fila *filaDeTracos = criarFila();
+    FILA *filaDeTracos = criarFila();
 
     /*
    * ========================================================================
@@ -337,7 +332,7 @@ int main() {
                     ponto_canvas.y >= 0 && ponto_canvas.y <= canvas_h) {
                     //Desenhando no canvas
                     al_set_target_bitmap(canvas);
-                    adicionarPontos(traco_novo, ponto_canvas);
+                    addPontos(traco_novo, ponto_canvas);
                     desenharCirc(ponto_inicial, ponto_canvas, COR, espessura);
                     al_set_target_backbuffer(tela);
                 }
@@ -349,7 +344,7 @@ int main() {
             if (evento.mouse.button == 1 && desenhar) {
                 traco_novo->ponto_final = ponto_canvas;
                 printf("ponto final: {%d, %d}\n", ponto_canvas.x, ponto_canvas.y);
-                aumentarFila(filaDeTracos,traco_novo);
+                pushFila(filaDeTracos,traco_novo);
                 desenhar = false;
             } 
         }
@@ -386,13 +381,13 @@ int main() {
 
 
                         for (int i = 0; i < filaDeTracos->traco_atual; i++) {
-                            traco* t = filaDeTracos->tracos[i];
+                            TRACO* t = filaDeTracos->tracos[i];
 
                             // Redesenha o ponto inicial (clique do mouse)
                             al_draw_filled_circle(t->inicio.ponto.x, t->inicio.ponto.y, t->inicio.espessura, t->inicio.cor);
 
                             // Redesenha o resto da linha
-                            vec2 ponto_anterior = t->inicio.ponto;
+                            VEC ponto_anterior = t->inicio.ponto;
                             for (size_t j = 0; j < t->tamanho; j++) {
                                 desenharCirc(ponto_anterior, t->pontos[j], t->inicio.cor, t->inicio.espessura);
                                 ponto_anterior = t->pontos[j];
