@@ -11,6 +11,7 @@
 #include <allegro5/allegro_image.h>
 #include <allegro5/allegro_primitives.h>
 #include <allegro5/allegro_ttf.h>
+#include "socket01.h"
 
 #define FPS 60
 
@@ -37,7 +38,7 @@ typedef struct TRACO {
 }TRACO;
 
 typedef struct FILA {
-    TRACO** tracos;
+    TRACO *tracos;
     int traco_atual;
     size_t tamanho;
     size_t capacidade;
@@ -87,7 +88,7 @@ FILA* criarFila() {
 
     filaNova->traco_atual = 0;
     filaNova->capacidade = 16;
-    filaNova->tracos = malloc(filaNova->capacidade * sizeof(TRACO*));
+    filaNova->tracos = malloc(filaNova->capacidade * sizeof(TRACO));
 
     if (!filaNova->tracos) {
         free(filaNova);
@@ -99,14 +100,16 @@ FILA* criarFila() {
 void pushFila(FILA* filaDeTracos, TRACO *traco_novo) {
     if (filaDeTracos->traco_atual >= filaDeTracos->capacidade) {
         filaDeTracos->capacidade *= 2; //dobra a capacidade da fila
-        TRACO** temp = realloc(filaDeTracos->tracos, filaDeTracos->capacidade * sizeof(TRACO*));
+        TRACO* temp = realloc(filaDeTracos->tracos, filaDeTracos->capacidade * sizeof(TRACO));
         if (temp == NULL) {
             printf("Erro ao realocar memória!!");
             exit(EXIT_FAILURE);
         }
-        filaDeTracos->tracos = temp;
+        filaDeTracos->tracos[filaDeTracos->traco_atual] = *traco_novo;
+        free(traco_novo);
+        filaDeTracos->traco_atual++;
     }
-    filaDeTracos->tracos[filaDeTracos->traco_atual] = traco_novo;
+    filaDeTracos->tracos[filaDeTracos->traco_atual] = *traco_novo;
     filaDeTracos->traco_atual++;
 }
 
@@ -233,10 +236,9 @@ int main() {
     ALLEGRO_COLOR LARANJA = al_map_rgb(255, 128, 0);
     ALLEGRO_COLOR ROXO = al_map_rgb(128, 0, 255);
 
-
     struct COR PRETO_PALE = {PRETO,{20, 20, 90, 75}};
     struct COR VERMELHO_PALE = {VERMELHO, {20, 160, 90, 105} };
-    struct  COR AMARELO_PALE = {AMARELO, {20, 190, 90, 245}};
+    struct COR AMARELO_PALE = {AMARELO, {20, 190, 90, 245}};
     struct COR AZUL_PALE = {AZUL, {20, 280, 90, 335}};
     struct COR LARANJA_PALE = {LARANJA, {20, 370, 90, 425}};
     struct COR ROXO_PALE = {ROXO, {20, 450, 90, 500}};
@@ -247,26 +249,47 @@ int main() {
     ALLEGRO_COLOR COR;
     int espessura;
 
-
-    // Limpa a tela inicial para branco
     al_clear_to_color(BRANCO);
     al_flip_display();
 
+    float border[4];
+    border[0] = telinha.x * 0.15; //canto esquerdo
+    border[1] = telinha.y * 0.15; // canto superior
+    border[2] = telinha.x - border[0]; // canto direito
+    border[3] = telinha.y - border[1]; // canto inferior
+
+    int canvas_w = border[2] - border[0];
+    int canvas_h = border[3] - border[1];
 
     //Converter sistema de coordenada da tela para o Canvas:
 
-    int x_offset = 0;
-    int y_offset = 0;
+    int x_offset = border[0];
+    int y_offset = border[1];
+
+    al_clear_to_color(VERDE);
+
+    /*cores*/
+    al_draw_filled_rectangle(PRETO_PALE.coordenadas[0],PRETO_PALE.coordenadas[1], PRETO_PALE.coordenadas[2], PRETO_PALE.coordenadas[3], PRETO_PALE.cor);
+    al_draw_filled_rectangle(VERMELHO_PALE.coordenadas[0],VERMELHO_PALE.coordenadas[1], VERMELHO_PALE.coordenadas[2], VERMELHO_PALE.coordenadas[3], VERMELHO_PALE.cor);
+    al_draw_filled_rectangle(AMARELO_PALE.coordenadas[0],AMARELO_PALE.coordenadas[1], AMARELO_PALE.coordenadas[2], AMARELO_PALE.coordenadas[3], AMARELO_PALE.cor);
+    al_draw_filled_rectangle(AZUL_PALE.coordenadas[0],AZUL_PALE.coordenadas[1], AZUL_PALE.coordenadas[2], AZUL_PALE.coordenadas[3], AZUL_PALE.cor);
+    al_draw_filled_rectangle(BRANCO_PALE.coordenadas[0],BRANCO_PALE.coordenadas[1], BRANCO_PALE.coordenadas[2], BRANCO_PALE.coordenadas[3], BRANCO_PALE.cor);
+    al_draw_filled_rectangle(LARANJA_PALE.coordenadas[0], LARANJA_PALE.coordenadas[1], LARANJA_PALE.coordenadas[2], LARANJA_PALE.coordenadas[3], LARANJA_PALE.cor);
+    al_draw_filled_rectangle(ROXO_PALE.coordenadas[0], ROXO_PALE.coordenadas[1], ROXO_PALE.coordenadas[2], ROXO_PALE.coordenadas[3], ROXO_PALE.cor);
+
+    /*espessura*/
+    al_draw_filled_rectangle(telinha.x * 0.01, telinha.y * 0.85, telinha.x *0.01 + 75, (telinha.y * 0.85) + 75, BRANCO);
+    al_draw_filled_circle(telinha.x * 0.01 + 37, telinha.y * 0.85 + 35.5,espessura, COR);
 
 
     //Criando a imagem do canvas
-    ALLEGRO_BITMAP* canvas = al_create_bitmap(telinha.x, telinha.y);
+    ALLEGRO_BITMAP* canvas = al_create_bitmap(canvas_w, canvas_h);
     if (!canvas) {
         printf("Erro ao criar o canvas!\n");
         return -1;
     }
 
-    al_set_target_bitmap(canvas);//Todo comando de desenho vai pra imagem
+    al_set_target_bitmap(canvas);
     al_clear_to_color(BRANCO);
 
     al_set_target_backbuffer(tela);//Volta os comandos para a tela
@@ -282,9 +305,10 @@ int main() {
 
     FILA *filaDeTracos = criarFila();
 
-
+    double agora, temp_loop = 0;
 
     while (round) {
+         agora = al_get_time();
 
         ALLEGRO_EVENT evento;
         al_wait_for_event(fila_eventos, &evento);
@@ -383,25 +407,25 @@ int main() {
                         filaDeTracos->traco_atual--;
                         int ultimo = filaDeTracos->traco_atual;
                         //libera a memória do último traço desfeito
-                        free(filaDeTracos->tracos[ultimo]->pontos);
-                        free(filaDeTracos->tracos[ultimo]);
-                        filaDeTracos->tracos[ultimo] = NULL;
+                        free(filaDeTracos->tracos[ultimo].pontos);
+                        //free(filaDeTracos->tracos[ultimo]);
+                        //filaDeTracos->tracos[ultimo] = NULL;
 
                         al_set_target_bitmap(canvas);//Todo comando de desenho vai pra imagem
                         al_clear_to_color(BRANCO);
 
 
                         for (int i = 0; i < filaDeTracos->traco_atual; i++) {
-                            TRACO* t = filaDeTracos->tracos[i];
+                            TRACO t = filaDeTracos->tracos[i];
 
                             // Redesenha o ponto inicial (clique do mouse)
-                            al_draw_filled_circle(t->inicio.ponto.x, t->inicio.ponto.y, t->inicio.espessura, t->inicio.cor);
+                            al_draw_filled_circle(t.inicio.ponto.x, t.inicio.ponto.y, t.inicio.espessura, t.inicio.cor);
 
                             // Redesenha o resto da linha
-                            VEC ponto_anterior = t->inicio.ponto;
-                            for (size_t j = 0; j < t->tamanho; j++) {
-                                desenharCirc(ponto_anterior, t->pontos[j], t->inicio.cor, t->inicio.espessura);
-                                ponto_anterior = t->pontos[j];
+                            VEC ponto_anterior = t.inicio.ponto;
+                            for (size_t j = 0; j < t.tamanho; j++) {
+                                desenharCirc(ponto_anterior, t.pontos[j], t.inicio.cor, t.inicio.espessura);
+                                ponto_anterior = t.pontos[j];
                             }
                         }
                         al_set_target_backbuffer(tela);//Volta os comandos para a tela
@@ -419,8 +443,6 @@ int main() {
 
         if (redesenhar && al_is_event_queue_empty(fila_eventos)) {
             redesenhar = false;
-            x_offset = 0, y_offset = 0;
-            al_draw_bitmap(canvas, x_offset, y_offset, 0);
 
             al_draw_filled_rectangle(0, 0, telinha.x * 0.15, telinha.y, VERDE);
             al_draw_filled_rectangle(0, 0, telinha.x, telinha.y * 0.15, VERDE);
@@ -440,11 +462,16 @@ int main() {
             al_draw_filled_rectangle(telinha.x * 0.01, telinha.y * 0.85, telinha.x *0.01 + 75, (telinha.y * 0.85) + 75, BRANCO);
             al_draw_filled_circle(telinha.x * 0.01 + 37, telinha.y * 0.85 + 35.5,espessura, COR);
 
-
-
+            al_draw_bitmap(canvas, x_offset, y_offset, 0);
             al_flip_display();
+
         }
 
+        temp_loop = al_get_time();
+        /*if (agora - temp_loop >= 5) {
+            socket01();
+
+        }*/
 
     }
 
@@ -454,6 +481,19 @@ int main() {
     al_destroy_event_queue(fila_eventos);
     al_destroy_timer(timer);
     al_destroy_display(tela);
+
+    if (filaDeTracos != NULL) {
+        for (int i = 0; i < filaDeTracos->traco_atual; i++) {
+            if (filaDeTracos->tracos[i].pontos != NULL) {
+                free(filaDeTracos->tracos[i].pontos);
+            }
+        }
+        if (filaDeTracos->tracos != NULL) {
+            free(filaDeTracos->tracos);
+        }
+        free(filaDeTracos);
+    }
+
 
     return 0;
 }
