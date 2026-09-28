@@ -35,7 +35,7 @@ typedef struct traco {
 }traco;
 
 typedef struct fila {
-    traco** tracos;
+    traco* tracos;
     int traco_atual;
     size_t tamanho;
     size_t capacidade;
@@ -82,7 +82,7 @@ fila* criarFila() {
 
     filaNova->traco_atual = 0;
     filaNova->capacidade = 16;
-    filaNova->tracos = malloc(filaNova->capacidade * sizeof(traco*));
+    filaNova->tracos = malloc(filaNova->capacidade * sizeof(traco));
 
     if (!filaNova->tracos) {
         free(filaNova);
@@ -95,14 +95,15 @@ fila* criarFila() {
 void aumentarFila(fila* filaDeTracos, traco *traco_novo) {
     if (filaDeTracos->traco_atual >= filaDeTracos->capacidade) {
         filaDeTracos->capacidade *= 2; //dobra a capacidade da fila
-        traco** temp = realloc(filaDeTracos->tracos, filaDeTracos->capacidade * sizeof(traco*));
+        traco* temp = realloc(filaDeTracos->tracos, filaDeTracos->capacidade * sizeof(traco));
         if (temp == NULL) {
             printf("Erro ao realocar memória!!");
             exit(EXIT_FAILURE);
         }
         filaDeTracos->tracos = temp;
     }
-    filaDeTracos->tracos[filaDeTracos->traco_atual] = traco_novo;
+    filaDeTracos->tracos[filaDeTracos->traco_atual] = *traco_novo;
+    free(traco_novo);
     filaDeTracos->traco_atual++;
     printf("novo traco adicionado com sucesso!\n");
     printf("%d tracos guardados ao total.\n", filaDeTracos->traco_atual);
@@ -142,8 +143,8 @@ int main() {
 
     al_get_monitor_info(0, &info); //Estrutura que pega os valores da tela do computador
 
-    telinha.x = info.x2 - info.x1 - 100;
-    telinha.y = info.y2 - info.y1 - 50;
+    telinha.x = info.x2 - info.x1-100;
+    telinha.y = info.y2 - info.y1-50;
 
     //al_set_new_display_flags(ALLEGRO_FULLSCREEN_WINDOW); //Coloca um restrição do ponteiro somente na tela e tira o fechar
 
@@ -377,25 +378,25 @@ int main() {
                         filaDeTracos->traco_atual--;
                         int ultimo = filaDeTracos->traco_atual;
                         //libera a memória do último traço desfeito
-                        free(filaDeTracos->tracos[ultimo]->pontos);
-                        free(filaDeTracos->tracos[ultimo]);
-                        filaDeTracos->tracos[ultimo] = NULL;
+                        free(filaDeTracos->tracos[ultimo].pontos);
+                        //free(filaDeTracos->tracos[ultimo]);
+                        //filaDeTracos->tracos[ultimo] = NULL;
 
                         al_set_target_bitmap(canvas);//Todo comando de desenho vai pra imagem
                         al_clear_to_color(BRANCO);
 
 
                         for (int i = 0; i < filaDeTracos->traco_atual; i++) {
-                            traco* t = filaDeTracos->tracos[i];
+                            traco t = filaDeTracos->tracos[i];
 
                             // Redesenha o ponto inicial (clique do mouse)
-                            al_draw_filled_circle(t->inicio.ponto.x, t->inicio.ponto.y, t->inicio.espessura, t->inicio.cor);
+                            al_draw_filled_circle(t.inicio.ponto.x, t.inicio.ponto.y, t.inicio.espessura, t.inicio.cor);
 
                             // Redesenha o resto da linha
-                            vec2 ponto_anterior = t->inicio.ponto;
-                            for (size_t j = 0; j < t->tamanho; j++) {
-                                desenharCirc(ponto_anterior, t->pontos[j], t->inicio.cor, t->inicio.espessura);
-                                ponto_anterior = t->pontos[j];
+                            vec2 ponto_anterior = t.inicio.ponto;
+                            for (size_t j = 0; j < t.tamanho; j++) {
+                                desenharCirc(ponto_anterior, t.pontos[j], t.inicio.cor, t.inicio.espessura);
+                                ponto_anterior = t.pontos[j];
                             }
                         }
                         al_set_target_backbuffer(tela);//Volta os comandos para a tela
