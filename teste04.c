@@ -438,6 +438,19 @@ int main() {
     al_destroy_timer(timer);
     al_destroy_display(tela);
 
+    // Liberar memória dos tracos remanescentes e da própria fila
+    if (filaDeTracos != NULL) {
+        for (int i = 0; i < filaDeTracos->traco_atual; i++) {
+            if (filaDeTracos->tracos[i].pontos != NULL) {
+                free(filaDeTracos->tracos[i].pontos);
+            }
+        }
+        if (filaDeTracos->tracos != NULL) {
+            free(filaDeTracos->tracos);
+        }
+        free(filaDeTracos);
+    }
+
     return 0;
 }
 
