@@ -366,14 +366,15 @@ int main() {
             }
             else if (evento.keyboard.keycode == ALLEGRO_KEY_PAD_PLUS) {
                 if (evento.keyboard.modifiers & ALLEGRO_KEYMOD_CTRL) {
-                    printf("+++");
                     espessura++;
+
+                    if (espessura > 35) espessura = 35;
                 }
             }
             else if (evento.keyboard.keycode == ALLEGRO_KEY_PAD_MINUS) {
                 if (evento.keyboard.modifiers & ALLEGRO_KEYMOD_CTRL) {
                     espessura--;
-                    if (espessura < 0) espessura = 0;
+                    if (espessura < 1) espessura = 1;
                 }
             }
             else if (evento.keyboard.keycode == ALLEGRO_KEY_Z) {
@@ -437,7 +438,7 @@ int main() {
 
             /*espessura*/
             al_draw_filled_rectangle(telinha.x * 0.01, telinha.y * 0.85, telinha.x *0.01 + 75, (telinha.y * 0.85) + 75, BRANCO);
-            al_draw_filled_circle(telinha.x * 0.01 + 35.5, telinha.y * 0.85 + 35.5,espessura, COR);
+            al_draw_filled_circle(telinha.x * 0.01 + 37, telinha.y * 0.85 + 35.5,espessura, COR);
 
 
 
