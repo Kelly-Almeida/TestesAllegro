@@ -142,8 +142,8 @@ int main() {
 
     al_get_monitor_info(0, &info); //Estrutura que pega os valores da tela do computador
 
-    telinha.x = info.x2 - info.x1 - 500;
-    telinha.y = info.y2 - info.y1 - 500;
+    telinha.x = info.x2 - info.x1 - 100;
+    telinha.y = info.y2 - info.y1 - 50;
 
     //al_set_new_display_flags(ALLEGRO_FULLSCREEN_WINDOW); //Coloca um restrição do ponteiro somente na tela e tira o fechar
 
