@@ -105,12 +105,11 @@ void pushFila(FILA* filaDeTracos, TRACO *traco_novo) {
             printf("Erro ao realocar memória!!");
             exit(EXIT_FAILURE);
         }
-        filaDeTracos->tracos[filaDeTracos->traco_atual] = *traco_novo;
-        free(traco_novo);
-        filaDeTracos->traco_atual++;
+        filaDeTracos->tracos = temp;
     }
     filaDeTracos->tracos[filaDeTracos->traco_atual] = *traco_novo;
     filaDeTracos->traco_atual++;
+    free(traco_novo);
 }
 
 void desenharCirc(VEC ponto_inicial, VEC ponto, ALLEGRO_COLOR cor, int espessura) {
@@ -406,10 +405,12 @@ int main() {
                     if (filaDeTracos->traco_atual > 0) {
                         filaDeTracos->traco_atual--;
                         int ultimo = filaDeTracos->traco_atual;
+
                         //libera a memória do último traço desfeito
                         free(filaDeTracos->tracos[ultimo].pontos);
-                        //free(filaDeTracos->tracos[ultimo]);
-                        //filaDeTracos->tracos[ultimo] = NULL;
+
+                        //Anulando o ponteiro que liberamos com free, evitamos novos bugs como "double free", já que ele se torna inválido.
+                        filaDeTracos->tracos[ultimo].pontos = NULL;
 
                         al_set_target_bitmap(canvas);//Todo comando de desenho vai pra imagem
                         al_clear_to_color(BRANCO);
