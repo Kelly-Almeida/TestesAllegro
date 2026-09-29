@@ -236,7 +236,7 @@ int main() {
     ALLEGRO_COLOR ROXO = al_map_rgb(128, 0, 255);
 
     struct COR PRETO_PALE = {PRETO,{20, 20, 90, 75}};
-    struct COR VERMELHO_PALE = {VERMELHO, {20, 160, 90, 105} };
+    struct COR VERMELHO_PALE = {VERMELHO, {20, 105, 90, 160}};
     struct COR AMARELO_PALE = {AMARELO, {20, 190, 90, 245}};
     struct COR AZUL_PALE = {AZUL, {20, 280, 90, 335}};
     struct COR LARANJA_PALE = {LARANJA, {20, 370, 90, 425}};
@@ -321,26 +321,28 @@ int main() {
                 ponto.x = evento.mouse.x;
                 ponto.y = evento.mouse.y;
 
-                if (ponto.x >= PRETO_PALE.coordenadas[0] && ponto.x <= PRETO_PALE.coordenadas[2] && ponto.y >= PRETO_PALE.coordenadas[1] && ponto.y <= PRETO_PALE.coordenadas[3]) { COR = PRETO; }
-                else if (ponto.x >= VERMELHO_PALE.coordenadas[0] && ponto.x <= VERMELHO_PALE.coordenadas[2] && ponto.y >= VERMELHO_PALE.coordenadas[1] && ponto.y <= VERMELHO_PALE.coordenadas[3]) { COR = VERMELHO; }
-                else if (ponto.x >= AMARELO_PALE.coordenadas[0] && ponto.x <= AMARELO_PALE.coordenadas[2] && ponto.y >= AMARELO_PALE.coordenadas[1] && ponto.y <= AMARELO_PALE.coordenadas[3]) { COR = AMARELO; }
-                else if (ponto.x >= AZUL_PALE.coordenadas[0] && ponto.x <= AZUL_PALE.coordenadas[2] && ponto.y >= AZUL_PALE.coordenadas[1] && ponto.y <= AZUL_PALE.coordenadas[3]) { COR = AZUL; }
-                else if (ponto.x >= BRANCO_PALE.coordenadas[0] && ponto.x <= BRANCO_PALE.coordenadas[2] && ponto.y >= BRANCO_PALE.coordenadas[1] && ponto.y <= BRANCO_PALE.coordenadas[3]) { COR = BRANCO; }
-                else if (ponto.x >= LARANJA_PALE.coordenadas[0] && ponto.x <= LARANJA_PALE.coordenadas[2] && ponto.y >= LARANJA_PALE.coordenadas[1] && ponto.y <= LARANJA_PALE.coordenadas[3]) { COR = LARANJA; }
-                else if (ponto.x >= ROXO_PALE.coordenadas[0] && ponto.x <= ROXO_PALE.coordenadas[2] && ponto.y >= ROXO_PALE.coordenadas[1] && ponto.y <= ROXO_PALE.coordenadas[3]) { COR = ROXO; }
+                if (ponto.x >= PRETO_PALE.coordenadas[0] && ponto.x <= PRETO_PALE.coordenadas[2] && ponto.y >= PRETO_PALE.coordenadas[1] && ponto.y <= PRETO_PALE.coordenadas[3]) { COR = PRETO; printf("Preto!\n"); }
+                else if (ponto.x >= VERMELHO_PALE.coordenadas[0] && ponto.x <= VERMELHO_PALE.coordenadas[2] && ponto.y >= VERMELHO_PALE.coordenadas[1] && ponto.y <= VERMELHO_PALE.coordenadas[3]) { COR = VERMELHO; printf("Vermelho!\n"); }
+                else if (ponto.x >= AMARELO_PALE.coordenadas[0] && ponto.x <= AMARELO_PALE.coordenadas[2] && ponto.y >= AMARELO_PALE.coordenadas[1] && ponto.y <= AMARELO_PALE.coordenadas[3]) { COR = AMARELO; printf("Amarelo!\n"); }
+                else if (ponto.x >= AZUL_PALE.coordenadas[0] && ponto.x <= AZUL_PALE.coordenadas[2] && ponto.y >= AZUL_PALE.coordenadas[1] && ponto.y <= AZUL_PALE.coordenadas[3]) { COR = AZUL; printf("Azul!\n"); }
+                else if (ponto.x >= BRANCO_PALE.coordenadas[0] && ponto.x <= BRANCO_PALE.coordenadas[2] && ponto.y >= BRANCO_PALE.coordenadas[1] && ponto.y <= BRANCO_PALE.coordenadas[3]) { COR = BRANCO; printf("Branco!\n"); }
+                else if (ponto.x >= LARANJA_PALE.coordenadas[0] && ponto.x <= LARANJA_PALE.coordenadas[2] && ponto.y >= LARANJA_PALE.coordenadas[1] && ponto.y <= LARANJA_PALE.coordenadas[3]) { COR = LARANJA; printf("Laranja!\n"); }
+                else if (ponto.x >= ROXO_PALE.coordenadas[0] && ponto.x <= ROXO_PALE.coordenadas[2] && ponto.y >= ROXO_PALE.coordenadas[1] && ponto.y <= ROXO_PALE.coordenadas[3]) { COR = ROXO; printf("Roxo!\n"); }
 
 
                 ponto_canvas.x = ponto.x - x_offset;
                 ponto_canvas.y = ponto.y - y_offset;
+                
+                if (ponto_canvas.x >= 0 && ponto_canvas.x <= canvas_w && ponto_canvas.y >= 0 && ponto_canvas.y <= canvas_h ){
+                    ponto_inicial.x = ponto_canvas.x, ponto_inicial.y = ponto_canvas.y;
+                    traco_novo = criarTraco(COR, espessura, ponto_canvas);
 
-                ponto_inicial.x = ponto_canvas.x, ponto_inicial.y = ponto_canvas.y;
-                traco_novo = criarTraco(COR, espessura, ponto_canvas);
+                    desenhar = true;
 
-                desenhar = true;
-
-                al_set_target_bitmap(canvas);
-                al_draw_filled_circle(ponto_canvas.x, ponto_canvas.y, espessura, COR);
-                al_set_target_backbuffer(tela);
+                    al_set_target_bitmap(canvas);
+                    al_draw_filled_circle(ponto_canvas.x, ponto_canvas.y, espessura, COR);
+                    al_set_target_backbuffer(tela);
+                }
             }
         }
 
