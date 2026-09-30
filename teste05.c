@@ -32,7 +32,6 @@ struct INICIO {
 typedef struct TRACO {
     struct INICIO inicio;
     VEC *pontos;
-    VEC ponto_final;
     size_t tamanho;
     size_t capacidade;
 }TRACO;
@@ -64,6 +63,9 @@ TRACO* criarTraco(ALLEGRO_COLOR cor, int espessura, VEC ponto) {
         free(tracoNovo);
         return NULL;
     }
+
+    printf("Novo Traço, Ponto Inicial: {%d, %d}, espessura: %d, cor: {r:%f g:%f b:%f a:%f} \n", ponto.x, ponto.y, espessura, cor.r, cor.g, cor.b, cor.a);
+    
     return tracoNovo;
 }
 
@@ -80,6 +82,11 @@ void addPontos(TRACO* traco, VEC coordenada) {
     traco->pontos[traco->tamanho].x = coordenada.x;
     traco->pontos[traco->tamanho].y = coordenada.y;
     traco->tamanho++;
+    //TODO: 
+    //função para controlar a verbosidade dos logs
+    
+    //printf("novo ponto: {%d, %d}\n", coordenada.x, coordenada.y);
+
 }
 
 FILA* criarFila() {
@@ -151,8 +158,16 @@ int main() {
 
     //al_set_new_display_flags(ALLEGRO_FULLSCREEN_WINDOW); //Coloca um restrição do ponteiro somente na tela e tira o fechar
 
-    // Inicializando a tela
+    //Opções para habilitar o anti-aliasing 
+    
+    /*
+    al_set_new_display_option(ALLEGRO_SAMPLE_BUFFERS, 1, ALLEGRO_SUGGEST);
+    al_set_new_display_option(ALLEGRO_SAMPLES, 8, ALLEGRO_SUGGEST);
+    */
+
     al_set_new_display_flags(ALLEGRO_OPENGL);
+
+    // Inicializando a tela
     ALLEGRO_DISPLAY* tela = al_create_display(telinha.x, telinha.y);
     if (!tela) {
         printf("Falha ao criar a tela!\n");
@@ -207,15 +222,23 @@ int main() {
     }
 
 
-    ALLEGRO_FONT *font = al_load_font("../Roboto-VariableFont_wdth,wght.ttf", 48, 0);
+    ALLEGRO_FONT *font = al_load_font("Roboto-VariableFont_wdth,wght.ttf", 48, 0);
+    
+    //Gambiarra, já que o debug mode do vs code gera o binário em um diretório abaixo do que o make do linux.
+    if (!font) { 
+        font = al_load_font("../Roboto-VariableFont_wdth,wght.ttf", 48, 0); 
+    }
+    if (!font) { 
+        font = al_load_font("../../Roboto-VariableFont_wdth,wght.ttf", 48, 0); 
+    }
+    if (!font) { 
+        font = al_load_font("../../../Roboto-VariableFont_wdth,wght.ttf", 48, 0); 
+    }
     if (!font) {
-        ALLEGRO_FONT *font = al_load_font("../../Roboto-VariableFont_wdth,wght.ttf", 48, 0);
-        if (!font) {
         printf("Erro ao carregar a fonte\n");
         al_destroy_timer(timer);
         al_destroy_display(tela);
         return -1;
-        }
     }
 
     // Registrando as fontes de eventos
@@ -290,7 +313,9 @@ int main() {
     al_draw_filled_rectangle(telinha.x * 0.01, telinha.y * 0.85, telinha.x *0.01 + 75, (telinha.y * 0.85) + 75, BRANCO);
     al_draw_filled_circle(telinha.x * 0.01 + 37, telinha.y * 0.85 + 35.5,espessura, COR);
 
-
+    //Adicionando Anti-aliasing no bitmap
+    //al_set_new_bitmap_samples(8);
+    
     //Criando a imagem do canvas
     ALLEGRO_BITMAP* canvas = al_create_bitmap(canvas_w, canvas_h);
     if (!canvas) {
@@ -369,8 +394,6 @@ int main() {
 
         else if (evento.type == ALLEGRO_EVENT_MOUSE_BUTTON_UP) {
             if (evento.mouse.button == 1 && desenhar) {
-                traco_novo->ponto_final = ponto_canvas;
-                printf("ponto final: {%d, %d}\n", ponto_canvas.x, ponto_canvas.y);
                 pushFila(filaDeTracos,traco_novo);
                 desenhar = false;
             }
