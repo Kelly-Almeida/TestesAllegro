@@ -308,6 +308,7 @@ int main() {
     double agora, temp_loop = 0;
 
     while (round) {
+        
          agora = al_get_time();
 
         ALLEGRO_EVENT evento;
