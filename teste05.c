@@ -200,7 +200,7 @@ int main() {
 
     //Inicializando as fontes
     if (!al_init_font_addon()) {
-        printf("Erro ao carregar as fontes\n");
+        printf("Erro ao inicializar a biblioteca de fontes\n");
         al_destroy_timer(timer);
         al_destroy_display(tela);
         return -1;
@@ -209,10 +209,13 @@ int main() {
 
     ALLEGRO_FONT *font = al_load_font("../Roboto-VariableFont_wdth,wght.ttf", 48, 0);
     if (!font) {
+        ALLEGRO_FONT *font = al_load_font("../../Roboto-VariableFont_wdth,wght.ttf", 48, 0);
+        if (!font) {
         printf("Erro ao carregar a fonte\n");
         al_destroy_timer(timer);
         al_destroy_display(tela);
         return -1;
+        }
     }
 
     // Registrando as fontes de eventos
@@ -247,6 +250,13 @@ int main() {
 
     ALLEGRO_COLOR COR;
     int espessura;
+
+    //Variáveis globais
+    COR = AZUL;
+    espessura = 3;
+    VEC ponto = { 0,0 };
+    VEC ponto_inicial;
+    VEC ponto_canvas;
 
     al_clear_to_color(BRANCO);
     al_flip_display();
@@ -293,12 +303,6 @@ int main() {
 
     al_set_target_backbuffer(tela);//Volta os comandos para a tela
 
-
-    VEC ponto = { 0,0 };
-    VEC ponto_inicial;
-    VEC ponto_canvas;
-    COR = AZUL;
-    espessura = 3;
 
     TRACO* traco_novo = NULL;
 

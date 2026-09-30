@@ -7,11 +7,9 @@ set(CMAKE_C_STANDARD_REQUIRED True)
 add_executable(Test teste05.c
         socket01.h)
 
+
 # -- Cross Platform Library Finding --
-
 # 1. Try finding Allegro the native vcpkg way
-
-
 if(WIN32)
     # Windows / Visual Studio path
     find_package(Allegro CONFIG REQUIRED)
@@ -20,6 +18,8 @@ if(WIN32)
         Allegro::allegro_main
         Allegro::allegro_primitives
         Allegro::allegro_image
+        Allegro::allegro_font
+        Allegro::allegro_ttf
         ws2_32
     )
 else()
