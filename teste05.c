@@ -284,6 +284,7 @@ int main() {
     al_clear_to_color(BRANCO);
     al_flip_display();
 
+    float scaling = 0.5;
     float border[4];
     border[0] = telinha.x * 0.15; //canto esquerdo
     border[1] = telinha.y * 0.15; // canto superior
@@ -311,13 +312,15 @@ int main() {
 
     /*espessura*/
     al_draw_filled_rectangle(telinha.x * 0.01, telinha.y * 0.85, telinha.x *0.01 + 75, (telinha.y * 0.85) + 75, BRANCO);
-    al_draw_filled_circle(telinha.x * 0.01 + 37, telinha.y * 0.85 + 35.5,espessura, COR);
+    al_draw_filled_circle(telinha.x * 0.01 + 37, telinha.y * 0.85 + 35.5,espessura / scaling, COR);
 
     //Adicionando Anti-aliasing no bitmap
     //al_set_new_bitmap_samples(8);
     
     //Criando a imagem do canvas
-    ALLEGRO_BITMAP* canvas = al_create_bitmap(canvas_w, canvas_h);
+    //al_set_new_bitmap_flags(ALLEGRO_MIN_LINEAR);
+ 
+    ALLEGRO_BITMAP* canvas = al_create_bitmap(canvas_w*scaling, canvas_h*scaling);
     if (!canvas) {
         printf("Erro ao criar o canvas!\n");
         return -1;
@@ -359,10 +362,10 @@ int main() {
                 else if (ponto.x >= ROXO_PALE.coordenadas[0] && ponto.x <= ROXO_PALE.coordenadas[2] && ponto.y >= ROXO_PALE.coordenadas[1] && ponto.y <= ROXO_PALE.coordenadas[3]) { COR = ROXO; printf("Roxo!\n"); }
 
 
-                ponto_canvas.x = ponto.x - x_offset;
-                ponto_canvas.y = ponto.y - y_offset;
+                ponto_canvas.x = (ponto.x - x_offset) * scaling;
+                ponto_canvas.y = (ponto.y - y_offset) * scaling;
                 
-                if (ponto_canvas.x >= 0 && ponto_canvas.x <= canvas_w && ponto_canvas.y >= 0 && ponto_canvas.y <= canvas_h ){
+                if (ponto.x - x_offset >= 0 && ponto.x - x_offset <= canvas_w && ponto.y - y_offset >= 0 && ponto.y - y_offset <= canvas_h ){
                     ponto_inicial.x = ponto_canvas.x, ponto_inicial.y = ponto_canvas.y;
                     traco_novo = criarTraco(COR, espessura, ponto_canvas);
 
@@ -379,8 +382,8 @@ int main() {
             ponto.x = evento.mouse.x;
             ponto.y = evento.mouse.y;
 
-            ponto_canvas.x = ponto.x - x_offset;
-            ponto_canvas.y = ponto.y - y_offset;
+            ponto_canvas.x = (ponto.x - x_offset) * scaling;
+            ponto_canvas.y = (ponto.y - y_offset) * scaling;
 
             if (desenhar && traco_novo) {
 
@@ -490,9 +493,9 @@ int main() {
 
             /*espessura*/
             al_draw_filled_rectangle(telinha.x * 0.01, telinha.y * 0.85, telinha.x *0.01 + 75, (telinha.y * 0.85) + 75, BRANCO);
-            al_draw_filled_circle(telinha.x * 0.01 + 37, telinha.y * 0.85 + 35.5,espessura, COR);
+            al_draw_filled_circle(telinha.x * 0.01 + 37, telinha.y * 0.85 + 35.5,espessura / scaling, COR);
 
-            al_draw_bitmap(canvas, x_offset, y_offset, 0);
+            al_draw_scaled_bitmap(canvas,0.0,0.0,canvas_w*scaling,canvas_h*scaling, x_offset, y_offset,canvas_w,canvas_h, 0);
             al_flip_display();
 
         }
