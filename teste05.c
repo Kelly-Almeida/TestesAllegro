@@ -11,7 +11,7 @@
 #include <allegro5/allegro_image.h>
 #include <allegro5/allegro_primitives.h>
 #include <allegro5/allegro_ttf.h>
-#include "socket01.h"
+#include "sock.h"
 
 #define FPS 60
 
@@ -284,7 +284,7 @@ int main() {
     al_clear_to_color(BRANCO);
     al_flip_display();
 
-    float scaling = 0.5;
+    float scaling = 0.3;
     float border[4];
     border[0] = telinha.x * 0.15; //canto esquerdo
     border[1] = telinha.y * 0.15; // canto superior
@@ -499,6 +499,8 @@ int main() {
             al_flip_display();
 
         }
+
+        test();
 
         temp_loop = al_get_time();
         /*if (agora - temp_loop >= 5) {

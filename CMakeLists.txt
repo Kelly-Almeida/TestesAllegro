@@ -6,6 +6,7 @@ set(CMAKE_C_STANDARD_REQUIRED True)
 
 add_executable(Test teste05.c
         socket01.h)
+        # socket01.h)
 
 
 # -- Cross Platform Library Finding --

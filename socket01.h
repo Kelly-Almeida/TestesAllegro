@@ -11,7 +11,7 @@
         #include <unistd.h>
 #endif
 
-int socket01() {
+int test() {
      bool round = true;
      const char *saida = "Meu voto é do Lobão";
      char bufferInfoClient[256];
