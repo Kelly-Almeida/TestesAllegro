@@ -64,7 +64,7 @@ TRACO* criarTraco(ALLEGRO_COLOR cor, int espessura, VEC ponto) {
         return NULL;
     }
 
-    printf("Novo Traço, Ponto Inicial: {%d, %d}, espessura: %d, cor: {r:%f g:%f b:%f a:%f} \n", ponto.x, ponto.y, espessura, cor.r, cor.g, cor.b, cor.a);
+    //printf("\nNovo Traço, Ponto Inicial: {%d, %d}, espessura: %d, cor: {r:%f g:%f b:%f a:%f} \n", ponto.x, ponto.y, espessura, cor.r, cor.g, cor.b, cor.a);
     
     return tracoNovo;
 }
@@ -336,10 +336,9 @@ int main() {
 
     FILA *filaDeTracos = criarFila();
 
-    double agora, temp_loop = 0;
+    time_t agora, antes = time(NULL);
 
     while (round) {
-         agora = al_get_time();
 
         ALLEGRO_EVENT evento;
         al_wait_for_event(fila_eventos, &evento);
@@ -500,13 +499,17 @@ int main() {
 
         }
 
-        test();
+         agora = time(NULL);
 
-        temp_loop = al_get_time();
-        /*if (agora - temp_loop >= 5) {
-            socket01();
+        if (agora - antes >= 3){
+            printf("Hora do socket\n");
 
-        }*/
+            test();
+
+            antes = agora;
+        }
+
+
 
     }
 
