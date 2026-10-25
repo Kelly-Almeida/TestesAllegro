@@ -119,6 +119,26 @@ void pushFila(FILA* filaDeTracos, TRACO *traco_novo) {
     free(traco_novo);
 }
 
+void clearFila(FILA* filaDeTracos){
+  if (filaDeTracos != NULL) {
+    for (int i = 0; i < filaDeTracos->traco_atual; i++) {
+      if (filaDeTracos->tracos[i].pontos != NULL) {
+          free(filaDeTracos->tracos[i].pontos);
+      }
+    }
+  }
+  filaDeTracos->traco_atual = 0;
+}
+
+void destroyFila(FILA* filaDeTracos){
+    if (filaDeTracos != NULL) {
+      if (filaDeTracos->tracos != NULL) {
+        free(filaDeTracos->tracos);
+    }
+    free(filaDeTracos);
+  }
+}
+
 void desenharCirc(VEC ponto_inicial, VEC ponto, ALLEGRO_COLOR cor, int espessura) {
     al_draw_line(ponto_inicial.x, ponto_inicial.y, ponto.x, ponto.y, cor, espessura * 2);
     al_draw_filled_circle(ponto.x, ponto.y, espessura, cor);
@@ -415,8 +435,11 @@ int main() {
                     al_set_target_bitmap(canvas);//Todo comando de desenho vai pra imagem
                     al_clear_to_color(BRANCO);
                     al_set_target_backbuffer(tela);//Volta os comandos para a tela
+                    clearFila(filaDeTracos);
 
                     printf("Limpar_tela\n");
+                    printf("Fila limpa!\n");
+
                 }
             }
             else if (evento.keyboard.keycode == ALLEGRO_KEY_PAD_PLUS) {
@@ -514,19 +537,8 @@ int main() {
     al_destroy_event_queue(fila_eventos);
     al_destroy_timer(timer);
     al_destroy_display(tela);
-
-    if (filaDeTracos != NULL) {
-        for (int i = 0; i < filaDeTracos->traco_atual; i++) {
-            if (filaDeTracos->tracos[i].pontos != NULL) {
-                free(filaDeTracos->tracos[i].pontos);
-            }
-        }
-        if (filaDeTracos->tracos != NULL) {
-            free(filaDeTracos->tracos);
-        }
-        free(filaDeTracos);
-    }
-
+    clearFila(filaDeTracos);
+    destroyFila(filaDeTracos);
 
     return 0;
 }
