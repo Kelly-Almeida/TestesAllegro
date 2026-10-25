@@ -6,7 +6,9 @@ set(CMAKE_C_STANDARD_REQUIRED True)
 
 add_executable(Test
         teste05.c
-        sock.h)
+        sock.h
+        graficos.h
+        infra.h)
         # socket01.h)
 
 

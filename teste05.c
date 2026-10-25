@@ -11,119 +11,16 @@
 #include <allegro5/allegro_image.h>
 #include <allegro5/allegro_primitives.h>
 #include <allegro5/allegro_ttf.h>
+#include <pthread.h>
+#include <unistd.h>
 #include "sock.h"
+#include "infra.h"
+
 
 #define FPS 60
 
-typedef struct TELA {
-    int x, y;
-}TELA;
+void desenhar();
 
-typedef struct VEC {
-    int x, y;
-}VEC;
-
-struct INICIO {
-    ALLEGRO_COLOR cor;
-    int espessura;
-    VEC ponto;
-};
-
-typedef struct TRACO {
-    struct INICIO inicio;
-    VEC *pontos;
-    size_t tamanho;
-    size_t capacidade;
-}TRACO;
-
-typedef struct FILA {
-    TRACO *tracos;
-    int traco_atual;
-    size_t tamanho;
-    size_t capacidade;
-}FILA;
-
-typedef struct COR {
-    ALLEGRO_COLOR cor;
-    int coordenadas[4];
-}COR;
-
-TRACO* criarTraco(ALLEGRO_COLOR cor, int espessura, VEC ponto) {
-    TRACO* tracoNovo = malloc(sizeof(TRACO));
-    if (!tracoNovo) return NULL;
-
-    tracoNovo->inicio.cor = cor;
-    tracoNovo->inicio.espessura = espessura;
-    tracoNovo->inicio.ponto = ponto;
-    tracoNovo->tamanho = 0; // ainda não tem nada guardado
-    tracoNovo->capacidade = 16; //capacidade inicial para 16 coordenadas
-    tracoNovo->pontos = malloc(tracoNovo->capacidade * sizeof(VEC)); //alocando espaço para o array dinâmico que será redimensionado
-
-    if (!tracoNovo->pontos) {
-        free(tracoNovo);
-        return NULL;
-    }
-
-    //printf("\nNovo Traço, Ponto Inicial: {%d, %d}, espessura: %d, cor: {r:%f g:%f b:%f a:%f} \n", ponto.x, ponto.y, espessura, cor.r, cor.g, cor.b, cor.a);
-    
-    return tracoNovo;
-}
-
-void addPontos(TRACO* traco, VEC coordenada) {
-    if (traco->tamanho >= traco->capacidade) {
-        traco->capacidade *= 2; //dobra a capacidade do traço
-        VEC* temp = realloc(traco->pontos, traco->capacidade * sizeof(VEC));
-        if (temp == NULL) {
-            printf("Erro ao realocar memória!!");
-            exit(EXIT_FAILURE);
-        }
-        traco->pontos = temp;
-    }
-    traco->pontos[traco->tamanho].x = coordenada.x;
-    traco->pontos[traco->tamanho].y = coordenada.y;
-    traco->tamanho++;
-    //TODO: 
-    //função para controlar a verbosidade dos logs
-    
-    //printf("novo ponto: {%d, %d}\n", coordenada.x, coordenada.y);
-
-}
-
-FILA* criarFila() {
-    FILA* filaNova = malloc(sizeof(FILA));
-    if (!filaNova) return NULL;
-
-    filaNova->traco_atual = 0;
-    filaNova->capacidade = 16;
-    filaNova->tracos = malloc(filaNova->capacidade * sizeof(TRACO));
-
-    if (!filaNova->tracos) {
-        free(filaNova);
-        return NULL;
-    }
-    return filaNova;
-}
-
-void pushFila(FILA* filaDeTracos, TRACO *traco_novo) {
-    if (filaDeTracos->traco_atual >= filaDeTracos->capacidade) {
-        filaDeTracos->capacidade *= 2; //dobra a capacidade da fila
-        TRACO* temp = realloc(filaDeTracos->tracos, filaDeTracos->capacidade * sizeof(TRACO));
-        if (temp == NULL) {
-            printf("Erro ao realocar memória!!");
-            exit(EXIT_FAILURE);
-        }
-        filaDeTracos->tracos = temp;
-    }
-    filaDeTracos->tracos[filaDeTracos->traco_atual] = *traco_novo;
-    filaDeTracos->traco_atual++;
-    free(traco_novo);
-}
-
-void desenharCirc(VEC ponto_inicial, VEC ponto, ALLEGRO_COLOR cor, int espessura) {
-    al_draw_line(ponto_inicial.x, ponto_inicial.y, ponto.x, ponto.y, cor, espessura * 2);
-    al_draw_filled_circle(ponto.x, ponto.y, espessura, cor);
-
-}
 int main() {
 
     bool round = true, desenhar = false, redesenhar = false;
@@ -156,14 +53,6 @@ int main() {
     telinha.x = info.x2 - info.x1 - 100;
     telinha.y = info.y2 - info.y1 - 50;
 
-    //al_set_new_display_flags(ALLEGRO_FULLSCREEN_WINDOW); //Coloca um restrição do ponteiro somente na tela e tira o fechar
-
-    //Opções para habilitar o anti-aliasing 
-    
-    /*
-    al_set_new_display_option(ALLEGRO_SAMPLE_BUFFERS, 1, ALLEGRO_SUGGEST);
-    al_set_new_display_option(ALLEGRO_SAMPLES, 8, ALLEGRO_SUGGEST);
-    */
 
     al_set_new_display_flags(ALLEGRO_OPENGL);
 
@@ -223,7 +112,7 @@ int main() {
 
 
     ALLEGRO_FONT *font = al_load_font("Roboto-VariableFont_wdth,wght.ttf", 48, 0);
-    
+    /*
     //Gambiarra, já que o debug mode do vs code gera o binário em um diretório abaixo do que o make do linux.
     if (!font) { 
         font = al_load_font("../Roboto-VariableFont_wdth,wght.ttf", 48, 0); 
@@ -239,7 +128,7 @@ int main() {
         al_destroy_timer(timer);
         al_destroy_display(tela);
         return -1;
-    }
+    }*/
 
     // Registrando as fontes de eventos
     al_register_event_source(fila_eventos, al_get_mouse_event_source());
@@ -314,11 +203,6 @@ int main() {
     al_draw_filled_rectangle(telinha.x * 0.01, telinha.y * 0.85, telinha.x *0.01 + 75, (telinha.y * 0.85) + 75, BRANCO);
     al_draw_filled_circle(telinha.x * 0.01 + 37, telinha.y * 0.85 + 35.5,espessura / scaling, COR);
 
-    //Adicionando Anti-aliasing no bitmap
-    //al_set_new_bitmap_samples(8);
-    
-    //Criando a imagem do canvas
-    //al_set_new_bitmap_flags(ALLEGRO_MIN_LINEAR);
  
     ALLEGRO_BITMAP* canvas = al_create_bitmap(canvas_w*scaling, canvas_h*scaling);
     if (!canvas) {
@@ -338,6 +222,19 @@ int main() {
 
     time_t agora, antes = time(NULL);
 
+
+    pthread_t socket;
+    MSG fila ={
+        .evento = 0,
+        .lock = PTHREAD_MUTEX_INITIALIZER
+    };
+
+    if (pthread_create(&socket, NULL, sock, &fila) != 0) {
+        perror("Erro ao criar a thread");
+        return 1;
+    }
+
+    bool ok = false;
     while (round) {
 
         ALLEGRO_EVENT evento;
@@ -391,6 +288,7 @@ int main() {
                 desenharCirc(ponto_inicial, ponto_canvas, COR, espessura);
                 al_set_target_backbuffer(tela);
                 ponto_inicial = ponto_canvas;
+
             }
         }
 
@@ -434,13 +332,11 @@ int main() {
             else if (evento.keyboard.keycode == ALLEGRO_KEY_Z) {
                 if (evento.keyboard.modifiers & ALLEGRO_KEYMOD_CTRL) {
                     if (filaDeTracos->traco_atual > 0) {
+                        printf("%s", fila.msg);
                         filaDeTracos->traco_atual--;
                         int ultimo = filaDeTracos->traco_atual;
 
-                        //libera a memória do último traço desfeito
                         free(filaDeTracos->tracos[ultimo].pontos);
-
-                        //Anulando o ponteiro que liberamos com free, evitamos novos bugs como "double free", já que ele se torna inválido.
                         filaDeTracos->tracos[ultimo].pontos = NULL;
 
                         al_set_target_bitmap(canvas);//Todo comando de desenho vai pra imagem
@@ -449,11 +345,7 @@ int main() {
 
                         for (int i = 0; i < filaDeTracos->traco_atual; i++) {
                             TRACO t = filaDeTracos->tracos[i];
-
-                            // Redesenha o ponto inicial (clique do mouse)
                             al_draw_filled_circle(t.inicio.ponto.x, t.inicio.ponto.y, t.inicio.espessura, t.inicio.cor);
-
-                            // Redesenha o resto da linha
                             VEC ponto_anterior = t.inicio.ponto;
                             for (size_t j = 0; j < t.tamanho; j++) {
                                 desenharCirc(ponto_anterior, t.pontos[j], t.inicio.cor, t.inicio.espessura);
@@ -476,19 +368,7 @@ int main() {
         if (redesenhar && al_is_event_queue_empty(fila_eventos)) {
             redesenhar = false;
 
-            al_draw_filled_rectangle(0, 0, telinha.x * 0.15, telinha.y, VERDE);
-            al_draw_filled_rectangle(0, 0, telinha.x, telinha.y * 0.15, VERDE);
-            al_draw_filled_rectangle(0, telinha.y, telinha.x, telinha.y * 0.85, VERDE );
-            al_draw_filled_rectangle(telinha.x, 0, telinha.x *0.85, telinha.y, VERDE);
-
-            /*cores*/
-            al_draw_filled_rectangle(PRETO_PALE.coordenadas[0],PRETO_PALE.coordenadas[1], PRETO_PALE.coordenadas[2], PRETO_PALE.coordenadas[3], PRETO_PALE.cor);
-            al_draw_filled_rectangle(VERMELHO_PALE.coordenadas[0],VERMELHO_PALE.coordenadas[1], VERMELHO_PALE.coordenadas[2], VERMELHO_PALE.coordenadas[3], VERMELHO_PALE.cor);
-            al_draw_filled_rectangle(AMARELO_PALE.coordenadas[0],AMARELO_PALE.coordenadas[1], AMARELO_PALE.coordenadas[2], AMARELO_PALE.coordenadas[3], AMARELO_PALE.cor);
-            al_draw_filled_rectangle(AZUL_PALE.coordenadas[0],AZUL_PALE.coordenadas[1], AZUL_PALE.coordenadas[2], AZUL_PALE.coordenadas[3], AZUL_PALE.cor);
-            al_draw_filled_rectangle(BRANCO_PALE.coordenadas[0],BRANCO_PALE.coordenadas[1], BRANCO_PALE.coordenadas[2], BRANCO_PALE.coordenadas[3], BRANCO_PALE.cor);
-            al_draw_filled_rectangle(LARANJA_PALE.coordenadas[0], LARANJA_PALE.coordenadas[1], LARANJA_PALE.coordenadas[2], LARANJA_PALE.coordenadas[3], LARANJA_PALE.cor);
-            al_draw_filled_rectangle(ROXO_PALE.coordenadas[0], ROXO_PALE.coordenadas[1], ROXO_PALE.coordenadas[2], ROXO_PALE.coordenadas[3], ROXO_PALE.cor);
+            telaPrincipal(telinha);
 
             /*espessura*/
             al_draw_filled_rectangle(telinha.x * 0.01, telinha.y * 0.85, telinha.x *0.01 + 75, (telinha.y * 0.85) + 75, BRANCO);
@@ -499,16 +379,17 @@ int main() {
 
         }
 
-         agora = time(NULL);
+        pthread_mutex_lock(&fila.lock);
+        if (fila.evento == 1) {
+            printf("Mensagem recebida: %s\n", fila.msg);
 
-        if (agora - antes >= 3){
-            printf("Hora do socket\n");
-
-            test();
-
-            antes = agora;
+            if (strcmp(fila.msg, "CABOOO") == 0) {
+                pthread_mutex_unlock(&fila.lock);
+                break;
+            }
+            fila.evento = 0;
         }
-
+        pthread_mutex_unlock(&fila.lock);
 
 
     }
@@ -532,7 +413,5 @@ int main() {
         free(filaDeTracos);
     }
 
-
     return 0;
 }
-
