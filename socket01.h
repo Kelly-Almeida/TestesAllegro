@@ -12,7 +12,7 @@
 #endif
 
 int socket01() {
-     bool round = true;
+     // bool round = true; // variável não utilizada
      const char *saida = "Meu voto é do Lobão";
      char bufferInfoClient[256];
 
@@ -48,7 +48,7 @@ int socket01() {
 
 
     int cliente, x;
-    int tamanho_tam_sock_Cliente = sizeof socket_cliente;
+    socklen_t tamanho_tam_sock_Cliente = sizeof socket_cliente;
 
     if (bind(server, (struct sockaddr *) &enderecoMara, sizeof enderecoMara) < 0) {
         printf("Erro no bind!\n");
@@ -95,7 +95,7 @@ int socket01() {
                 const char *message = "\nFim da conexao\n";
                 puts(message);
                 send(cliente, message, (int)strlen(message), 0);
-                round = false;
+                //round = false;
                 i = 0;
             }
             i = 0;
