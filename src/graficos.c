@@ -9,11 +9,14 @@
 #include "infra.h"
 
 
-TRACO* criarTraco(ALLEGRO_COLOR cor, short espessura, VEC ponto) {
+TRACO* criarTraco(COR_RGB cor, short espessura, VEC ponto) {
+
     TRACO* tracoNovo = malloc(sizeof(TRACO));
     if (!tracoNovo) return NULL;
 
-    tracoNovo->inicio.cor = cor;
+    tracoNovo->inicio.cor.r = cor.r;
+    tracoNovo->inicio.cor.g = cor.g;
+    tracoNovo->inicio.cor.b = cor.b;
     tracoNovo->inicio.espessura = espessura;
     tracoNovo->tamanho = 1; // índice do próximo espaço disponível (o intem inicial é o 0)
     tracoNovo->capacidade = 16; //capacidade inicial para 16 coordenadas
@@ -26,7 +29,7 @@ TRACO* criarTraco(ALLEGRO_COLOR cor, short espessura, VEC ponto) {
   
     tracoNovo->pontos[0] = ponto;
 
-    printf("Novo Traço, Ponto Inicial: {%d, %d}, espessura: %d, cor: {r:%f g:%f b:%f a:%f} \n", ponto.x, ponto.y, espessura, cor.r, cor.g, cor.b, cor.a);
+    printf("Novo Traço, Ponto Inicial: {%d, %d}, espessura: %d, cor: {r:%d g:%d b:%d} \n", ponto.x, ponto.y, espessura, cor.r, cor.g, cor.b);
     
     return tracoNovo;
 }
@@ -51,21 +54,21 @@ void addPontos(TRACO* traco, VEC coordenada) {
 
 }
 
-void desenharCirc(VEC ponto_inicial, VEC ponto, ALLEGRO_COLOR cor, float espessura) {
+void desenharCirc(VEC ponto_inicial, VEC ponto, COR_RGB cor_rgb, float espessura) {
+  ALLEGRO_COLOR cor = al_map_rgb(cor_rgb.r,cor_rgb.g,cor_rgb.b);
   al_draw_line(ponto_inicial.x, ponto_inicial.y, ponto.x, ponto.y, cor, espessura * 2);
   al_draw_filled_circle(ponto.x, ponto.y, espessura, cor);
 
 }
 
-void limparCanvas(ALLEGRO_BITMAP* canvas, ALLEGRO_COLOR BRANCO,  ALLEGRO_DISPLAY* tela, FILA *filaDeTracos){
+void limparCanvas(ALLEGRO_BITMAP* canvas, COR_RGB cor,  ALLEGRO_DISPLAY* tela, FILA *filaDeTracos){
   al_set_target_bitmap(canvas);//Todo comando de desenho vai pra imagem
-  al_clear_to_color(BRANCO);
+  al_clear_to_color(al_map_rgb(cor.r, cor.g, cor.b));
   al_set_target_backbuffer(tela);//Volta os comandos para a tela
   clearFila(filaDeTracos);
   printf("Limpar_tela\n");
   printf("Fila limpa!\n");
 }
-
 
 
 void telaPrincipal(TELA telinha) {

@@ -54,7 +54,7 @@ int main() {
     telinha.y = info.y2 - info.y1 - 50;
 
 
-    al_set_new_display_flags(ALLEGRO_OPENGL);
+    //al_set_new_display_flags(ALLEGRO_OPENGL);
 
     // Inicializando a tela
     ALLEGRO_DISPLAY* tela = al_create_display(telinha.x, telinha.y);
@@ -123,27 +123,27 @@ int main() {
     al_start_timer(timer);
 
     // Cores
+    
+    COR_RGB VERDE = {172, 225, 57};
+    COR_RGB VERMELHO = {255, 0, 0};
+    COR_RGB AZUL = {0, 0, 255};
+    COR_RGB AMARELO = {255, 255, 0};
+    COR_RGB BRANCO = {255, 255, 255};
+    COR_RGB PRETO = {0, 0, 0};
+    COR_RGB LARANJA = {255, 128, 0};
+    COR_RGB ROXO = {128, 0, 255};
 
-    ALLEGRO_COLOR VERDE = al_map_rgb(172, 225, 57);
-    ALLEGRO_COLOR VERMELHO = al_map_rgb(255, 0, 0);
-    ALLEGRO_COLOR AZUL = al_map_rgb(0, 0, 255);
-    ALLEGRO_COLOR AMARELO = al_map_rgb(255, 255, 0);
-    ALLEGRO_COLOR BRANCO = al_map_rgb(255, 255, 255);
-    ALLEGRO_COLOR PRETO = al_map_rgb(0, 0, 0);
-    ALLEGRO_COLOR LARANJA = al_map_rgb(255, 128, 0);
-    ALLEGRO_COLOR ROXO = al_map_rgb(128, 0, 255);
+    struct COR PRETO_PALE = {al_map_rgb(PRETO.r, PRETO.g, PRETO.b),{20, 20, 90, 75}};
+    struct COR VERMELHO_PALE = {al_map_rgb(VERMELHO.r, VERMELHO.g, VERMELHO.b), {20, 105, 90, 160}};
+    struct COR AMARELO_PALE = {al_map_rgb(AMARELO.r, AMARELO.g, AMARELO.b), {20, 190, 90, 245}};
+    struct COR AZUL_PALE = {al_map_rgb(AZUL.r, AZUL.g, AZUL.b), {20, 280, 90, 335}};
+    struct COR LARANJA_PALE = {al_map_rgb(LARANJA.r, LARANJA.g, LARANJA.b), {20, 370, 90, 425}};
+    struct COR ROXO_PALE = {al_map_rgb(ROXO.r, ROXO.g, ROXO.b), {20, 450, 90, 500}};
 
-    struct COR PRETO_PALE = {PRETO,{20, 20, 90, 75}};
-    struct COR VERMELHO_PALE = {VERMELHO, {20, 105, 90, 160}};
-    struct COR AMARELO_PALE = {AMARELO, {20, 190, 90, 245}};
-    struct COR AZUL_PALE = {AZUL, {20, 280, 90, 335}};
-    struct COR LARANJA_PALE = {LARANJA, {20, 370, 90, 425}};
-    struct COR ROXO_PALE = {ROXO, {20, 450, 90, 500}};
-
-    struct COR BRANCO_PALE = {BRANCO, {20, 530, 90, 580}};
+    struct COR BRANCO_PALE = {al_map_rgb(BRANCO.r, BRANCO.g, BRANCO.b), {20, 530, 90, 580}};
 
 
-    ALLEGRO_COLOR COR;
+    COR_RGB COR;
     short espessura;
 
     //Variáveis globais
@@ -153,7 +153,7 @@ int main() {
     VEC ponto_inicial;
     VEC ponto_canvas;
 
-    al_clear_to_color(BRANCO);
+    al_clear_to_color(al_map_rgb(BRANCO.r, BRANCO.g, BRANCO.b));
     al_flip_display();
 
     float scaling = 0.25;
@@ -172,12 +172,12 @@ int main() {
     int x_offset = border[0];
     int y_offset = border[1];
 
-    al_clear_to_color(VERDE);
+    al_clear_to_color(al_map_rgb(VERDE.r,VERDE.g, VERDE.b));
 
     
     /*espessura*/
-    al_draw_filled_rectangle(telinha.x * 0.01, telinha.y * 0.85, telinha.x *0.01 + 75, (telinha.y * 0.85) + 75, BRANCO);
-    al_draw_filled_circle(telinha.x * 0.01 + 37, telinha.y * 0.85 + 35.5,espessura / scaling, COR);
+    al_draw_filled_rectangle(telinha.x * 0.01, telinha.y * 0.85, telinha.x *0.01 + 75, (telinha.y * 0.85) + 75, al_map_rgb(BRANCO.r, BRANCO.g, BRANCO.b));
+    al_draw_filled_circle(telinha.x * 0.01 + 37, telinha.y * 0.85 + 35.5,espessura / scaling, al_map_rgb(COR.r, COR.g, COR.b));
 
     ALLEGRO_BITMAP* canvas = al_create_bitmap(canvas_w*scaling, canvas_h*scaling);
     if (!canvas) {
@@ -186,7 +186,7 @@ int main() {
     }
 
     al_set_target_bitmap(canvas);
-    al_clear_to_color(BRANCO);
+    al_clear_to_color(al_map_rgb(BRANCO.r, BRANCO.g, BRANCO.b));
 
     al_set_target_backbuffer(tela);//Volta os comandos para a tela
 
@@ -255,7 +255,7 @@ int main() {
                   desenhar = true;
 
                   al_set_target_bitmap(canvas);
-                  al_draw_filled_circle(ponto_canvas.x, ponto_canvas.y, espessura, COR);
+                  al_draw_filled_circle(ponto_canvas.x, ponto_canvas.y, espessura, al_map_rgb(COR.r, COR.g, COR.b));
                   al_set_target_backbuffer(tela);
               }
           }
@@ -324,14 +324,15 @@ int main() {
                       filaDeTracos->tracos[ultimo].pontos = NULL;
 
                       al_set_target_bitmap(canvas);//Todo comando de desenho vai pra imagem
-                      al_clear_to_color(BRANCO);
+                      al_clear_to_color(al_map_rgb(BRANCO.r, BRANCO.g, BRANCO.b));
 
 
                       for (int i = 0; i < filaDeTracos->traco_atual; i++) {
                           TRACO t = filaDeTracos->tracos[i];
+                          ALLEGRO_COLOR c = al_map_rgb(t.inicio.cor.r, t.inicio.cor.g, t.inicio.cor.b);
 
                           // Redesenha o ponto inicial (clique do mouse)
-                          al_draw_filled_circle(t.pontos[0].x, t.pontos[0].y, t.inicio.espessura, t.inicio.cor);
+                          al_draw_filled_circle(t.pontos[0].x, t.pontos[0].y, t.inicio.espessura, c);
 
                           // Redesenha o resto da linha
                           VEC ponto_anterior = t.pontos[0];
@@ -359,8 +360,8 @@ int main() {
           telaPrincipal(telinha);
 
           /*espessura*/
-          al_draw_filled_rectangle(telinha.x * 0.01, telinha.y * 0.85, telinha.x *0.01 + 75, (telinha.y * 0.85) + 75, BRANCO);
-          al_draw_filled_circle(telinha.x * 0.01 + 37, telinha.y * 0.85 + 35.5,espessura / scaling, COR);
+          al_draw_filled_rectangle(telinha.x * 0.01, telinha.y * 0.85, telinha.x *0.01 + 75, (telinha.y * 0.85) + 75, al_map_rgb(BRANCO.r, BRANCO.g, BRANCO.b));
+          al_draw_filled_circle(telinha.x * 0.01 + 37, telinha.y * 0.85 + 35.5,espessura / scaling, al_map_rgb(COR.r, COR.g, COR.b));
 
           al_draw_scaled_bitmap(canvas,0.0,0.0,canvas_w*scaling,canvas_h*scaling, x_offset, y_offset,canvas_w,canvas_h, 0);
           al_flip_display();

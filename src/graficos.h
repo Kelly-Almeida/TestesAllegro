@@ -15,8 +15,12 @@ typedef struct VEC {
     short x, y;
 }VEC;
 
+typedef struct COR_RGB {
+  unsigned int r, g, b;
+}COR_RGB;
+
 struct INICIO {
-    ALLEGRO_COLOR cor;
+    COR_RGB cor;
     short espessura;
 };
 
@@ -35,12 +39,12 @@ typedef struct COR {
 }COR;
 
 
-TRACO* criarTraco(ALLEGRO_COLOR cor, short espessura, VEC ponto);
+TRACO* criarTraco(COR_RGB cor, short espessura, VEC ponto);
 
 void addPontos(TRACO* traco, VEC coordenada);
-void desenharCirc(VEC ponto_inicial, VEC ponto, ALLEGRO_COLOR cor, float espessura);
+void desenharCirc(VEC ponto_inicial, VEC ponto, COR_RGB cor, float espessura);
 void telaPrincipal(TELA telinha);
-void limparCanvas(ALLEGRO_BITMAP* canvas, ALLEGRO_COLOR BRANCO,  ALLEGRO_DISPLAY* tela,struct FILA *filaDeTracos);
+void limparCanvas(ALLEGRO_BITMAP* canvas, COR_RGB cor,  ALLEGRO_DISPLAY* tela,struct FILA *filaDeTracos);
 
 
 
