@@ -4,6 +4,7 @@
 //https://www.allegro.cc/manual/5/ALLEGRO_MONITOR_INFO
 //https://www.youtube.com/watch?v=EI6z4I8PfUc Para configurações do monitor
 //https://rafaeltoledonet.wordpress.com/2011/11/10/tutorial-allegro-5-4-escrevendo-texto-usando-fontes-true-type-ttf/
+//https://www.youtube.com/watch?v=XfZ6WrV5Z7Y
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -23,7 +24,7 @@
 int main() {
 
     bool round = true, desenhar = false, redesenhar = false;
-
+    
     // Inicializando o Allegro
     if (!al_init()) {
         printf("Falha ao inicializar o Allegro!\n");
@@ -62,7 +63,7 @@ int main() {
         return -1;
     }
 
-    ALLEGRO_TIMER* timer = al_create_timer(1.0 / FPS);
+    ALLEGRO_TIMER *timer = al_create_timer(1.0 / FPS);
 
     if (!timer) {
         al_destroy_timer(timer);
@@ -110,24 +111,7 @@ int main() {
     }
 
 
-    ALLEGRO_FONT *font = al_load_font("Roboto-VariableFont_wdth,wght.ttf", 48, 0);
-    /*
-    //Gambiarra, já que o debug mode do vs code gera o binário em um diretório abaixo do que o make do linux.
-    if (!font) { 
-        font = al_load_font("../Roboto-VariableFont_wdth,wght.ttf", 48, 0); 
-    }
-    if (!font) { 
-        font = al_load_font("../../Roboto-VariableFont_wdth,wght.ttf", 48, 0); 
-    }
-    if (!font) { 
-        font = al_load_font("../../../Roboto-VariableFont_wdth,wght.ttf", 48, 0); 
-    }
-    if (!font) {
-        printf("Erro ao carregar a fonte\n");
-        al_destroy_timer(timer);
-        al_destroy_display(tela);
-        return -1;
-    }*/
+    ALLEGRO_FONT *font = al_load_font("../resources/Roboto-Regular.ttf", 48, 0);
 
     // Registrando as fontes de eventos
     al_register_event_source(fila_eventos, al_get_mouse_event_source());
@@ -219,9 +203,6 @@ int main() {
 
     FILA *filaDeTracos = criarFila();
 
-    // time_t agora;  //Comentado por ser uma variável não utilizada
-    // time_t antes = time(NULL); //Comentado por ser uma variável não utilizada
-
     pthread_t socket;
     MSG fila ={
         .evento = 0,
@@ -233,7 +214,6 @@ int main() {
         return 1;
     }
 
-    //bool ok = false; //Comentei pois é uma variável não utilizada
     while (round) {
 
       ALLEGRO_EVENT evento;

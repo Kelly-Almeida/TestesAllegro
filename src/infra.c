@@ -2,16 +2,10 @@
 // Created by sants on 2026-10-21.
 //
 
-#ifndef TESTC_INFRA_H
-#define TESTC_INFRA_H
-
-#endif //TESTC_INFRA_H
-
-typedef struct FILA {
-    TRACO *tracos;
-    size_t traco_atual;
-    size_t capacidade;
-}FILA;
+#include <stdlib.h>
+#include <stdio.h>
+#include "graficos.h"
+#include "infra.h"
 
 
 FILA* criarFila() {

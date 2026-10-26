@@ -6,16 +6,8 @@
 #include <netinet/in.h>
 
 #include "graficos.h"
-#ifndef TESTESOCKET_SOCK_H
-#define TESTESOCKET_SOCK_H
-#endif
+#include "sock.h"
 
-typedef struct {
-    int evento;
-    char msg[256];
-    pthread_mutex_t lock;
-    TRACO *traco;
-}MSG;
 
 void *sock(void *arg) {
 

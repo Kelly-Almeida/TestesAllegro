@@ -11,11 +11,10 @@ if(CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
 endif()
 
 add_executable(Test
-        teste05.c
-        sock.h
-        graficos.h
-        infra.h)
-        # socket01.h)
+        src/teste05.c
+        src/sock.c
+        src/graficos.c
+        src/infra.c)
 
 # -- Cross Platform Library Finding --
 # 1. Try finding Allegro the native vcpkg way
