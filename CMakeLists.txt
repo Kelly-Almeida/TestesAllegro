@@ -16,6 +16,11 @@ add_executable(Test
         src/graficos.c
         src/infra.c)
 
+add_custom_command(TARGET Test
+    POST_BUILD
+    COMMAND cp -r ${PROJECT_SOURCE_DIR}/resources ${CMAKE_BINARY_DIR}
+    )
+
 # -- Cross Platform Library Finding --
 # 1. Try finding Allegro the native vcpkg way
 if(WIN32)

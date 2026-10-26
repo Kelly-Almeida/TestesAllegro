@@ -109,9 +109,19 @@ int main() {
         al_destroy_display(tela);
         return -1;
     }
-
-
-    ALLEGRO_FONT *font = al_load_font("../resources/Roboto-Regular.ttf", 48, 0);
+    if (!al_init_ttf_addon()) {
+        printf("Erro ao inicializar a biblioteca de fontes ttf\n");
+        al_destroy_timer(timer);
+        al_destroy_display(tela);
+        return -1;
+    }
+    ALLEGRO_FONT *font = al_load_font("./resources/Roboto-Regular.ttf", 20, 0);
+    if (!font) {
+        printf("Não foi possível carregar a fonte!\n");
+        al_destroy_timer(timer);
+        al_destroy_display(tela);
+        return -1;
+    }
 
     // Registrando as fontes de eventos
     al_register_event_source(fila_eventos, al_get_mouse_event_source());
@@ -217,12 +227,12 @@ int main() {
               break;
           }
           if (strcmp(fila.msg, "LIMPAR") == 0) {
-              pthread_mutex_unlock(&fila.lock);
+              // pthread_mutex_unlock(&fila.lock);
               limparCanvas(canvas, BRANCO, tela, filaDeTracos);
               fila.evento = 0;
           }
           if (strcmp(fila.msg, "UNDO") == 0) {
-              pthread_mutex_unlock(&fila.lock);
+              //pthread_mutex_unlock(&fila.lock);
               undo(filaDeTracos, canvas, tela);
               fila.evento = 0;
           }
@@ -300,7 +310,6 @@ int main() {
               }
           }
           else if (evento.keyboard.keycode == ALLEGRO_KEY_R) {
-              printf("Limpeza recebida \n");
               if (evento.keyboard.modifiers & ALLEGRO_KEYMOD_CTRL) {
                   limparCanvas(canvas, BRANCO, tela, filaDeTracos);
               }
@@ -335,6 +344,7 @@ int main() {
 
           telaPrincipal(telinha);
 
+          al_draw_text(font, al_map_rgb(0,50,255), 20, 600, 0, "Teste texto\n");
           /*espessura*/
           al_draw_filled_rectangle(telinha.x * 0.01, telinha.y * 0.85, telinha.x *0.01 + 75, (telinha.y * 0.85) + 75, al_map_rgb(BRANCO.r, BRANCO.g, BRANCO.b));
           al_draw_filled_circle(telinha.x * 0.01 + 37, telinha.y * 0.85 + 35.5,espessura / scaling, al_map_rgb(COR.r, COR.g, COR.b));

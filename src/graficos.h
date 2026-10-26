@@ -16,7 +16,7 @@ typedef struct VEC {
 }VEC;
 
 typedef struct COR_RGB {
-  unsigned int r, g, b;
+  unsigned char r, g, b;
 }COR_RGB;
 
 struct INICIO {
