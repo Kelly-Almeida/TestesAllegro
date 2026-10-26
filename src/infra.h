@@ -17,5 +17,6 @@ FILA* criarFila();
 void pushFila(FILA* filaDeTracos, TRACO *traco_novo);
 void clearFila(FILA* filaDeTracos);
 void destroyFila(FILA* filaDeTracos);
+void undo(FILA* filaDeTracos, ALLEGRO_BITMAP* canvas, ALLEGRO_DISPLAY* tela);
 
 #endif //TESTC_INFRA_H

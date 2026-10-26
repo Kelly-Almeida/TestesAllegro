@@ -16,6 +16,7 @@ void *sock(void *arg) {
     bool round = true;
     const char *saida = "CABOOO";
     const char *limpar = "LIMPAR";
+    const char *desfazer = "UNDO";
     char bufferInfoClient[256];
 
     struct sockaddr_in socket_cliente;
@@ -78,6 +79,11 @@ void *sock(void *arg) {
             }
             if (strcmp(bufferInfoClient, limpar) == 0) {
                 const char *message = "\nlimpar a tela remotamente\n";
+                puts(message);
+                send(cliente, message, (int)strlen(message), 0);
+            }
+            if (strcmp(bufferInfoClient, desfazer) == 0) {
+                const char *message = "\nCtrl + z\n";
                 puts(message);
                 send(cliente, message, (int)strlen(message), 0);
             }
