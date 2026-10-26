@@ -6,6 +6,7 @@
 #include <allegro5/allegro.h>
 #include <allegro5/allegro_primitives.h>
 #include "graficos.h"
+#include "infra.h"
 
 
 TRACO* criarTraco(ALLEGRO_COLOR cor, short espessura, VEC ponto) {
@@ -51,10 +52,20 @@ void addPontos(TRACO* traco, VEC coordenada) {
 }
 
 void desenharCirc(VEC ponto_inicial, VEC ponto, ALLEGRO_COLOR cor, float espessura) {
-    al_draw_line(ponto_inicial.x, ponto_inicial.y, ponto.x, ponto.y, cor, espessura * 2);
-    al_draw_filled_circle(ponto.x, ponto.y, espessura, cor);
+  al_draw_line(ponto_inicial.x, ponto_inicial.y, ponto.x, ponto.y, cor, espessura * 2);
+  al_draw_filled_circle(ponto.x, ponto.y, espessura, cor);
 
 }
+
+void limparCanvas(ALLEGRO_BITMAP* canvas, ALLEGRO_COLOR BRANCO,  ALLEGRO_DISPLAY* tela, FILA *filaDeTracos){
+  al_set_target_bitmap(canvas);//Todo comando de desenho vai pra imagem
+  al_clear_to_color(BRANCO);
+  al_set_target_backbuffer(tela);//Volta os comandos para a tela
+  clearFila(filaDeTracos);
+  printf("Limpar_tela\n");
+  printf("Fila limpa!\n");
+}
+
 
 
 void telaPrincipal(TELA telinha) {

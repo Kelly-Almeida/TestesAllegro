@@ -174,15 +174,7 @@ int main() {
 
     al_clear_to_color(VERDE);
 
-    /*cores*/
-    al_draw_filled_rectangle(PRETO_PALE.coordenadas[0],PRETO_PALE.coordenadas[1], PRETO_PALE.coordenadas[2], PRETO_PALE.coordenadas[3], PRETO_PALE.cor);
-    al_draw_filled_rectangle(VERMELHO_PALE.coordenadas[0],VERMELHO_PALE.coordenadas[1], VERMELHO_PALE.coordenadas[2], VERMELHO_PALE.coordenadas[3], VERMELHO_PALE.cor);
-    al_draw_filled_rectangle(AMARELO_PALE.coordenadas[0],AMARELO_PALE.coordenadas[1], AMARELO_PALE.coordenadas[2], AMARELO_PALE.coordenadas[3], AMARELO_PALE.cor);
-    al_draw_filled_rectangle(AZUL_PALE.coordenadas[0],AZUL_PALE.coordenadas[1], AZUL_PALE.coordenadas[2], AZUL_PALE.coordenadas[3], AZUL_PALE.cor);
-    al_draw_filled_rectangle(BRANCO_PALE.coordenadas[0],BRANCO_PALE.coordenadas[1], BRANCO_PALE.coordenadas[2], BRANCO_PALE.coordenadas[3], BRANCO_PALE.cor);
-    al_draw_filled_rectangle(LARANJA_PALE.coordenadas[0], LARANJA_PALE.coordenadas[1], LARANJA_PALE.coordenadas[2], LARANJA_PALE.coordenadas[3], LARANJA_PALE.cor);
-    al_draw_filled_rectangle(ROXO_PALE.coordenadas[0], ROXO_PALE.coordenadas[1], ROXO_PALE.coordenadas[2], ROXO_PALE.coordenadas[3], ROXO_PALE.cor);
-
+    
     /*espessura*/
     al_draw_filled_rectangle(telinha.x * 0.01, telinha.y * 0.85, telinha.x *0.01 + 75, (telinha.y * 0.85) + 75, BRANCO);
     al_draw_filled_circle(telinha.x * 0.01 + 37, telinha.y * 0.85 + 35.5,espessura / scaling, COR);
@@ -216,6 +208,22 @@ int main() {
 
     while (round) {
 
+      pthread_mutex_lock(&fila.lock);
+      if (fila.evento == 1) {
+          printf("Mensagem recebida: %s\n", fila.msg);
+
+          if (strcmp(fila.msg, "CABOOO") == 0) {
+              pthread_mutex_unlock(&fila.lock);
+              break;
+          }
+          if (strcmp(fila.msg, "LIMPAR") == 0) {
+              pthread_mutex_unlock(&fila.lock);
+              limparCanvas(canvas, BRANCO, tela, filaDeTracos);
+              fila.evento = 0;
+          }
+      }
+      pthread_mutex_unlock(&fila.lock);
+
       ALLEGRO_EVENT evento;
       al_wait_for_event(fila_eventos, &evento);
 
@@ -239,7 +247,7 @@ int main() {
 
               ponto_canvas.x = (ponto.x - x_offset) * scaling;
               ponto_canvas.y = (ponto.y - y_offset) * scaling;
-              
+
               if (ponto.x - x_offset >= 0 && ponto.x - x_offset <= canvas_w && ponto.y - y_offset >= 0 && ponto.y - y_offset <= canvas_h ){
                   ponto_inicial.x = ponto_canvas.x, ponto_inicial.y = ponto_canvas.y;
                   traco_novo = criarTraco(COR, espessura, ponto_canvas);
@@ -287,15 +295,9 @@ int main() {
               }
           }
           else if (evento.keyboard.keycode == ALLEGRO_KEY_R) {
+              printf("Limpeza recebida \n");
               if (evento.keyboard.modifiers & ALLEGRO_KEYMOD_CTRL) {
-                  al_set_target_bitmap(canvas);//Todo comando de desenho vai pra imagem
-                  al_clear_to_color(BRANCO);
-                  al_set_target_backbuffer(tela);//Volta os comandos para a tela
-                  clearFila(filaDeTracos);
-
-                  printf("Limpar_tela\n");
-                  printf("Fila limpa!\n");
-
+                  limparCanvas(canvas, BRANCO, tela, filaDeTracos);
               }
           }
           else if (evento.keyboard.keycode == ALLEGRO_KEY_PAD_PLUS) {
@@ -340,43 +342,30 @@ int main() {
                       }
                       al_set_target_backbuffer(tela);//Volta os comandos para a tela
 
-                      printf("CTRL+Z executado! Restam %ld tracos.\n", filaDeTracos->traco_atual);
+                      // printf("CTRL+Z executado! Restam %ld tracos.\n", filaDeTracos->traco_atual);
                   }
               }
           }
       }
 
 
-        if (evento.type == ALLEGRO_EVENT_DISPLAY_CLOSE) {
-            round = false;
-        }
+      if (evento.type == ALLEGRO_EVENT_DISPLAY_CLOSE) {
+          round = false;
+      }
 
-        if (redesenhar && al_is_event_queue_empty(fila_eventos)) {
-            redesenhar = false;
+      if (redesenhar && al_is_event_queue_empty(fila_eventos)) {
+          redesenhar = false;
 
-            telaPrincipal(telinha);
+          telaPrincipal(telinha);
 
-            /*espessura*/
-            al_draw_filled_rectangle(telinha.x * 0.01, telinha.y * 0.85, telinha.x *0.01 + 75, (telinha.y * 0.85) + 75, BRANCO);
-            al_draw_filled_circle(telinha.x * 0.01 + 37, telinha.y * 0.85 + 35.5,espessura / scaling, COR);
+          /*espessura*/
+          al_draw_filled_rectangle(telinha.x * 0.01, telinha.y * 0.85, telinha.x *0.01 + 75, (telinha.y * 0.85) + 75, BRANCO);
+          al_draw_filled_circle(telinha.x * 0.01 + 37, telinha.y * 0.85 + 35.5,espessura / scaling, COR);
 
-            al_draw_scaled_bitmap(canvas,0.0,0.0,canvas_w*scaling,canvas_h*scaling, x_offset, y_offset,canvas_w,canvas_h, 0);
-            al_flip_display();
+          al_draw_scaled_bitmap(canvas,0.0,0.0,canvas_w*scaling,canvas_h*scaling, x_offset, y_offset,canvas_w,canvas_h, 0);
+          al_flip_display();
 
-        }
-
-        pthread_mutex_lock(&fila.lock);
-        if (fila.evento == 1) {
-            printf("Mensagem recebida: %s\n", fila.msg);
-
-            if (strcmp(fila.msg, "CABOOO") == 0) {
-                pthread_mutex_unlock(&fila.lock);
-                break;
-            }
-            fila.evento = 0;
-        }
-        pthread_mutex_unlock(&fila.lock);
-
+      }
 
     }
 

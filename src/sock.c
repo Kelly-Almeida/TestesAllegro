@@ -15,6 +15,7 @@ void *sock(void *arg) {
 
     bool round = true;
     const char *saida = "CABOOO";
+    const char *limpar = "LIMPAR";
     char bufferInfoClient[256];
 
     struct sockaddr_in socket_cliente;
@@ -74,6 +75,11 @@ void *sock(void *arg) {
                 puts(message);
                 send(cliente, message, (int)strlen(message), 0);
                 round = false;
+            }
+            if (strcmp(bufferInfoClient, limpar) == 0) {
+                const char *message = "\nlimpar a tela remotamente\n";
+                puts(message);
+                send(cliente, message, (int)strlen(message), 0);
             }
             pthread_mutex_lock(&fila->lock);
 

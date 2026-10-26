@@ -20,6 +20,8 @@ struct INICIO {
     short espessura;
 };
 
+struct FILA;
+
 typedef struct TRACO {
     struct INICIO inicio;
     VEC *pontos;
@@ -32,11 +34,14 @@ typedef struct COR {
     float coordenadas[4];
 }COR;
 
+
 TRACO* criarTraco(ALLEGRO_COLOR cor, short espessura, VEC ponto);
 
 void addPontos(TRACO* traco, VEC coordenada);
 void desenharCirc(VEC ponto_inicial, VEC ponto, ALLEGRO_COLOR cor, float espessura);
-
 void telaPrincipal(TELA telinha);
+void limparCanvas(ALLEGRO_BITMAP* canvas, ALLEGRO_COLOR BRANCO,  ALLEGRO_DISPLAY* tela,struct FILA *filaDeTracos);
+
+
 
 #endif //TESTC_GRAFICOS_H
