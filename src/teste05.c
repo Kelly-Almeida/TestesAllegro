@@ -12,9 +12,11 @@
 #include <allegro5/allegro_image.h>
 #include <allegro5/allegro_primitives.h>
 #include <allegro5/allegro_ttf.h>
+#ifndef _WIN32
 #include <pthread.h>
 #include <unistd.h>
 #include "sock.h"
+#endif
 #include "infra.h"
 
 
@@ -205,6 +207,7 @@ int main() {
 
     FILA *filaDeTracos = criarFila();
 
+    #ifndef _WIN32
     pthread_t socket;
     MSG fila ={
         .evento = 0,
@@ -215,9 +218,11 @@ int main() {
         perror("Erro ao criar a thread");
         return 1;
     }
+    #endif
 
     while (round) {
 
+#ifndef _WIN32
       pthread_mutex_lock(&fila.lock);
       if (fila.evento == 1) {
           printf("Mensagem recebida: %s\n", fila.msg);
@@ -238,7 +243,7 @@ int main() {
           }
       }
       pthread_mutex_unlock(&fila.lock);
-
+#endif
       ALLEGRO_EVENT evento;
       al_wait_for_event(fila_eventos, &evento);
 

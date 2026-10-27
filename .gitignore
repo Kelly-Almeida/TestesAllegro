@@ -6,3 +6,9 @@ out/*
 vcpkg_installed/*
 *.bmp
 *.pdb
+packages/
+x64/
+Debug/
+Release/
+*.vcxproj.user
+packages/
