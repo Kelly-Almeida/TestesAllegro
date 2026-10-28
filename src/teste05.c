@@ -114,10 +114,10 @@ int main() {
     if (!al_init_ttf_addon()) {
         printf("Erro ao inicializar a biblioteca de fontes ttf\n");
         al_destroy_timer(timer);
-        al_destroy_display(tela);
+        al_destroy_display(tela);   
         return -1;
     }
-    ALLEGRO_FONT *font = al_load_font("./resources/Roboto-Regular.ttf", 20, 0);
+    ALLEGRO_FONT *font = al_load_font("resources/Roboto-Regular.ttf", 20, 0);
     if (!font) {
         printf("Não foi possível carregar a fonte!\n");
         al_destroy_timer(timer);
