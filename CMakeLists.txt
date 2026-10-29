@@ -11,7 +11,7 @@ if(CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
 endif()
 
 add_executable(Test
-        src/teste05.c
+        src/main.c
   #--      src/sock.c
         src/graficos.c
         src/infra.c)
