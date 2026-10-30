@@ -27,6 +27,8 @@ int main() {
 
     bool round = true, desenhar = false, redesenhar = false;
     
+    #include "csv.c"
+        
     // Inicializando o Allegro
     if (!al_init()) {
         printf("Falha ao inicializar o Allegro!\n");
@@ -242,6 +244,7 @@ int main() {
               fila.evento = 0;
           }
       }
+      fila.evento = 0;
       pthread_mutex_unlock(&fila.lock);
 #endif
       ALLEGRO_EVENT evento;
