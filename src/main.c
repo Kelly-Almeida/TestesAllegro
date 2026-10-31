@@ -37,7 +37,7 @@ int main() {
         return -1;
     }
 
-    // Inicializando a biblioteca de primitivas gráficas
+    // Inicializando a bal_mutex_unlockiblioteca de primitivas gráficas
     if (!al_init_primitives_addon()) {
         printf("Falha ao inicializar a biblioteca de primitivas!\n");
         return -1;
@@ -210,76 +210,56 @@ int main() {
     TRACO* traco_novo = NULL;
     FILA *filaDeTracos = criarFila();
 
+    MSG dados;
+    dados.contador = 0;
+    dados.evento = false;
+    dados.mutex = al_create_mutex();
 
-#if defined(_WIN32) || defined(WIN32)
-    MSG fila;
-    fila.evento =0;
-    InitializeCriticalSection(&fila.lock);
-    HANDLE socket = CreateThread(NULL, 0, sock, &fila, 0, NULL);
-
-    if (!socket) {
-        printf("Erro ao criar socket!\n");
-    }
-#else
-    MSG fila ={
-        .evento = 0,
-        .lock = PTHREAD_MUTEX_INITIALIZER
-    };
-
-    pthread_t socket;
-    if (pthread_create(&socket, NULL, sock, &fila) != 0) {
-        perror("Erro ao criar a thread");
-        return 1;
+    if (!dados.mutex) {
+        printf("Erro ao criar mutex!\n");
+        return -1;
     }
 
-#endif
-
+    ALLEGRO_THREAD *socket = al_create_thread(sock, &dados);
+    al_start_thread(socket);
 
     while (round) {
 
-    #if defined(_WIN32) || defined(WIN32)
-        EnterCriticalSection(&fila.lock);
-        if (fila.evento == 1) {
-            printf("Mensagem recebida: %s\n", fila.msg);
+        al_lock_mutex(dados.mutex);
+        if (dados.evento == 1) {
+            RESP resposta = tratamento(dados.msg);
+            printf("Mensagem recebida: %s\n", resposta.comando);
 
-            if (strcmp(fila.msg, "CABOOO") == 0) {
-                LeaveCriticalSection(&fila.lock);
+            if (strcmp(resposta.comando, "CABO") == 0) {
+                dados.evento = 0;
+                al_unlock_mutex(dados.mutex);
                 break;
             }
-            if (strcmp(fila.msg, "LIMPAR") == 0) {
-                // pthread_mutex_unlock(&fila.lock);
+            if (strcmp(resposta.comando, "LIMP") == 0) {
                 limparCanvas(canvas, BRANCO, tela, filaDeTracos);
-                fila.evento = 0;
             }
-            if (strcmp(fila.msg, "UNDO") == 0) {
-                //pthread_mutex_unlock(&fila.lock);
+            if (strcmp(resposta.comando, "UNDO") == 0) {
                 undo(filaDeTracos, canvas, tela);
-                fila.evento = 0;
             }
-        }
-        LeaveCriticalSection(&fila.lock);
-        #else
-        pthread_mutex_lock(&fila.lock);
-            if (fila.evento == 1) {
-                printf("Mensagem recebida: %s\n", fila.msg);
+            if (strcmp(resposta.comando, "TRSP") == 0) {
+                TRACO *newTraco1 = criarTraco(
+                    resposta.cor,
+                    resposta.espessura,
+                    resposta.p1
+                );
 
-                if (strcmp(fila.msg, "CABOOO") == 0) {
-                    pthread_mutex_unlock(&fila.lock);
-                    break;
-                }
-                if (strcmp(fila.msg, "LIMPAR") == 0) {
-                    // pthread_mutex_unlock(&fila.lock);
-                    limparCanvas(canvas, BRANCO, tela, filaDeTracos);
-                    fila.evento = 0;
-                }
-                if (strcmp(fila.msg, "UNDO") == 0) {
-                    //pthread_mutex_unlock(&fila.lock);
-                    undo(filaDeTracos, canvas, tela);
-                    fila.evento = 0;
+                if (newTraco1 != NULL) {
+                    addPontos(newTraco1, resposta.p2);
+                    al_set_target_bitmap(canvas);
+                    desenharCirc(resposta.p1, resposta.p2, resposta.cor, (float)resposta.espessura);
+                    al_set_target_backbuffer(tela);
+
+                    pushFila(filaDeTracos, newTraco1);
                 }
             }
-        pthread_mutex_unlock(&fila.lock);
-        #endif
+            dados.evento = 0;
+        }
+        al_unlock_mutex(dados.mutex);
 
       ALLEGRO_EVENT evento;
       al_wait_for_event(fila_eventos, &evento);
@@ -405,14 +385,8 @@ int main() {
     al_destroy_timer(timer);
     al_destroy_display(tela);
     destroyFila(filaDeTracos);
-
-    #if defined(_WIN32) || defined(WIN32)
-        DeleteCriticalSection(&fila.lock);
-        if (socket) CloseHandle(socket);
-    #else
-        pthread_mutex_destroy(&fila.lock);
-    #endif
-
+    al_destroy_thread(socket);
+    al_destroy_mutex(dados.mutex);
 
     return 0;
 }
