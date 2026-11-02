@@ -14,11 +14,20 @@ typedef struct {
 typedef struct {
     char comando[5];
     VEC p1;
-    VEC p2;
     int espessura;
-    COR_RGB cor;
+    int corR;
+    int corG;
+    int corB;
 }RESP;
 
+typedef struct {
+    char comando[5];
+    VEC p1;
+    int espessura;
+    int corR;
+    int corG;
+    int corB;
+}ENV;
 void *sock(ALLEGRO_THREAD *thread,  void *arg);
 
 short parseText(char *msg, int *idx);

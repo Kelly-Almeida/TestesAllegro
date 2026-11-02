@@ -242,20 +242,30 @@ int main() {
                 undo(filaDeTracos, canvas, tela);
             }
             if (strcmp(resposta.comando, "TRSP") == 0) {
-                TRACO *newTraco1 = criarTraco(
-                    resposta.cor,
-                    resposta.espessura,
-                    resposta.p1
-                );
+                COR_RGB cor = {resposta.corR, resposta.corG, resposta.corB};
 
-                if (newTraco1 != NULL) {
-                    addPontos(newTraco1, resposta.p2);
+                traco_novo = criarTraco(cor, espessura, ponto_canvas);
+                desenhar = true;
+                al_set_target_bitmap(canvas);
+                al_draw_filled_circle(resposta.p1.x, resposta.p1.y, resposta.espessura, al_map_rgb(resposta.corR, resposta.corG, resposta.corB));
+                al_set_target_backbuffer(tela);
+                ponto_inicial = resposta.p1;
+
+            }
+            if (strcmp(resposta.comando, "NEWP") == 0) {
+                if (desenhar && traco_novo) {
+                    COR_RGB cor = {resposta.corR, resposta.corG, resposta.corB};
+
                     al_set_target_bitmap(canvas);
-                    desenharCirc(resposta.p1, resposta.p2, resposta.cor, (float)resposta.espessura);
+                    addPontos(traco_novo, ponto_canvas);
+                    desenharCirc(ponto_inicial, ponto_canvas, cor, resposta.espessura);
                     al_set_target_backbuffer(tela);
+                    ponto_inicial = ponto_canvas;
 
-                    pushFila(filaDeTracos, newTraco1);
+                    pushFila(filaDeTracos,traco_novo);
+                    desenhar = false;
                 }
+
             }
             dados.evento = 0;
         }
@@ -263,6 +273,7 @@ int main() {
 
       ALLEGRO_EVENT evento;
       al_wait_for_event(fila_eventos, &evento);
+      //ENV envio;
 
       if (evento.type == ALLEGRO_EVENT_TIMER) {
           redesenhar = true;
@@ -272,6 +283,7 @@ int main() {
           if (evento.mouse.button == 1) {
               ponto.x = evento.mouse.x;
               ponto.y = evento.mouse.y;
+
 
               if (ponto.x >= PRETO_PALE.coordenadas[0] && ponto.x <= PRETO_PALE.coordenadas[2] && ponto.y >= PRETO_PALE.coordenadas[1] && ponto.y <= PRETO_PALE.coordenadas[3]) { COR = PRETO; printf("Preto!\n"); }
               else if (ponto.x >= VERMELHO_PALE.coordenadas[0] && ponto.x <= VERMELHO_PALE.coordenadas[2] && ponto.y >= VERMELHO_PALE.coordenadas[1] && ponto.y <= VERMELHO_PALE.coordenadas[3]) { COR = VERMELHO; printf("Vermelho!\n"); }
@@ -284,6 +296,10 @@ int main() {
 
               ponto_canvas.x = (ponto.x - x_offset) * scaling;
               ponto_canvas.y = (ponto.y - y_offset) * scaling;
+
+
+              //envio.p1.x = ponto_canvas.x;
+              //envio.p1.y = ponto_canvas.y;
 
               if (ponto.x - x_offset >= 0 && ponto.x - x_offset <= canvas_w && ponto.y - y_offset >= 0 && ponto.y - y_offset <= canvas_h ){
                   ponto_inicial.x = ponto_canvas.x, ponto_inicial.y = ponto_canvas.y;
@@ -304,6 +320,8 @@ int main() {
 
           ponto_canvas.x = (ponto.x - x_offset) * scaling;
           ponto_canvas.y = (ponto.y - y_offset) * scaling;
+
+
 
           if (desenhar && traco_novo) {
 
@@ -359,6 +377,7 @@ int main() {
 
       if (evento.type == ALLEGRO_EVENT_DISPLAY_CLOSE) {
           round = false;
+          break;
       }
 
       if (redesenhar && al_is_event_queue_empty(fila_eventos)) {
@@ -379,14 +398,16 @@ int main() {
     }
 
     // Liberação de memória
+    al_set_thread_should_stop(socket);
+    al_join_thread(socket, NULL);
+    al_destroy_thread(socket);
+    al_destroy_mutex(dados.mutex);
     al_destroy_font(font);
     al_destroy_bitmap(canvas);
     al_destroy_event_queue(fila_eventos);
     al_destroy_timer(timer);
     al_destroy_display(tela);
     destroyFila(filaDeTracos);
-    al_destroy_thread(socket);
-    al_destroy_mutex(dados.mutex);
 
     return 0;
 }

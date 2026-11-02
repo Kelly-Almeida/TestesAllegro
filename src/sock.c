@@ -15,7 +15,6 @@
 #include "sock.h"
 
 void *sock(ALLEGRO_THREAD *thread, void *arg) {
-
         MSG *fila = (MSG *)arg;
 
         bool round = true;
@@ -23,6 +22,15 @@ void *sock(ALLEGRO_THREAD *thread, void *arg) {
         const char *limpar = "LIMPAR";
         const char *desfazer = "UNDO";
         char bufferInfoClient[256];
+
+        #if defined(_WIN32) || defined(WIN32)
+            WSADATA wsaData;
+            if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0) {
+                printf("Erro ao inicializar a WSASDATA()\n");
+                return NULL;
+            }
+        #endif
+
 
         struct sockaddr_in socket_cliente;
         struct sockaddr_in enderecoMara = {
@@ -34,11 +42,21 @@ void *sock(ALLEGRO_THREAD *thread, void *arg) {
 
         if (server <0) {
             printf("Erro ao criar o socket\n");
-            return 0;
+            return NULL;
         }
 
         int opt = 1;
         setsockopt(server, SOL_SOCKET, SO_REUSEADDR, (const char *) &opt, sizeof(opt));
+
+        #if defined(_WIN32) || defined(WIN32)
+            DWORD tv = 1000;
+            setsockopt(server, SOL_SOCKET, SO_RCVTIMEO, (const char*)&tv, sizeof(tv));
+        #else
+            struct timeval tv;
+            tv.tv_sec = 1;
+            tv.tv_usec = 0;
+            setsockopt(server, SOL_SOCKET, SO_RCVTIMEO, (const char*)&tv, sizeof(tv));
+        #endif
 
         int cliente;
         socklen_t tam_sock_Cliente = sizeof socket_cliente;
@@ -46,25 +64,24 @@ void *sock(ALLEGRO_THREAD *thread, void *arg) {
         if (bind(server, (struct sockaddr *) &enderecoMara, sizeof enderecoMara) < 0) {
             printf("Erro no bind!\n");
             close(server);
-            return 0;
+            return NULL;
         }
 
         listen(server, 5);
 
         printf("Servidor inicializado\n");
 
-        while (round) {
+        while (!al_get_thread_should_stop(thread) && round) {
             cliente = accept(server, (struct sockaddr *) &socket_cliente, &tam_sock_Cliente);
 
-
             if (cliente < 0) {
-                printf("Erro no accept");
-                break;
+                continue;
             }
+            while (!al_get_thread_should_stop(thread) && round) {
+                ssize_t x = recv(cliente, bufferInfoClient, sizeof(bufferInfoClient) -1, 0);
 
-            ssize_t x = recv(cliente, bufferInfoClient, sizeof(bufferInfoClient) -1, 0);
+                if (x <= 0) break;
 
-            if (x > 0) {
                 bufferInfoClient[x] = '\0';
                 bufferInfoClient[strcspn(bufferInfoClient, "\r\n")] = '\0';
 
@@ -96,14 +113,18 @@ void *sock(ALLEGRO_THREAD *thread, void *arg) {
                 fila->contador++;
                 fila->evento = 1;
 
-                strncpy(fila->msg, bufferInfoClient, sizeof(fila->msg));
+                strncpy(fila->msg, bufferInfoClient, sizeof(fila->msg) - 1);
+                fila->msg[sizeof(fila->msg) - 1] = '\0';
                 al_unlock_mutex(fila->mutex);
-
             }
+
             close(cliente);
         }
         close(server);
-        return 0;
+        #if defined(_WIN32) || defined(WIN32)
+            WSACleanup();
+        #endif
+        return NULL;
     }
 
 
@@ -132,6 +153,7 @@ short parseText(char *msg, int *idx) {
 }
 
 RESP tratamento (char msg[]) {
+    printf("%s\n", msg);
     RESP resp;
     char comando[5];
 
@@ -147,45 +169,17 @@ RESP tratamento (char msg[]) {
 
     strcpy(resp.comando, comando);
 
-    if (strcmp (resp.comando, "TRSP") != 0) return resp;
+    if (strcmp (resp.comando, "TRSP") != 0 && strcmp(resp.comando, "NEWP") != 0) return resp;
     if (strlen(msg) <= 5) return resp;
 
     int idx = 5;
 
     resp.p1.x = parseText(msg, &idx);
     resp.p1.y = parseText(msg, &idx);
-    resp.p2.x = parseText(msg, &idx);
-    resp.p2.y = parseText(msg, &idx);
     resp.espessura = parseText(msg, &idx);
-
-    while (msg[idx] == ' ') (idx)++;
-
-    char cor[16];
-    int k = 0;
-    while (msg[idx] != ' ' && msg[idx] != '\0' && msg[idx] != '\r' && msg[idx] != '\n' && k < 15) {
-        cor[k] = msg[idx];
-        k++;
-        idx++;
-    }
-    cor[k] = '\0';
-
-    COR_RGB VERDE = {172, 225, 57};
-    COR_RGB VERMELHO = {255, 0, 0};
-    COR_RGB AZUL = {0, 0, 255};
-    COR_RGB AMARELO = {255, 255, 0};
-    COR_RGB BRANCO = {255, 255, 255};
-    COR_RGB PRETO = {0, 0, 0};
-    COR_RGB LARANJA = {255, 128, 0};
-    COR_RGB ROXO = {128, 0, 255};
-
-    if (strcmp(cor, "VERDE") == 0) resp.cor = VERDE;
-    else if (strcmp(cor, "VERMELHO") == 0) resp.cor = VERMELHO;
-    else if (strcmp(cor, "AZUL") == 0) resp.cor = AZUL;
-    else if (strcmp(cor, "AMARELO") == 0) resp.cor = AMARELO;
-    else if (strcmp(cor, "BRANCO") == 0) resp.cor = BRANCO;
-    else if (strcmp(cor, "LARANJA") == 0) resp.cor = LARANJA;
-    else if (strcmp(cor, "ROXO") == 0) resp.cor = ROXO;
-    else resp.cor = PRETO;
+    resp.corR = parseText(msg, &idx);
+    resp.corG = parseText(msg, &idx);
+    resp.corB = parseText(msg, &idx);
 
     return resp;
 }
