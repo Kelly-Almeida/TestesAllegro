@@ -14,7 +14,8 @@ add_executable(Test
         src/teste05.c
   #--      src/sock.c
         src/graficos.c
-        src/infra.c)
+        src/infra.c
+        src/csv.c)
 
 if(NOT WIN32)
   target_sources(Test PRIVATE src/sock.c)

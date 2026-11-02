@@ -1,86 +1,91 @@
-//#include <stdio.h>
-//#include <stdlib.h>
+#include "csv.h"
+#include "stdio.h"
+#include "stdlib.h"
 
-printf("Abrindo o arquivo...!\n");
-FILE *file = fopen("resources/palavra em ingles_dicas preenchidas.csv", "r");
-if (!file){
-  printf("Erro ao abrir o arquivo!\n");
-  return -1;
-}
+deck* novo_deck(FILE *fptr, char dificuldade){
+  deck *d = malloc(sizeof(deck));
 
-typedef struct {
-  const char* frase;
-  const char* traducao;
-  const char* dica1;
-  const char* dica2;
-  const char* dica3;
-} frase;
+  size_t temp_size = 1000;
+  char *temp = malloc(sizeof(char) * temp_size);
 
-typedef struct {
-  char* buffer; // "Linguição" onde será guardado os dados brutos
-  frase* frases; // array paralelo onde serão guardados os ponteiros para os inícios de cada item
-  int tamanho;
-} deck;
-
-
-//TODO:
-frase* nova_frase(FILE * fptr, char *arena){
-
-  size_t buff_size = 1000;
-  char *buff = malloc(sizeof(char) * buff_size);
-
-  fgets(buff, sizeof(char) * buff_size, fptr);
-  printf("%s", buff);
-
-  free(buff);
-
-  return NULL;
-}
-
-  /*
-long get_file_size(FILE* fp) {
-
-  if (fseek(fp, 0L, SEEK_END) != 0) {
-      fclose(fp);
-      return -1;
+  // pulando o cabeçalho e as dificuldades menores.
+  // inicio guarda a posição ANTES de cada leitura, então ao sair do laço
+  // ele aponta para o começo da linha que está em temp.
+  long int inicio = ftell(fptr);
+  char *flag = fgets(temp, temp_size, fptr);
+  while (flag != NULL && temp[0] != dificuldade) {
+    inicio = ftell(fptr);
+    flag = fgets(temp, temp_size, fptr);
   }
 
-  long size = ftell(fp);
-  rewind(fp);
-  return size;
-}
-
-printf("O tamanho do arquivo em bytes é: %ld \n", get_file_size(file));
-*/ 
-
-
-
-// ignorando a primeira linha (cabeçalho).
-for (int i = 0; i < 1; i++) {
-  char ch = fgetc(file);
-  while(ch != 10){
-    ch = fgetc(file);
+  // Primeira leitura: contando caracteres e quantidade de linhas.
+  int num_linhas = 0;
+  int total = 0;
+  while (flag != NULL && temp[0] == dificuldade) {
+    int j = 0;
+    while (temp[j] != '\0') {
+      j++;
+    }
+    total += j;
+    num_linhas++;
+    flag = fgets(temp, temp_size, fptr);
   }
+
+  printf("total: %d", total);
+  d->arena = malloc(sizeof(char) * total);
+  d->frases = malloc(sizeof(frase) * num_linhas);
+  d->tamanho = num_linhas;
+
+  // rebobinando para o início dos dados
+  fseek(fptr, inicio, SEEK_SET);
+
+  char *indice_arena = d->arena; // cabeça de escrita, indicando o próximo espaço vazio.
+  for (int t = 0; t < num_linhas; t++) {
+    fgets(temp, temp_size, fptr);
+    char *linha = temp + 2; // ignorando a dificuldade e seu delimitador
+
+    frase *f = &d->frases[t];
+    const char **campos[] = { &f->frase, &f->traducao, &f->dica1, &f->dica2, &f->dica3 };
+
+    int i = 0;
+    for (int c = 0; c < 5; c++) {
+      *campos[c] = indice_arena + i;
+      while (linha[i] != ';' && linha[i] != '\n' && linha[i] != '\r' && linha[i] != '\0') {
+        indice_arena[i] = linha[i];
+        i++;
+      }
+      indice_arena[i] = '\0';
+      i++;
+    }
+    indice_arena = indice_arena + i;
+  }
+
+  free(temp);
+
+  return d;
 }
-char* arena =  malloc(10000);
 
-frase *a = nova_frase(file, arena);
-deck *b = NULL;
-
-free(arena);
-
-if (!a || !b){
-  printf("echo\n");
+void destroy_deck(deck* d){
+  free(d->arena);
+  free(d->frases);
+  free(d);
+  return;
 }
 
 
 /*
-// imprimindo o arquivo um caractere de cada vez.
-while(ch != EOF){
-  putchar(ch);
-  ch = fgetc(file);
-}
-*/ 
-// fechando o arquivo.
-fclose(file);
 
+
+printf("%s", "Imprimindo as frases guardadas no struct\n");
+for (int i = 0; i < faceis->tamanho; i++) {
+
+  printf("%s\n", faceis->frases[i].frase);
+  printf("%s\n", faceis->frases[i].traducao);
+  printf("%s\n", faceis->frases[i].dica1);
+  printf("%s\n", faceis->frases[i].dica2);
+  printf("%s\n", faceis->frases[i].dica3);
+  printf("\n");
+
+}
+
+*/

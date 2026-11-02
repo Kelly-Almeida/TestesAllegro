@@ -18,7 +18,7 @@
 #include "sock.h"
 #endif
 #include "infra.h"
-
+#include "csv.h"
 
 #define FPS 60
 
@@ -27,7 +27,28 @@ int main() {
 
     bool round = true, desenhar = false, redesenhar = false;
     
-    #include "csv.c"
+    printf("Abrindo o arquivo...!\n");
+    FILE *file = fopen("resources/palavra em ingles_dicas preenchidas.csv", "r");
+    if (!file){
+      printf("Erro ao abrir o arquivo!\n");
+      return -1;
+    }
+
+    deck *faceis =    novo_deck(file, '0');
+    deck *medias =    novo_deck(file, '1');
+    deck *dificeis =  novo_deck(file, '2');
+
+  printf("%s", "Imprimindo as frases guardadas no struct\n");
+  for (int i = 0; i < faceis->tamanho; i++) {
+
+    printf("%s\n", faceis->frases[i].frase);
+    printf("%s\n", faceis->frases[i].traducao);
+    printf("%s\n", faceis->frases[i].dica1);
+    printf("%s\n", faceis->frases[i].dica2);
+    printf("%s\n", faceis->frases[i].dica3);
+    printf("\n");
+  
+    fclose(file);
         
     // Inicializando o Allegro
     if (!al_init()) {
@@ -371,6 +392,9 @@ int main() {
     al_destroy_timer(timer);
     al_destroy_display(tela);
     destroyFila(filaDeTracos);
+    destroy_deck(faceis);
+    destroy_deck(medias);
+    destroy_deck(dificeis);
 
     return 0;
 }

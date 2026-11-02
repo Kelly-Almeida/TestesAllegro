@@ -45,8 +45,8 @@ void *sock(void *arg) {
     }
 
     listen(server, 5);
-
-    printf("Servidor inicializado\n");
+ 
+    //printf("Servidor inicializado\n");
 
     while (round) {
         cliente = accept(server, (struct sockaddr *) &socket_cliente, &tam_sock_Cliente);
