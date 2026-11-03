@@ -242,30 +242,27 @@ int main() {
                 undo(filaDeTracos, canvas, tela);
             }
             if (strcmp(resposta.comando, "TRSP") == 0) {
-                COR_RGB cor = {resposta.corR, resposta.corG, resposta.corB};
-
-                traco_novo = criarTraco(cor, espessura, ponto_canvas);
-                desenhar = true;
                 al_set_target_bitmap(canvas);
                 al_draw_filled_circle(resposta.p1.x, resposta.p1.y, resposta.espessura, al_map_rgb(resposta.corR, resposta.corG, resposta.corB));
+                COR_RGB cor = {resposta.corR, resposta.corG, resposta.corB};
+                traco_novo = criarTraco(cor, resposta.espessura, resposta.p1);
                 al_set_target_backbuffer(tela);
                 ponto_inicial = resposta.p1;
 
             }
             if (strcmp(resposta.comando, "NEWP") == 0) {
-                if (desenhar && traco_novo) {
-                    COR_RGB cor = {resposta.corR, resposta.corG, resposta.corB};
 
-                    al_set_target_bitmap(canvas);
-                    addPontos(traco_novo, ponto_canvas);
-                    desenharCirc(ponto_inicial, ponto_canvas, cor, resposta.espessura);
-                    al_set_target_backbuffer(tela);
-                    ponto_inicial = ponto_canvas;
+                COR_RGB cor = {resposta.corR, resposta.corG, resposta.corB};
+                al_set_target_bitmap(canvas);
+                addPontos(traco_novo, ponto_canvas);
+                desenharCirc(ponto_inicial, resposta.p1, cor, resposta.espessura);
+                al_set_target_backbuffer(tela);
+                ponto_inicial = resposta.p1;
 
-                    pushFila(filaDeTracos,traco_novo);
-                    desenhar = false;
-                }
+            }
 
+            if (strcmp(resposta.comando, "NEWT") == 0) {
+                pushFila(filaDeTracos,traco_novo);
             }
             dados.evento = 0;
         }
