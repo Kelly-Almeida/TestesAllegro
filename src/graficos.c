@@ -91,10 +91,7 @@ void telaPrincipal(TELA telinha, ALLEGRO_FONT *font, deck *deck, int indice ) {
 
     struct COR BRANCO_PALE = {BRANCO, {20, 530, 90, 580}};
 
-    al_draw_filled_rectangle(0, 0, telinha.x * 0.15, telinha.y, VERDE);
-    al_draw_filled_rectangle(0, 0, telinha.x, telinha.y * 0.15, VERDE);
-    al_draw_filled_rectangle(0, telinha.y, telinha.x, telinha.y * 0.85, VERDE );
-    al_draw_filled_rectangle(telinha.x, 0, telinha.x *0.85, telinha.y, VERDE);
+    al_draw_filled_rectangle(0, 0, telinha.x, telinha.y, VERDE);
 
     /*cores*/
     al_draw_filled_rectangle(PRETO_PALE.coordenadas[0],PRETO_PALE.coordenadas[1], PRETO_PALE.coordenadas[2], PRETO_PALE.coordenadas[3], PRETO_PALE.cor);
@@ -105,6 +102,7 @@ void telaPrincipal(TELA telinha, ALLEGRO_FONT *font, deck *deck, int indice ) {
     al_draw_filled_rectangle(LARANJA_PALE.coordenadas[0], LARANJA_PALE.coordenadas[1], LARANJA_PALE.coordenadas[2], LARANJA_PALE.coordenadas[3], LARANJA_PALE.cor);
     al_draw_filled_rectangle(ROXO_PALE.coordenadas[0], ROXO_PALE.coordenadas[1], ROXO_PALE.coordenadas[2], ROXO_PALE.coordenadas[3], ROXO_PALE.cor);
 
+    al_draw_text(font, al_map_rgb(0,50,255), 900, 50, ALLEGRO_ALIGN_CENTRE, deck->frases[indice].ingles);
 
-    al_draw_text(font, al_map_rgb(0,50,255), 900, 50, 0, deck->frases[indice].ingles);
+    al_draw_filled_rounded_rectangle(telinha.x * 0.80, telinha.y*0.15,telinha.x * 0.98,telinha.y * 0.85,15,15, al_map_rgba(0,0,0,100));
 }

@@ -209,9 +209,9 @@ int main() {
     float scaling = 0.25;
     float border[4];
 
-    border[0] = telinha.x * 0.15; //canto esquerdo
+    border[0] = telinha.x * 0.1; //canto esquerdo
     border[1] = telinha.y * 0.15; // canto superior
-    border[2] = telinha.x - border[0]; // canto direito
+    border[2] = telinha.x - border[0] - telinha.x * 0.12; // canto direito
     border[3] = telinha.y - border[1]; // canto inferior
 
     double canvas_w = border[2] - border[0];
