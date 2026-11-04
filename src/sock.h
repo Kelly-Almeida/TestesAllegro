@@ -3,13 +3,13 @@
 #include "graficos.h"
 #include <allegro5/allegro.h>
 
-
 typedef struct {
     bool evento;
     int contador;
     char msg[256];
     ALLEGRO_MUTEX *mutex;
-}MSG;
+    ALLEGRO_COND *cond;
+}MSG_S;
 
 typedef struct {
     char comando[5];

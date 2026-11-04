@@ -15,7 +15,7 @@
 #include "sock.h"
 
 void *sock(ALLEGRO_THREAD *thread, void *arg) {
-        MSG *fila = (MSG *)arg;
+        MSG_S *fila = (MSG_S *)arg;
 
         bool round = true;
         const char *saida = "CABOOO";
@@ -40,7 +40,7 @@ void *sock(ALLEGRO_THREAD *thread, void *arg) {
         };
         int server = socket(AF_INET, SOCK_STREAM, 0);
 
-        if (server <0) {
+        if (server < 0) {
             printf("Erro ao criar o socket\n");
             return NULL;
         }
@@ -79,10 +79,18 @@ void *sock(ALLEGRO_THREAD *thread, void *arg) {
             }
             while (!al_get_thread_should_stop(thread) && round) {
                 ssize_t x = recv(cliente, bufferInfoClient, sizeof(bufferInfoClient) -1, 0);
-
                 if (x <= 0) break;
-
+/*
                 bufferInfoClient[x] = '\0';
+                char *linha = strtok(bufferInfoClient, "\r\n");
+
+                while (linha != NULL) {
+                    if (strlen(linha) > 0) {
+                        al_lock_mutex(fila->mutex);
+                        while
+                    }
+                }
+*/
                 bufferInfoClient[strcspn(bufferInfoClient, "\r\n")] = '\0';
 
                 puts(bufferInfoClient);

@@ -1,0 +1,130 @@
+#include <string.h>
+#include <stdio.h>
+#include <stdlib.h>
+
+#if defined(_WIN32) || defined(WIN32)
+    #include <winsock2.h>
+    #include <ws2tcpip.h>
+    #define CLOSE_SOCKET(s) closesocket(s)
+    #define SEND_FLAGS 0
+#else
+    #include <unistd.h>
+    #include <sys/socket.h>
+    #include <netinet/in.h>
+    #include <arpa/inet.h>
+    #include <signal.h>
+    #define CLOSE_SOCKET(s) close(s)
+    // Evita o encerramento do processo caso a conexao caia
+    #ifndef MSG_NOSIGNAL
+        #define MSG_NOSIGNAL 0
+    #endif
+    #define SEND_FLAGS MSG_NOSIGNAL
+#endif
+
+#include <allegro5/threads.h>
+#include "sock.h"
+#include "sockClient.h"
+
+#define PORT 5000
+
+void *client(ALLEGRO_THREAD *thread, void *arg) {
+    MSG_S *fila = (MSG_S *) arg;
+
+#if !defined(_WIN32) && !defined(WIN32)
+    // Ignora SIGPIPE globalmente para essa thread
+    signal(SIGPIPE, SIG_IGN);
+#else
+    WSADATA wsaData;
+    if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0) {
+        printf("Erro ao inicializar Winsock\n");
+        return NULL;
+    }
+#endif
+
+    int sock = socket(AF_INET, SOCK_STREAM, 0);
+    if (sock < 0) {
+        printf("Erro na criacao do Socket\n");
+#if defined(_WIN32) || defined(WIN32)
+        WSACleanup();
+#endif
+        return NULL;
+    }
+
+    struct sockaddr_in serv_addr;
+    memset(&serv_addr, 0, sizeof(serv_addr));
+    serv_addr.sin_family = AF_INET;
+    serv_addr.sin_port = htons(PORT);
+
+    if (inet_pton(AF_INET, "127.0.0.1", &serv_addr.sin_addr) <= 0) {
+        printf("Endereco invalido / nao suportado\n");
+        CLOSE_SOCKET(sock);
+#if defined(_WIN32) || defined(WIN32)
+        WSACleanup();
+#endif
+        return NULL;
+    }
+
+    if (connect(sock, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0) {
+        printf("Falha na conexao com o servidor\n");
+        CLOSE_SOCKET(sock);
+#if defined(_WIN32) || defined(WIN32)
+        WSACleanup();
+#endif
+        return NULL;
+    }
+
+    printf("Cliente conectado ao servidor!\n");
+
+    while (!al_get_thread_should_stop(thread)) {
+        al_lock_mutex(fila->mutex);
+
+        while (!fila->evento && !al_get_thread_should_stop(thread)) {
+            ALLEGRO_TIMEOUT timeout;
+            al_init_timeout(&timeout, 0.1);
+            al_wait_cond_until(fila->cond, fila->mutex, &timeout);
+        }
+
+        if (al_get_thread_should_stop(thread)) {
+            al_unlock_mutex(fila->mutex);
+            break;
+        }
+
+        char msg_env[256];
+        strncpy(msg_env, fila->msg, sizeof(msg_env) - 1);
+        msg_env[sizeof(msg_env) - 1] = '\0';
+
+        fila->evento = false;
+        al_unlock_mutex(fila->mutex);
+
+        if (strlen(msg_env) > 0) {
+            char buffer_formatado[280];
+            snprintf(buffer_formatado, sizeof(buffer_formatado), "%s\n", msg_env);
+
+            // Uso de SEND_FLAGS (MSG_NOSIGNAL) previne o crash por SIGPIPE
+            ssize_t enviou = send(sock, buffer_formatado, (int)strlen(buffer_formatado), SEND_FLAGS);
+            if (enviou <= 0) {
+                printf("Servidor encerrou a conexao! Finalizando thread do cliente.\n");
+                break;
+            }
+        }
+    }
+
+    CLOSE_SOCKET(sock);
+
+#if defined(_WIN32) || defined(WIN32)
+    WSACleanup();
+#endif
+
+    return NULL;
+}
+
+void transpCliente(MSG_S *data, const char *msg) {
+    al_lock_mutex(data->mutex);
+
+    strncpy(data->msg, msg, sizeof(data->msg) - 1);
+    data->msg[sizeof(data->msg) - 1] = '\0';
+    data->evento = true;
+
+    al_signal_cond(data->cond);
+    al_unlock_mutex(data->mutex);
+}
