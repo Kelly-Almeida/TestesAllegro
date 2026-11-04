@@ -4,7 +4,7 @@
 
 
 typedef struct {
-  const char* frase;
+  const char* ingles;
   const char* traducao;
   const char* dica1;
   const char* dica2;

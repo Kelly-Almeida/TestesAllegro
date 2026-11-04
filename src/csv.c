@@ -31,7 +31,7 @@ deck* novo_deck(FILE *fptr, char dificuldade){
     flag = fgets(temp, temp_size, fptr);
   }
 
-  printf("total: %d", total);
+  //printf("total: %d\n", total);
   d->arena = malloc(sizeof(char) * total);
   d->frases = malloc(sizeof(frase) * num_linhas);
   d->tamanho = num_linhas;
@@ -45,7 +45,7 @@ deck* novo_deck(FILE *fptr, char dificuldade){
     char *linha = temp + 2; // ignorando a dificuldade e seu delimitador
 
     frase *f = &d->frases[t];
-    const char **campos[] = { &f->frase, &f->traducao, &f->dica1, &f->dica2, &f->dica3 };
+    const char **campos[] = { &f->ingles, &f->traducao, &f->dica1, &f->dica2, &f->dica3 };
 
     int i = 0;
     for (int c = 0; c < 5; c++) {
@@ -87,5 +87,4 @@ for (int i = 0; i < faceis->tamanho; i++) {
   printf("\n");
 
 }
-
 */

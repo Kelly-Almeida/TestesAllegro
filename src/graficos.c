@@ -5,11 +5,12 @@
 #include <stdio.h>
 #include <allegro5/allegro.h>
 #include <allegro5/allegro_primitives.h>
+#include <allegro5/allegro_font.h>
 #include "graficos.h"
 #include "infra.h"
 
 
-TRACO* criarTraco(COR_RGB cor, short espessura, VEC ponto) {
+TRACO* criarTraco(COR_RGB cor, short espessura, VEC ponto ) {
 
     TRACO* tracoNovo = malloc(sizeof(TRACO));
     if (!tracoNovo) return NULL;
@@ -71,7 +72,7 @@ void limparCanvas(ALLEGRO_BITMAP* canvas, COR_RGB cor,  ALLEGRO_DISPLAY* tela, F
 }
 
 
-void telaPrincipal(TELA telinha) {
+void telaPrincipal(TELA telinha, ALLEGRO_FONT *font, deck *deck, int indice ) {
     ALLEGRO_COLOR VERDE = al_map_rgb(172, 225, 57);
     ALLEGRO_COLOR VERMELHO = al_map_rgb(255, 0, 0);
     ALLEGRO_COLOR AZUL = al_map_rgb(0, 0, 255);
@@ -105,4 +106,5 @@ void telaPrincipal(TELA telinha) {
     al_draw_filled_rectangle(ROXO_PALE.coordenadas[0], ROXO_PALE.coordenadas[1], ROXO_PALE.coordenadas[2], ROXO_PALE.coordenadas[3], ROXO_PALE.cor);
 
 
+    al_draw_text(font, al_map_rgb(0,50,255), 900, 50, 0, deck->frases[indice].ingles);
 }
