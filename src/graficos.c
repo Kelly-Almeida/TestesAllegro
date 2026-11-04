@@ -5,11 +5,12 @@
 #include <stdio.h>
 #include <allegro5/allegro.h>
 #include <allegro5/allegro_primitives.h>
+#include <allegro5/allegro_font.h>
 #include "graficos.h"
 #include "infra.h"
 
 
-TRACO* criarTraco(COR_RGB cor, short espessura, VEC ponto) {
+TRACO* criarTraco(COR_RGB cor, short espessura, VEC ponto ) {
 
     TRACO* tracoNovo = malloc(sizeof(TRACO));
     if (!tracoNovo) return NULL;
@@ -26,11 +27,11 @@ TRACO* criarTraco(COR_RGB cor, short espessura, VEC ponto) {
         free(tracoNovo);
         return NULL;
     }
-  
+
     tracoNovo->pontos[0] = ponto;
 
     printf("Novo Traço, Ponto Inicial: {%d, %d}, espessura: %d, cor: {r:%d g:%d b:%d} \n", ponto.x, ponto.y, espessura, cor.r, cor.g, cor.b);
-    
+
     return tracoNovo;
 }
 
@@ -71,7 +72,7 @@ void limparCanvas(ALLEGRO_BITMAP* canvas, COR_RGB cor,  ALLEGRO_DISPLAY* tela, F
 }
 
 
-void telaPrincipal(TELA telinha) {
+void telaPrincipal(TELA telinha, ALLEGRO_FONT *font, deck *deck, int indice ) {
     ALLEGRO_COLOR VERDE = al_map_rgb(172, 225, 57);
     ALLEGRO_COLOR VERMELHO = al_map_rgb(255, 0, 0);
     ALLEGRO_COLOR AZUL = al_map_rgb(0, 0, 255);
@@ -90,10 +91,7 @@ void telaPrincipal(TELA telinha) {
 
     struct COR BRANCO_PALE = {BRANCO, {20, 530, 90, 580}};
 
-    al_draw_filled_rectangle(0, 0, telinha.x * 0.15, telinha.y, VERDE);
-    al_draw_filled_rectangle(0, 0, telinha.x, telinha.y * 0.15, VERDE);
-    al_draw_filled_rectangle(0, telinha.y, telinha.x, telinha.y * 0.85, VERDE );
-    al_draw_filled_rectangle(telinha.x, 0, telinha.x *0.85, telinha.y, VERDE);
+    al_draw_filled_rectangle(0, 0, telinha.x, telinha.y, VERDE);
 
     /*cores*/
     al_draw_filled_rectangle(PRETO_PALE.coordenadas[0],PRETO_PALE.coordenadas[1], PRETO_PALE.coordenadas[2], PRETO_PALE.coordenadas[3], PRETO_PALE.cor);
@@ -104,5 +102,7 @@ void telaPrincipal(TELA telinha) {
     al_draw_filled_rectangle(LARANJA_PALE.coordenadas[0], LARANJA_PALE.coordenadas[1], LARANJA_PALE.coordenadas[2], LARANJA_PALE.coordenadas[3], LARANJA_PALE.cor);
     al_draw_filled_rectangle(ROXO_PALE.coordenadas[0], ROXO_PALE.coordenadas[1], ROXO_PALE.coordenadas[2], ROXO_PALE.coordenadas[3], ROXO_PALE.cor);
 
+    al_draw_text(font, al_map_rgb(0,50,255), 900, 50, ALLEGRO_ALIGN_CENTRE, deck->frases[indice].ingles);
 
+    al_draw_filled_rounded_rectangle(telinha.x * 0.80, telinha.y*0.15,telinha.x * 0.98,telinha.y * 0.85,15,15, al_map_rgba(0,0,0,100));
 }

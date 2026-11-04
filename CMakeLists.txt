@@ -12,11 +12,13 @@ endif()
 
 add_executable(Test
         src/main.c
-  #--      src/sock.c
+        #--      src/sock.c
         src/graficos.c
         src/infra.c
         src/sockClient.h
-        src/sockClient.c)
+        src/sockClient.c
+        src/csv.h
+        src/csv.c)
 
 if(NOT WIN32)
   target_sources(Test PRIVATE src/sock.c)
@@ -24,9 +26,9 @@ endif()
 
 
 add_custom_command(TARGET Test POST_BUILD
-  COMMAND ${CMAKE_COMMAND} -E copy_directory
-          ${CMAKE_SOURCE_DIR}/resources
-          $<TARGET_FILE_DIR:Test>/resources)
+        COMMAND ${CMAKE_COMMAND} -E copy_directory
+        ${CMAKE_SOURCE_DIR}/resources
+        $<TARGET_FILE_DIR:Test>/resources)
 
 # -- Cross Platform Library Finding --
 if(WIN32)
@@ -47,43 +49,43 @@ if(WIN32)
     foreach(m IN LISTS ALLEGRO_MODULOS)
       add_library(Allegro::${m} SHARED IMPORTED)
       set_target_properties(Allegro::${m} PROPERTIES
-        INTERFACE_INCLUDE_DIRECTORIES "${_nativo}/include"
-        IMPORTED_CONFIGURATIONS       "DEBUG;RELEASE"
-        IMPORTED_IMPLIB_RELEASE       "${_dir}/lib/${m}.lib"
-        IMPORTED_LOCATION_RELEASE     "${_dir}/bin/${m}-5.2.dll"
-        IMPORTED_IMPLIB_DEBUG         "${_dir}/lib/${m}-debug.lib"
-        IMPORTED_LOCATION_DEBUG       "${_dir}/bin/${m}-debug-5.2.dll"
-        MAP_IMPORTED_CONFIG_RELWITHDEBINFO RELEASE
-        MAP_IMPORTED_CONFIG_MINSIZEREL     RELEASE)
+              INTERFACE_INCLUDE_DIRECTORIES "${_nativo}/include"
+              IMPORTED_CONFIGURATIONS       "DEBUG;RELEASE"
+              IMPORTED_IMPLIB_RELEASE       "${_dir}/lib/${m}.lib"
+              IMPORTED_LOCATION_RELEASE     "${_dir}/bin/${m}-5.2.dll"
+              IMPORTED_IMPLIB_DEBUG         "${_dir}/lib/${m}-debug.lib"
+              IMPORTED_LOCATION_DEBUG       "${_dir}/bin/${m}-debug-5.2.dll"
+              MAP_IMPORTED_CONFIG_RELWITHDEBINFO RELEASE
+              MAP_IMPORTED_CONFIG_MINSIZEREL     RELEASE)
     endforeach()
   else()
     find_package(Allegro CONFIG REQUIRED)
   endif()
 
   target_link_libraries(Test PRIVATE
-        Allegro::allegro
-        Allegro::allegro_main
-        Allegro::allegro_primitives
-        Allegro::allegro_image
-        Allegro::allegro_font
-        Allegro::allegro_ttf
-        # ws2_32   # volta quando o socket for portado
+          Allegro::allegro
+          Allegro::allegro_main
+          Allegro::allegro_primitives
+          Allegro::allegro_image
+          Allegro::allegro_font
+          Allegro::allegro_ttf
+          # ws2_32   # volta quando o socket for portado
   )
 
   # Copia as DLLs para junto do .exe (senão: "allegro-5.2.dll não encontrado")
   add_custom_command(TARGET Test POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_RUNTIME_DLLS:Test> $<TARGET_FILE_DIR:Test>
-    COMMAND_EXPAND_LISTS)
+          COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_RUNTIME_DLLS:Test> $<TARGET_FILE_DIR:Test>
+          COMMAND_EXPAND_LISTS)
 else()
   # 2. Fall back to Linux pkg-config path
   find_package(PkgConfig REQUIRED)
   pkg_check_modules(ALLEGRO REQUIRED IMPORTED_TARGET
-        allegro-5
-        allegro_main-5
-        allegro_primitives-5
-        allegro_image-5
-        allegro_ttf-5
-    )
+          allegro-5
+          allegro_main-5
+          allegro_primitives-5
+          allegro_image-5
+          allegro_ttf-5
+  )
   target_link_libraries(Test PRIVATE PkgConfig::ALLEGRO)
 endif()
 

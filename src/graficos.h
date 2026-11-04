@@ -6,6 +6,9 @@
 #define TESTC_GRAFICOS_H
 
 #include <allegro5/allegro.h>
+#include <allegro5/allegro_font.h>
+
+#include "csv.h"
 
 typedef struct TELA {
     int x, y;
@@ -16,7 +19,7 @@ typedef struct VEC {
 }VEC;
 
 typedef struct COR_RGB {
-  unsigned char r, g, b;
+    unsigned char r, g, b;
 }COR_RGB;
 
 struct INICIO {
@@ -43,7 +46,7 @@ TRACO* criarTraco(COR_RGB cor, short espessura, VEC ponto);
 
 void addPontos(TRACO* traco, VEC coordenada);
 void desenharCirc(VEC ponto_inicial, VEC ponto, COR_RGB cor, float espessura);
-void telaPrincipal(TELA telinha);
+void telaPrincipal(TELA telinha, ALLEGRO_FONT *font, deck *frases, int frase);
 void limparCanvas(ALLEGRO_BITMAP* canvas, COR_RGB cor,  ALLEGRO_DISPLAY* tela,struct FILA *filaDeTracos);
 
 
