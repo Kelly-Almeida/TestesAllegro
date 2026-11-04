@@ -7,6 +7,7 @@
 //https://www.youtube.com/watch?v=XfZ6WrV5Z7Y
 
 #include <stdlib.h>
+#include <time.h>
 #include <stdio.h>
 #include <allegro5/allegro.h>
 #include <allegro5/allegro_image.h>
@@ -22,15 +23,46 @@
 /*Nossa bibliotecas :p*/
 #include "sock.h"
 #include "infra.h"
-
+#include "csv.h"
 
 #define FPS 60
 
 
 int main() {
 
-    bool round = true, desenhar = false, redesenhar = false;
+  srand(time(NULL));
+  
+  bool round = true, desenhar = false, redesenhar = false;
+  
+  printf("Abrindo o arquivo...!\n");
+  FILE *file = fopen("resources/palavra em ingles_dicas preenchidas.csv", "r");
+  if (!file){
+    printf("Erro ao abrir o arquivo!\n");
+    return -1;
+  }
+  deck *faceis =    novo_deck(file, '0');
+  deck *medias =    novo_deck(file, '1');
+  deck *dificeis =  novo_deck(file, '2');
+  deck *dificuldades[3] = {faceis, medias, dificeis};
+  
+  
+  /*
+  printf("%s", "Imprimindo as frases guardadas no struct\n");
+  for (int i = 0; i < faceis->tamanho; i++) {
 
+    printf("%s\n", faceis->frases[i].frase);
+    printf("%s\n", faceis->frases[i].traducao);
+    printf("%s\n", faceis->frases[i].dica1);
+    printf("%s\n", faceis->frases[i].dica2);
+    printf("%s\n", faceis->frases[i].dica3);
+    printf("\n");
+
+  }
+  */
+
+  
+    fclose(file);
+        
     // Inicializando o Allegro
     if (!al_init()) {
         printf("Falha ao inicializar o Allegro!\n");
@@ -168,6 +200,8 @@ int main() {
     VEC ponto = { 0,0 };
     VEC ponto_inicial;
     VEC ponto_canvas;
+    int DIFICULDADE = 0;
+    int indice = rand() % dificuldades[DIFICULDADE]->tamanho;
 
     al_clear_to_color(al_map_rgb(BRANCO.r, BRANCO.g, BRANCO.b));
     al_flip_display();
@@ -376,7 +410,7 @@ int main() {
           }
       }
 
-
+    
       if (evento.type == ALLEGRO_EVENT_DISPLAY_CLOSE) {
           round = false;
       }
@@ -384,9 +418,8 @@ int main() {
       if (redesenhar && al_is_event_queue_empty(fila_eventos)) {
           redesenhar = false;
 
-          telaPrincipal(telinha);
+          telaPrincipal(telinha, font, dificuldades[DIFICULDADE], indice);
 
-          al_draw_text(font, al_map_rgb(0,50,255), 20, 600, 0, "Teste texto\n");
           /*espessura*/
           al_draw_filled_rectangle(telinha.x * 0.01, telinha.y * 0.85, telinha.x *0.01 + 75, (telinha.y * 0.85) + 75, al_map_rgb(BRANCO.r, BRANCO.g, BRANCO.b));
           al_draw_filled_circle(telinha.x * 0.01 + 37, telinha.y * 0.85 + 35.5,espessura / scaling, al_map_rgb(COR.r, COR.g, COR.b));
@@ -405,6 +438,9 @@ int main() {
     al_destroy_timer(timer);
     al_destroy_display(tela);
     destroyFila(filaDeTracos);
+    destroy_deck(faceis);
+    destroy_deck(medias);
+    destroy_deck(dificeis);
 
     #if defined(_WIN32) || defined(WIN32)
         DeleteCriticalSection(&fila.lock);

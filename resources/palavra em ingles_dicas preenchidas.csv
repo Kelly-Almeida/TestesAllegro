@@ -1,0 +1,108 @@
+DIFICULDADE;INGLES;TRADUCAO;DICA 1;DICA 2;DICA 3
+0;a;b;c;d;e
+0;á;b;c;d;ê
+0;Apple;Maçã;fruit;vermelho;pomar
+0;Bread;Pão;comida;wheat;padaria
+0;Milk;Leite;drink;branco;laticínio
+0;Water;Água;drink;thirst;clear
+0;Rice;Arroz;grain;comida;rice field
+0;Egg;Ovo;comida;shell;breakfast
+0;Chair;Cadeira;furniture;sentar;madeira
+0;Table;Mesa;furniture;flat;wooden
+0;Door;Porta;entrance;open;handle
+0;Window;Janela;glass;view;opening
+0;Bed;Cama;sleep;mattress;bedroom
+0;House;Casa;building;family;home
+0;Car;Carro;vehicle;drive;road
+0;Bus;Ônibus;transport;passengers;station
+0;Phone;Celular;call;screen;mobile
+0;Book;Livro;read;pages;library
+0;Pen;Caneta;write;ink;school
+0;Pencil;Lápis;write;eraser;school
+0;Bag;Bolsa / Mochila;carry;travel;luggage
+0;Shoe;Sapato;foot;wear;walk
+0;Shirt;Camisa;clothing;wear;cotton
+0;Hat;Chapéu / Boné;head;wear;summer
+0;Key;Chave;lock;open;metal
+0;Clock;Relógio;time;hour;wall
+0;Cup;Xícara / Copo;drink;handle;kitchen
+0;Plate;Prato;comida;dish;dinner
+0;Spoon;Colher;eat;metal;handle
+0;Fork;Garfo;eat;prongs;metal
+0;Knife;Faca;cut;sharp;metal
+0;Dog;Cachorro;pet;bark;loyal
+0;Cat;Gato;pet;meow;feline
+0;Bird;Pássaro;animal;fly;feathers
+0;Tree;Árvore;nature;wood;leaves
+0;Flower;Flor;garden;petals;plant
+0;Sun;Sol;sky;light;day
+1;An apple resting on a table.;Uma maçã sobre uma mesa.;fruit;surface;vermelho
+1;A piece of bread beside a plate.;Um pedaço de pão ao lado de um prato.;comida;padaria;wheat
+1;A cup filled with milk.;Uma xícara cheia de leite.;drink;dairy;white
+1;A glass of water.;Um copo com água.;drink;thirst;clear
+1;Rice on a plate.;Arroz em um prato.;grain;meal;white
+1;An egg beside some bread.;Um ovo ao lado de um pão.;breakfast;shell;comida
+1;A cat sitting on a chair.;Um gato sentado em uma cadeira.;pet;furniture;feline
+1;A book underneath the table.;Um livro debaixo da mesa.;reading;furniture;below
+1;A dog hiding behind the door.;Um cachorro escondido atrás da porta.;pet;entrance;hiding
+1;Sunlight coming through the window.;Luz do sol entrando pela janela.;light;glass;day
+1;A sleeping cat on the bed.;Um gato dormindo na cama.;pet;sleep;bedroom
+1;A small tree beside the house.;Uma árvore pequena ao lado da casa.;nature;home;wood
+1;A car parked in front of the house.;Um carro estacionado na frente da casa.;vehicle;parking;home
+1;A bus parked next to a car.;Um ônibus estacionado ao lado de um carro.;transport;parking;vehicle
+1;A phone lying on the table.;Um celular sobre a mesa.;mobile;surface;electronic
+1;An open book on the table.;Um livro aberto sobre a mesa.;reading;pages;surface
+1;A pen beside the book.;Uma caneta ao lado do livro.;writing;ink;reading
+1;A pencil underneath a book.;Um lápis debaixo de um livro.;writing;school;below
+1;A bag resting beside a chair.;Uma bolsa ao lado de uma cadeira.;carry;luggage;furniture
+1;A single shoe under the bed.;Um único sapato debaixo da cama.;footwear;sleep;floor
+1;A shirt hanging near the window.;Uma camisa pendurada perto da janela.;clothing;wall;glass
+1;A boy wearing a hat.;Um menino usando um boné.;child;headwear;clothing
+1;A key beside a phone.;Uma chave ao lado de um celular.;metal;unlock;electronic
+1;A clock hanging above the door.;Um relógio pendurado acima da porta.;time;wall;above
+1;A cup sitting beside a plate.;Uma xícara ao lado de um prato.;drink;dish;handle
+1;A plate filled with food.;Um prato cheio de comida.;dish;meal;full
+1;A spoon inside a cup.;Uma colher dentro de uma xícara.;utensil;drink;inside
+1;A fork lying beside the plate.;Um garfo ao lado do prato.;utensil;meal;beside
+1;A knife on the table.;Uma faca sobre a mesa.;cut;utensil;surface
+1;A dog sitting beside the house.;Um cachorro sentado ao lado da casa.;pet;home;furniture
+1;A cat hiding under the table.;Um gato escondido debaixo da mesa.;pet;furniture;hiding
+1;A bird flying over a tree.;Um pássaro voando sobre uma árvore.;animal;sky;nature
+1;Two trees behind the house.;Duas árvores atrás da casa.;nature;wood;home
+1;A flower growing beside a tree.;Uma flor crescendo ao lado de uma árvore.;garden;plant;nature
+1;The sun above the house.;O sol acima da casa.;sky;light;home
+2;There is a red apple on the table next to the plate.;Há uma maçã vermelha sobre a mesa, ao lado do prato.;fruit;color;dish
+2;A piece of bread is sitting on a small plate near the window.;Um pedaço de pão está em um prato pequeno perto da janela.;padaria;comida;glass
+2;There is a glass of cold milk on the table beside the book.;Há um copo de leite gelado sobre a mesa, ao lado do livro.;dairy;drink;reading
+2;A glass of water is next to the chair near the door.;Um copo de água está ao lado da cadeira perto da porta.;drink;furniture;entrance
+2;There is a plate of rice next to the egg on the table.;Há um prato de arroz ao lado do ovo sobre a mesa.;meal;grain;breakfast
+2;A boiled egg is sitting on a small plate beside the bread.;Um ovo cozido está em um prato pequeno ao lado do pão.;breakfast;cooked;comida
+2;There is a wooden chair next to the table near the window.;Há uma cadeira de madeira ao lado da mesa perto da janela.;furniture;wood;glass
+2;A small table is in the middle of the room with a book on it.;Uma mesa pequena está no meio do quarto com um livro sobre ela.;furniture;room;reading
+2;The brown door is open, and you can see the room behind it.;A porta marrom está aberta, e você pode ver o quarto atrás dela.;entrance;color;interior
+2;The window is open, and the sun is shining through it.;A janela está aberta, e o sol está brilhando através dela.;opening;light;sky
+2;There is a small cat sleeping on the bed.;Há um gato pequeno dormindo na cama.;pet;sleeping;furniture
+2;The house has two windows and a small door in the front.;A casa tem duas janelas e uma porta pequena na frente.;building;entrance;glass
+2;A blue car is parked in front of the house next to the tree.;Um carro azul está estacionado na frente da casa, ao lado da árvore.;vehicle;color;nature
+2;The yellow bus is driving down the street near the house.;O ônibus amarelo está passando pela rua perto da casa.;transport;street;color
+2;The phone is lying on the table next to a cup and a book.;O celular está sobre a mesa, ao lado de uma xícara e de um livro.;mobile;drink;reading
+2;An open book is lying on the table under the window.;Um livro aberto está sobre a mesa, debaixo da janela.;reading;furniture;glass
+2;The black pen is next to the book on the wooden table.;A caneta preta está ao lado do livro sobre a mesa de madeira.;writing;color;furniture
+2;A yellow pencil is lying under the book beside the chair.;Um lápis amarelo está debaixo do livro, ao lado da cadeira.;writing;color;furniture
+2;There is a black bag on the floor beside the chair.;Há uma bolsa preta no chão ao lado da cadeira.;luggage;floor;furniture
+2;One red shoe is under the bed, and the other is near the door.;Um sapato vermelho está debaixo da cama, e o outro está perto da porta.;footwear;color;location
+2;A blue shirt is hanging on the wall next to the window.;Uma camisa azul está pendurada na parede ao lado da janela.;clothing;color;wall
+2;The boy is wearing a big hat and standing next to the house.;O menino está usando um chapéu grande e está ao lado da casa.;child;headwear;home
+2;A small key is lying on the table next to the phone.;Uma chave pequena está sobre a mesa, ao lado do celular.;metal;small;mobile
+2;The clock is hanging on the wall above the door.;O relógio está pendurado na parede acima da porta.;tempo;parede;entrance
+2;There is a white cup full of milk beside the plate.;Há uma xícara branca cheia de leite ao lado do prato.;drink;dairy;dish
+2;The plate is on the table with an egg and some rice on it.;O prato está sobre a mesa com um ovo e um pouco de arroz nele.;meal;breakfast;grain
+2;A spoon is inside the cup, next to the plate on the table.;Uma colher está dentro da xícara, ao lado do prato sobre a mesa.;utensil;drink;dish
+2;The fork is lying next to the plate beside the knife.;O garfo está ao lado do prato, perto da faca.;utensil;meal;cutting
+2;The knife is on the table between the plate and the cup.;A faca está sobre a mesa entre o prato e a xícara.;cutting;utensil;drink
+2;A happy dog is sitting in front of the house near the car.;Um cachorro feliz está sentado na frente da casa, perto do carro.;pet;vehicle;home
+2;The little cat is hiding under the table behind the chair.;O gatinho está escondido debaixo da mesa, atrás da cadeira.;pet;furniture;hiding
+2;A small bird is flying above the tree near the house.;Um pássaro pequeno está voando acima da árvore perto da casa.;animal;sky;nature
+2;There is a tall green tree behind the house with a bird in it.;Há uma árvore verde e alta atrás da casa com um pássaro nela.;natureza;alto;animal
+2;A beautiful red flower is growing next to the tree near the door.;Uma linda flor vermelha está crescendo ao lado da árvore perto da porta.;jardim;cor;planta
+2;The bright sun is shining above the house while a bird flies in the sky.;O sol brilhante está brilhando acima da casa enquanto um pássaro voa no céu.;céu;luz;animal
