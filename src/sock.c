@@ -13,105 +13,109 @@
 #endif
 
 #include "sock.h"
-
 void *sock(ALLEGRO_THREAD *thread, void *arg) {
-        MSG_S *fila = (MSG_S *)arg;
+    MSG_S *fila = (MSG_S *)arg;
+    bool round = true;
+    char bufferInfoClient[1024];
 
-        bool round = true;
-        /*const char *saida = "CABOOO";
-        const char *limpar = "LIMPAR";
-        const char *desfazer = "UNDO";*/
-        char bufferInfoClient[256];
+#if defined(_WIN32) || defined(WIN32)
+    WSADATA wsaData;
+    if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0) {
+        printf("Erro no WSAStartup\n");
+        return NULL;
+    }
+#endif
 
-        #if defined(_WIN32) || defined(WIN32)
-            WSADATA wsaData;
-            if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0) {
-                printf("Erro ao inicializar a WSASDATA()\n");
-                return NULL;
-            }
-        #endif
+    struct sockaddr_in socket_cliente;
+    struct sockaddr_in enderecoMara = {
+        .sin_family = AF_INET,
+        .sin_addr.s_addr = htonl(INADDR_ANY),
+        .sin_port = htons(5000)
+    };
 
-
-        struct sockaddr_in socket_cliente;
-        struct sockaddr_in enderecoMara = {
-            .sin_family = AF_INET,
-            .sin_addr.s_addr = htonl(INADDR_ANY),
-            .sin_port = htons(5000)
-        };
-        int server = socket(AF_INET, SOCK_STREAM, 0);
-
-        if (server < 0) {
-            printf("Erro ao criar o socket\n");
-            return NULL;
-        }
-
-        int opt = 1;
-        setsockopt(server, SOL_SOCKET, SO_REUSEADDR, (const char *) &opt, sizeof(opt));
-
-        #if defined(_WIN32) || defined(WIN32)
-            DWORD tv = 1000;
-            setsockopt(server, SOL_SOCKET, SO_RCVTIMEO, (const char*)&tv, sizeof(tv));
-        #else
-            struct timeval tv;
-            tv.tv_sec = 1;
-            tv.tv_usec = 0;
-            setsockopt(server, SOL_SOCKET, SO_RCVTIMEO, (const char*)&tv, sizeof(tv));
-        #endif
-
-        int cliente;
-        socklen_t tam_sock_Cliente = sizeof socket_cliente;
-
-        if (bind(server, (struct sockaddr *) &enderecoMara, sizeof enderecoMara) < 0) {
-            printf("Erro no bind!\n");
-            close(server);
-            return NULL;
-        }
-
-        listen(server, 5);
-
-        printf("Servidor inicializado\n");
-
-        while (!al_get_thread_should_stop(thread) && round) {
-            cliente = accept(server, (struct sockaddr *) &socket_cliente, &tam_sock_Cliente);
-
-            if (cliente < 0) {
-                continue;
-            }
-            while (!al_get_thread_should_stop(thread) && round) {
-                ssize_t x = recv(cliente, bufferInfoClient, sizeof(bufferInfoClient) -1, 0);
-                if (x <= 0) break;
-
-                bufferInfoClient[x] = '\0';
-                char *linha = strtok(bufferInfoClient, "\r\n");
-
-                while (linha != NULL) {
-                    if (strlen(linha) > 0) {
-                        al_lock_mutex(fila->mutex);
-                        while (fila->evento && !al_get_thread_should_stop(thread)) {
-                            al_unlock_mutex(fila->mutex);
-                            al_rest(0.001);
-                            al_lock_mutex(fila->mutex);
-                        }
-
-                        fila->contador++;
-                        fila->evento = true;
-                        strncpy(fila->msg, linha, sizeof(fila->msg) -1);
-                        fila->msg[sizeof(fila->msg) - 1] = '\0';
-                        al_unlock_mutex(fila->mutex);
-                    }
-                    linha = strtok(NULL, "\r\n");
-                }
-            }
-
-            close(cliente);
-        }
-        close(server);
-        #if defined(_WIN32) || defined(WIN32)
-            WSACleanup();
-        #endif
+    int server = socket(AF_INET, SOCK_STREAM, 0);
+    if (server < 0) {
+        printf("Erro ao criar socket do servidor\n");
         return NULL;
     }
 
+    int opt = 1;
+    setsockopt(server, SOL_SOCKET, SO_REUSEADDR, (const char *)&opt, sizeof(opt));
+
+    socklen_t tam_sock_Cliente = sizeof(socket_cliente);
+
+    if (bind(server, (struct sockaddr *)&enderecoMara, sizeof(enderecoMara)) < 0) {
+        printf("Erro no bind!\n");
+        close(server);
+#if defined(_WIN32) || defined(WIN32)
+        WSACleanup();
+#endif
+        return NULL;
+    }
+
+    listen(server, 5);
+    printf("Servidor ativo e escutando na porta 5000...\n");
+
+    while (!al_get_thread_should_stop(thread) && round) {
+        int cliente = accept(server, (struct sockaddr *)&socket_cliente, &tam_sock_Cliente);
+        if (cliente < 0) continue;
+
+        printf("Cliente conectado\n");
+
+        // LOOP DE LEITURA CONTÍNUA
+        while (!al_get_thread_should_stop(thread) && round) {
+            ssize_t x = recv(cliente, bufferInfoClient, sizeof(bufferInfoClient) - 1, 0);
+
+            // Se der erro/timeout, verifica se foi erro real ou apenas ausência de dados momentânea
+            if (x <= 0) {
+                // Em conexões TCP normais, x == 0 significa que o cliente fechou a conexão explicitamente.
+                if (x == 0) {
+                    printf("Cliente fechou a conexao.\n");
+                    break;
+                }
+                // Se x < 0, pode ser apenas o timeout do SO_RCVTIMEO (sem dados no momento)
+                // Continuamos o loop para manter a conexão aberta!
+                continue;
+            }
+
+            bufferInfoClient[x] = '\0';
+            printf("[Servidor Recv]: %s", bufferInfoClient); // Log para depuração
+
+            char *saveptr;
+            char *linha = strtok_r(bufferInfoClient, "\r\n", &saveptr);
+
+            while (linha != NULL) {
+                if (strlen(linha) > 0) {
+                    al_lock_mutex(fila->mutex);
+
+                    // Espera a main consumir a mensagem anterior
+                    while (fila->evento && !al_get_thread_should_stop(thread)) {
+                        al_unlock_mutex(fila->mutex);
+                        al_rest(0.001);
+                        al_lock_mutex(fila->mutex);
+                    }
+
+                    fila->contador++;
+                    fila->evento = true;
+                    strncpy(fila->msg, linha, sizeof(fila->msg) - 1);
+                    fila->msg[sizeof(fila->msg) - 1] = '\0';
+
+                    al_unlock_mutex(fila->mutex);
+                }
+                linha = strtok_r(NULL, "\r\n", &saveptr);
+            }
+        }
+
+        close(cliente);
+        printf("Sessao com o cliente encerrada.\n");
+    }
+
+    close(server);
+#if defined(_WIN32) || defined(WIN32)
+    WSACleanup();
+#endif
+    return NULL;
+}
 
 short parseText(char *msg, int *idx) {
     char cord[16];
