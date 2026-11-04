@@ -114,29 +114,24 @@ void *sock(ALLEGRO_THREAD *thread, void *arg) {
 
 
 short parseText(char *msg, int *idx) {
-    char *cord;
-    int num = 12;
-    cord = (char *) malloc(num * sizeof(char));
+    char cord[16];
     int k = 0;
-
-    bool scanNum = true;
-    while (scanNum) {
-        if (msg[*idx] != ' ' && msg[*idx] != '\0') {
-            cord[k] = msg[*idx];
-            k++;
-            (*idx)++;
-        }else {
-            scanNum = false;
-            if (msg[*idx] == ' ') (*idx)++;
-        }
+    while (msg[*idx] != '\0' && msg[*idx] == ' ') {
+        (*idx)++;
     }
 
-    cord[k] = '\0';
-    short resp = (short) atoi(cord);
-    free(cord);
-    return resp;
-}
+    if (msg[*idx] == '\0') return 0;
 
+    while (msg[*idx] != '\0' && msg[*idx] != ' ' && k < 15) {
+        cord[k++] = msg[*idx];
+        (*idx)++;
+    }
+    cord[k] = '\0';
+
+    if (msg[*idx] == ' ') (*idx)++;
+
+    return (short)atoi(cord);
+}
 RESP tratamento (char msg[]) {
     printf("%s\n", msg);
     RESP resp;

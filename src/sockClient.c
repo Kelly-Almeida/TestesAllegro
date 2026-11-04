@@ -121,9 +121,16 @@ void *client(ALLEGRO_THREAD *thread, void *arg) {
 void transpCliente(MSG_S *data, const char *msg) {
     al_lock_mutex(data->mutex);
 
+    while (data->evento) {
+        al_unlock_mutex(data->mutex);
+        al_rest(0.001);
+        al_lock_mutex(data->mutex);
+    }
+
     strncpy(data->msg, msg, sizeof(data->msg) - 1);
     data->msg[sizeof(data->msg) - 1] = '\0';
     data->evento = true;
+    printf("Mensagem no transporte: %s\n", data->msg);
 
     al_signal_cond(data->cond);
     al_unlock_mutex(data->mutex);
