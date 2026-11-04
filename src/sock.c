@@ -18,9 +18,9 @@ void *sock(ALLEGRO_THREAD *thread, void *arg) {
         MSG_S *fila = (MSG_S *)arg;
 
         bool round = true;
-        const char *saida = "CABOOO";
+        /*const char *saida = "CABOOO";
         const char *limpar = "LIMPAR";
-        const char *desfazer = "UNDO";
+        const char *desfazer = "UNDO";*/
         char bufferInfoClient[256];
 
         #if defined(_WIN32) || defined(WIN32)
@@ -80,50 +80,27 @@ void *sock(ALLEGRO_THREAD *thread, void *arg) {
             while (!al_get_thread_should_stop(thread) && round) {
                 ssize_t x = recv(cliente, bufferInfoClient, sizeof(bufferInfoClient) -1, 0);
                 if (x <= 0) break;
-/*
+
                 bufferInfoClient[x] = '\0';
                 char *linha = strtok(bufferInfoClient, "\r\n");
 
                 while (linha != NULL) {
                     if (strlen(linha) > 0) {
                         al_lock_mutex(fila->mutex);
-                        while
+                        while (fila->evento && !al_get_thread_should_stop(thread)) {
+                            al_unlock_mutex(fila->mutex);
+                            al_rest(0.001);
+                            al_lock_mutex(fila->mutex);
+                        }
+
+                        fila->contador++;
+                        fila->evento = true;
+                        strncpy(fila->msg, linha, sizeof(fila->msg) -1);
+                        fila->msg[sizeof(fila->msg) - 1] = '\0';
+                        al_unlock_mutex(fila->mutex);
                     }
+                    linha = strtok(NULL, "\r\n");
                 }
-*/
-                bufferInfoClient[strcspn(bufferInfoClient, "\r\n")] = '\0';
-
-                puts(bufferInfoClient);
-                fflush(stdout);
-
-                char resposta[512];
-                snprintf(resposta, sizeof(resposta), "Mensagem enviada: %s\n", bufferInfoClient);
-                send(cliente, resposta, (int)strlen(resposta), 0);
-
-                if (strcmp(bufferInfoClient, saida) == 0) {
-                    const char *message = "\nFim da conexao\n";
-                    puts(message);
-                    send(cliente, message, (int)strlen(message), 0);
-                    round = false;
-                }
-                if (strcmp(bufferInfoClient, limpar) == 0) {
-                    const char *message = "\nlimpar a tela remotamente\n";
-                    puts(message);
-                    send(cliente, message, (int)strlen(message), 0);
-                }
-                if (strcmp(bufferInfoClient, desfazer) == 0) {
-                    const char *message = "\nCtrl + z\n";
-                    puts(message);
-                    send(cliente, message, (int)strlen(message), 0);
-                }
-                al_lock_mutex(fila->mutex);
-
-                fila->contador++;
-                fila->evento = 1;
-
-                strncpy(fila->msg, bufferInfoClient, sizeof(fila->msg) - 1);
-                fila->msg[sizeof(fila->msg) - 1] = '\0';
-                al_unlock_mutex(fila->mutex);
             }
 
             close(cliente);

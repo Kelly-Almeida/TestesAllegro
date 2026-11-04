@@ -162,13 +162,9 @@ int main() {
     dados.contador = 0;
     dados.evento = false;
     dados.mutex = al_create_mutex();
+
     if (cliente) {
         dados.cond = al_create_cond();
-    }
-
-    if (!dados.mutex) {
-        printf("Erro ao criar mutex!\n");
-        return -1;
     }
 
     ALLEGRO_THREAD *socket;
@@ -182,210 +178,179 @@ int main() {
 
     while (round) {
 
-        // Dentro do loop 'while (round)' na main.c (Lado Servidor / Recebimento)
-if (!cliente) {
-    al_lock_mutex(dados.mutex);
-    if (dados.evento == 1) {
-        RESP resposta = tratamento(dados.msg);
 
-        if (strcmp(resposta.comando, "TRSP") == 0) {
-            // 1. Recebeu o início do traço
-            COR_RGB cor = {resposta.corR, resposta.corG, resposta.corB};
+    if (!cliente) {
+        al_lock_mutex(dados.mutex);
+        if (dados.evento == 1) {
+            RESP resposta = tratamento(dados.msg);
 
-            al_set_target_bitmap(canvas);
-            al_draw_filled_circle(resposta.p1.x, resposta.p1.y, resposta.espessura, al_map_rgb(cor.r, cor.g, cor.b));
-            al_set_target_backbuffer(tela);
-
-            // Registra o novo traço e atualiza o ponto inicial
-            traco_novo = criarTraco(cor, resposta.espessura, resposta.p1);
-            ponto_inicial = resposta.p1;
-        }
-        else if (strcmp(resposta.comando, "NEWP") == 0) {
-            // 2. Recebeu um novo ponto da linha
-            if (traco_novo != NULL) {
+            if (strcmp(resposta.comando, "TRSP") == 0) {
                 COR_RGB cor = {resposta.corR, resposta.corG, resposta.corB};
 
                 al_set_target_bitmap(canvas);
-                addPontos(traco_novo, resposta.p1);
-
-                // Conecta o ponto anterior ao novo ponto recebido
-                desenharCirc(ponto_inicial, resposta.p1, cor, resposta.espessura);
+                al_draw_filled_circle(resposta.p1.x, resposta.p1.y, resposta.espessura, al_map_rgb(cor.r, cor.g, cor.b));
                 al_set_target_backbuffer(tela);
 
-                ponto_inicial = resposta.p1; // Atualiza o ponto de partida para o proximo segmento
+                traco_novo = criarTraco(cor, resposta.espessura, resposta.p1);
+                ponto_inicial = resposta.p1;
             }
-        }
-        else if (strcmp(resposta.comando, "NEWT") == 0) {
-            // 3. Finalizou o traço
-            if (traco_novo != NULL) {
-                pushFila(filaDeTracos, traco_novo);
-                traco_novo = NULL;
-            }
-        }
-        else if (strcmp(resposta.comando, "LIMP") == 0) {
-            limparCanvas(canvas, BRANCO, tela, filaDeTracos);
-        }
-        else if (strcmp(resposta.comando, "UNDO") == 0) {
-            undo(filaDeTracos, canvas, tela);
-        }
+            else if (strcmp(resposta.comando, "NEWP") == 0) {
+                if (traco_novo != NULL) {
+                    COR_RGB cor = {resposta.corR, resposta.corG, resposta.corB};
 
-        dados.evento = 0; // Marca como processado
+                    al_set_target_bitmap(canvas);
+                    addPontos(traco_novo, resposta.p1);
+
+                    desenharCirc(ponto_inicial, resposta.p1, cor, resposta.espessura);
+                    al_set_target_backbuffer(tela);
+
+                    ponto_inicial = resposta.p1;
+                }
+            }
+            else if (strcmp(resposta.comando, "NEWT") == 0) {
+                if (traco_novo != NULL) {
+                    pushFila(filaDeTracos, traco_novo);
+                    traco_novo = NULL;
+                }
+            }
+            else if (strcmp(resposta.comando, "LIMP") == 0) {
+                limparCanvas(canvas, BRANCO, tela, filaDeTracos);
+            }
+            else if (strcmp(resposta.comando, "UNDO") == 0) {
+                undo(filaDeTracos, canvas, tela);
+            }
+
+            dados.evento = 0;
+        }
+        al_unlock_mutex(dados.mutex);
     }
-    al_unlock_mutex(dados.mutex);
-}
 
-        ALLEGRO_EVENT evento;
-        al_wait_for_event(fila_eventos, &evento);
+            ALLEGRO_EVENT evento;
+            al_wait_for_event(fila_eventos, &evento);
 
-        if (evento.type == ALLEGRO_EVENT_TIMER) {
-            redesenhar = true;
-        }
-        else if (evento.type == ALLEGRO_EVENT_MOUSE_BUTTON_DOWN) {
-            if (evento.mouse.button == 1) {
+            if (evento.type == ALLEGRO_EVENT_TIMER) {
+                redesenhar = true;
+            }
+            else if (evento.type == ALLEGRO_EVENT_MOUSE_BUTTON_DOWN) {
+                if (evento.mouse.button == 1) {
+                    ponto.x = evento.mouse.x;
+                    ponto.y = evento.mouse.y;
+
+                    if (ponto.x >= PRETO_PALE.coordenadas[0] && ponto.x <= PRETO_PALE.coordenadas[2] && ponto.y >= PRETO_PALE.coordenadas[1] && ponto.y <= PRETO_PALE.coordenadas[3]) COR = PRETO;
+                    else if (ponto.x >= VERMELHO_PALE.coordenadas[0] && ponto.x <= VERMELHO_PALE.coordenadas[2] && ponto.y >= VERMELHO_PALE.coordenadas[1] && ponto.y <= VERMELHO_PALE.coordenadas[3]) COR = VERMELHO;
+                    else if (ponto.x >= AMARELO_PALE.coordenadas[0] && ponto.x <= AMARELO_PALE.coordenadas[2] && ponto.y >= AMARELO_PALE.coordenadas[1] && ponto.y <= AMARELO_PALE.coordenadas[3]) COR = AMARELO;
+                    else if (ponto.x >= AZUL_PALE.coordenadas[0] && ponto.x <= AZUL_PALE.coordenadas[2] && ponto.y >= AZUL_PALE.coordenadas[1] && ponto.y <= AZUL_PALE.coordenadas[3]) COR = AZUL;
+                    else if (ponto.x >= BRANCO_PALE.coordenadas[0] && ponto.x <= BRANCO_PALE.coordenadas[2] && ponto.y >= BRANCO_PALE.coordenadas[1] && ponto.y <= BRANCO_PALE.coordenadas[3]) COR = BRANCO;
+                    else if (ponto.x >= LARANJA_PALE.coordenadas[0] && ponto.x <= LARANJA_PALE.coordenadas[2] && ponto.y >= LARANJA_PALE.coordenadas[1] && ponto.y <= LARANJA_PALE.coordenadas[3]) COR = LARANJA;
+                    else if (ponto.x >= ROXO_PALE.coordenadas[0] && ponto.x <= ROXO_PALE.coordenadas[2] && ponto.y >= ROXO_PALE.coordenadas[1] && ponto.y <= ROXO_PALE.coordenadas[3]) COR = ROXO;
+
+                    ponto_canvas.x = (ponto.x - x_offset) * scaling;
+                    ponto_canvas.y = (ponto.y - y_offset) * scaling;
+
+                    if (ponto.x - x_offset >= 0 && ponto.x - x_offset <= canvas_w && ponto.y - y_offset >= 0 && ponto.y - y_offset <= canvas_h) {
+                        ponto_inicial.x = ponto_canvas.x;
+                        ponto_inicial.y = ponto_canvas.y;
+                        traco_novo = criarTraco(COR, espessura, ponto_canvas);
+
+                        desenhar = true;
+
+                        al_set_target_bitmap(canvas);
+                        al_draw_filled_circle(ponto_canvas.x, ponto_canvas.y, espessura, al_map_rgb(COR.r, COR.g, COR.b));
+                        al_set_target_backbuffer(tela);
+
+                        if (cliente) {
+                            char msg_env[256];
+                            snprintf(msg_env, sizeof(msg_env), "TRSP %d %d %d %d %d %d",
+                                     ponto_canvas.x, ponto_canvas.y, espessura, COR.r, COR.g, COR.b);
+                            transpCliente(&dados, msg_env);
+                        }
+                    }
+                }
+            }
+            else if (evento.type == ALLEGRO_EVENT_MOUSE_AXES) {
                 ponto.x = evento.mouse.x;
                 ponto.y = evento.mouse.y;
-
-                if (ponto.x >= PRETO_PALE.coordenadas[0] && ponto.x <= PRETO_PALE.coordenadas[2] && ponto.y >= PRETO_PALE.coordenadas[1] && ponto.y <= PRETO_PALE.coordenadas[3]) COR = PRETO;
-                else if (ponto.x >= VERMELHO_PALE.coordenadas[0] && ponto.x <= VERMELHO_PALE.coordenadas[2] && ponto.y >= VERMELHO_PALE.coordenadas[1] && ponto.y <= VERMELHO_PALE.coordenadas[3]) COR = VERMELHO;
-                else if (ponto.x >= AMARELO_PALE.coordenadas[0] && ponto.x <= AMARELO_PALE.coordenadas[2] && ponto.y >= AMARELO_PALE.coordenadas[1] && ponto.y <= AMARELO_PALE.coordenadas[3]) COR = AMARELO;
-                else if (ponto.x >= AZUL_PALE.coordenadas[0] && ponto.x <= AZUL_PALE.coordenadas[2] && ponto.y >= AZUL_PALE.coordenadas[1] && ponto.y <= AZUL_PALE.coordenadas[3]) COR = AZUL;
-                else if (ponto.x >= BRANCO_PALE.coordenadas[0] && ponto.x <= BRANCO_PALE.coordenadas[2] && ponto.y >= BRANCO_PALE.coordenadas[1] && ponto.y <= BRANCO_PALE.coordenadas[3]) COR = BRANCO;
-                else if (ponto.x >= LARANJA_PALE.coordenadas[0] && ponto.x <= LARANJA_PALE.coordenadas[2] && ponto.y >= LARANJA_PALE.coordenadas[1] && ponto.y <= LARANJA_PALE.coordenadas[3]) COR = LARANJA;
-                else if (ponto.x >= ROXO_PALE.coordenadas[0] && ponto.x <= ROXO_PALE.coordenadas[2] && ponto.y >= ROXO_PALE.coordenadas[1] && ponto.y <= ROXO_PALE.coordenadas[3]) COR = ROXO;
 
                 ponto_canvas.x = (ponto.x - x_offset) * scaling;
                 ponto_canvas.y = (ponto.y - y_offset) * scaling;
 
-                if (ponto.x - x_offset >= 0 && ponto.x - x_offset <= canvas_w && ponto.y - y_offset >= 0 && ponto.y - y_offset <= canvas_h) {
-                    ponto_inicial.x = ponto_canvas.x;
-                    ponto_inicial.y = ponto_canvas.y;
-                    traco_novo = criarTraco(COR, espessura, ponto_canvas);
-
-                    desenhar = true;
-
+                if (desenhar && traco_novo) {
                     al_set_target_bitmap(canvas);
-                    al_draw_filled_circle(ponto_canvas.x, ponto_canvas.y, espessura, al_map_rgb(COR.r, COR.g, COR.b));
+                    addPontos(traco_novo, ponto_canvas);
+                    desenharCirc(ponto_inicial, ponto_canvas, COR, espessura);
                     al_set_target_backbuffer(tela);
-                    if (evento.mouse.button == 1 && cliente) {
+                    ponto_inicial = ponto_canvas;
+
+                    if (cliente) {
                         char msg_env[256];
-                        snprintf(msg_env, sizeof(msg_env), "TRSP %d %d %d %d %d %d",
+                        snprintf(msg_env, sizeof(msg_env), "NEWP %d %d %d %d %d %d",
                                  ponto_canvas.x, ponto_canvas.y, espessura, COR.r, COR.g, COR.b);
                         transpCliente(&dados, msg_env);
                     }
                 }
-            }
-        }
-        else if (evento.type == ALLEGRO_EVENT_MOUSE_AXES) {
-            ponto.x = evento.mouse.x;
-            ponto.y = evento.mouse.y;
-
-            ponto_canvas.x = (ponto.x - x_offset) * scaling;
-            ponto_canvas.y = (ponto.y - y_offset) * scaling;
-
-            if (desenhar && traco_novo) {
-                al_set_target_bitmap(canvas);
-                addPontos(traco_novo, ponto_canvas);
-                desenharCirc(ponto_inicial, ponto_canvas, COR, espessura);
-                al_set_target_backbuffer(tela);
-                ponto_inicial = ponto_canvas;
-
 
             }
-            if (desenhar && cliente) {
-                char msg_env[256];
-                snprintf(msg_env, sizeof(msg_env), "NEWP %d %d %d %d %d %d",
-                         ponto_canvas.x, ponto_canvas.y, espessura, COR.r, COR.g, COR.b);
-                transpCliente(&dados, msg_env);
-            }
-        }
-        else if (evento.type == ALLEGRO_EVENT_MOUSE_BUTTON_UP) {
-            if (evento.mouse.button == 1 && desenhar) {
-                pushFila(filaDeTracos, traco_novo);
-                desenhar = false;
+            else if (evento.type == ALLEGRO_EVENT_MOUSE_BUTTON_UP) {
+                if (evento.mouse.button == 1 && desenhar) {
+                    pushFila(filaDeTracos, traco_novo);
+                    desenhar = false;
 
+                    if (cliente) {
+                        transpCliente(&dados, "NEWT");
+                    }
+                }
 
             }
-            if (evento.mouse.button == 1 && cliente) {
-                transpCliente(&dados, "NEWT");
+            else if (evento.type == ALLEGRO_EVENT_KEY_DOWN) {
+                if (evento.keyboard.keycode == ALLEGRO_KEY_Q && (evento.keyboard.modifiers & ALLEGRO_KEYMOD_CTRL)) {
+                    al_save_bitmap("teste.bmp", canvas);
+                    round = false;
+                }
+                else if (evento.keyboard.keycode == ALLEGRO_KEY_R && (evento.keyboard.modifiers & ALLEGRO_KEYMOD_CTRL)) {
+                    limparCanvas(canvas, BRANCO, tela, filaDeTracos);
+                }
+                else if (evento.keyboard.keycode == ALLEGRO_KEY_PAD_PLUS && (evento.keyboard.modifiers & ALLEGRO_KEYMOD_CTRL)) {
+                    espessura++;
+                    if (espessura > 10) espessura = 10;
+                }
+                else if (evento.keyboard.keycode == ALLEGRO_KEY_PAD_MINUS && (evento.keyboard.modifiers & ALLEGRO_KEYMOD_CTRL)) {
+                    espessura--;
+                    if (espessura < 1) espessura = 1;
+                }
+                else if (evento.keyboard.keycode == ALLEGRO_KEY_Z && (evento.keyboard.modifiers & ALLEGRO_KEYMOD_CTRL)) {
+                    undo(filaDeTracos, canvas, tela);
+                }
             }
-        }
-        else if (evento.type == ALLEGRO_EVENT_KEY_DOWN) {
-            if (evento.keyboard.keycode == ALLEGRO_KEY_Q && (evento.keyboard.modifiers & ALLEGRO_KEYMOD_CTRL)) {
-                al_save_bitmap("teste.bmp", canvas);
+            else if (evento.type == ALLEGRO_EVENT_DISPLAY_CLOSE) {
                 round = false;
             }
-            else if (evento.keyboard.keycode == ALLEGRO_KEY_R && (evento.keyboard.modifiers & ALLEGRO_KEYMOD_CTRL)) {
-                limparCanvas(canvas, BRANCO, tela, filaDeTracos);
-            }
-            else if (evento.keyboard.keycode == ALLEGRO_KEY_PAD_PLUS && (evento.keyboard.modifiers & ALLEGRO_KEYMOD_CTRL)) {
-                espessura++;
-                if (espessura > 10) espessura = 10;
-            }
-            else if (evento.keyboard.keycode == ALLEGRO_KEY_PAD_MINUS && (evento.keyboard.modifiers & ALLEGRO_KEYMOD_CTRL)) {
-                espessura--;
-                if (espessura < 1) espessura = 1;
-            }
-            else if (evento.keyboard.keycode == ALLEGRO_KEY_Z && (evento.keyboard.modifiers & ALLEGRO_KEYMOD_CTRL)) {
-                undo(filaDeTracos, canvas, tela);
+
+            if (redesenhar && al_is_event_queue_empty(fila_eventos)) {
+                redesenhar = false;
+
+                telaPrincipal(telinha);
+
+                al_draw_text(font, al_map_rgb(0, 50, 255), 20, 600, 0, "Teste texto\n");
+
+                al_draw_filled_rectangle(telinha.x * 0.01, telinha.y * 0.85, telinha.x * 0.01 + 75, (telinha.y * 0.85) + 75, al_map_rgb(BRANCO.r, BRANCO.g, BRANCO.b));
+                al_draw_filled_circle(telinha.x * 0.01 + 37, telinha.y * 0.85 + 35.5, espessura / scaling, al_map_rgb(COR.r, COR.g, COR.b));
+
+                al_draw_scaled_bitmap(canvas, 0.0, 0.0, canvas_w * scaling, canvas_h * scaling, x_offset, y_offset, canvas_w, canvas_h, 0);
+                al_flip_display();
             }
         }
-        else if (evento.type == ALLEGRO_EVENT_DISPLAY_CLOSE) {
-            round = false;
-        }
 
-        // 3. ATUALIZAÇÃO DA TELA
-        if (redesenhar && al_is_event_queue_empty(fila_eventos)) {
-            redesenhar = false;
+        if (cliente) al_destroy_cond(dados.cond);
+        al_set_thread_should_stop(socket);
+        al_join_thread(socket, NULL);
+        al_destroy_thread(socket);
+        al_destroy_mutex(dados.mutex);
+        al_destroy_font(font);
+        al_destroy_bitmap(canvas);
+        al_destroy_event_queue(fila_eventos);
+        al_destroy_timer(timer);
+        al_destroy_display(tela);
+        destroyFila(filaDeTracos);
 
-            telaPrincipal(telinha);
-
-            al_draw_text(font, al_map_rgb(0, 50, 255), 20, 600, 0, "Teste texto\n");
-
-            /* Indicador de espessura */
-            al_draw_filled_rectangle(telinha.x * 0.01, telinha.y * 0.85, telinha.x * 0.01 + 75, (telinha.y * 0.85) + 75, al_map_rgb(BRANCO.r, BRANCO.g, BRANCO.b));
-            al_draw_filled_circle(telinha.x * 0.01 + 37, telinha.y * 0.85 + 35.5, espessura / scaling, al_map_rgb(COR.r, COR.g, COR.b));
-
-            al_draw_scaled_bitmap(canvas, 0.0, 0.0, canvas_w * scaling, canvas_h * scaling, x_offset, y_offset, canvas_w, canvas_h, 0);
-            al_flip_display();
-        }
+        return 0;
     }
-
-    if (cliente) al_destroy_cond(dados.cond);
-    al_set_thread_should_stop(socket);
-    al_join_thread(socket, NULL);
-    al_destroy_thread(socket);
-    al_destroy_mutex(dados.mutex);
-    al_destroy_font(font);
-    al_destroy_bitmap(canvas);
-    al_destroy_event_queue(fila_eventos);
-    al_destroy_timer(timer);
-    al_destroy_display(tela);
-    destroyFila(filaDeTracos);
-
-    return 0;
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
