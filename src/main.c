@@ -108,6 +108,7 @@ int main() {
     }
 
     al_start_thread(socket);
+    RESP respostaAntiga;
 
     while (round) {
 
@@ -115,6 +116,47 @@ int main() {
             al_lock_mutex(dados.mutex);
             if (dados.evento == 1) {
                 RESP resposta = tratamento(dados.msg);
+
+
+                if (resposta.corR < 0 || resposta.corR > 255) {
+                    if (resposta.corR < 0 || resposta.corR > 255) {
+                        resposta.corR = 255;
+                    }else {
+                        resposta.corR = respostaAntiga.corR;
+                    }
+                }
+
+                if (resposta.corG < 0 || resposta.corG > 255) {
+                    if (resposta.corG < 0 || resposta.corG > 255) {
+                        resposta.corG = 255;
+                    }else {
+                        resposta.corG = respostaAntiga.corG;
+                    }
+                }
+
+                if (resposta.corB < 0 || resposta.corB > 255) {
+                    if (resposta.corB < 0 || resposta.corB > 255) {
+                        resposta.corB = 255;
+                    }else {
+                        resposta.corB = respostaAntiga.corB;
+                    }
+                }
+
+                if (resposta.espessura < 0 || resposta.espessura > 10) {
+                    if (respostaAntiga.espessura < 0 || respostaAntiga.espessura > 10) resposta.espessura = 1;
+                    else resposta.espessura = respostaAntiga.espessura;
+                }
+
+                if (resposta.p1.x < 0 || resposta.p1.x > 800) {
+                    if (respostaAntiga.p1.x < 0 || respostaAntiga.p1.x > 800) resposta.p1.x = 1;
+                    else resposta.p1.x = respostaAntiga.p1.x;
+                }
+
+                if (resposta.p1.y < 0 || resposta.p1.y > 800) {
+                    if (respostaAntiga.p1.y < 0 || respostaAntiga.p1.y > 800) resposta.p1.y = 1;
+                    else resposta.p1.y = respostaAntiga.p1.y;
+                }
+
 
                 if (strcmp(resposta.comando, "TRSP") == 0) {
                     COR_RGB cor = {resposta.corR, resposta.corG, resposta.corB};
@@ -127,12 +169,16 @@ int main() {
                 }
                 else if (strcmp(resposta.comando, "NEWP") == 0) {
                     if (traco_novo != NULL) {
-                        COR_RGB cor = {resposta.corR, resposta.corG, resposta.corB};
-                        al_set_target_bitmap(canvas);
-                        addPontos(traco_novo, resposta.p1);
-                        desenharCirc(ponto_inicial, resposta.p1, cor, resposta.espessura);
-                        al_set_target_backbuffer(tela);
-                        ponto_inicial = resposta.p1;
+
+                        if (resposta.p1.x >=0 && resposta.p1.y >= 0 && resposta.completa) {
+                            COR_RGB cor = {resposta.corR, resposta.corG, resposta.corB};
+                            al_set_target_bitmap(canvas);
+                            addPontos(traco_novo, resposta.p1);
+                            desenharCirc(ponto_inicial, resposta.p1, cor, resposta.espessura);
+                            al_set_target_backbuffer(tela);
+                            ponto_inicial = resposta.p1;
+                        }
+
                     }
                 }
                 else if (strcmp(resposta.comando, "NEWT") == 0) {
@@ -147,7 +193,11 @@ int main() {
                 else if (strcmp(resposta.comando, "UNDO") == 0) {
                     undo(filaDeTracos, canvas, tela);
                 }
+                else if (strcmp(resposta.comando, "FIMP") == 0) {
+                    round = false;
+                }
 
+                respostaAntiga = resposta;
                 dados.evento = 0;
             }
             al_unlock_mutex(dados.mutex);
@@ -228,10 +278,18 @@ int main() {
         else if (evento.type == ALLEGRO_EVENT_KEY_DOWN) {
             if (evento.keyboard.keycode == ALLEGRO_KEY_Q && (evento.keyboard.modifiers & ALLEGRO_KEYMOD_CTRL)) {
                 al_save_bitmap("teste.bmp", canvas);
+
+                if (cliente) {
+                        transpCliente(&dados, "FIMP");
+                }
+
                 round = false;
             }
             else if (evento.keyboard.keycode == ALLEGRO_KEY_R && (evento.keyboard.modifiers & ALLEGRO_KEYMOD_CTRL)) {
                 limparCanvas(canvas, BRANCO, tela, filaDeTracos);
+                if (cliente) {
+                    transpCliente(&dados, "LIMP");
+                }
             }
             else if (evento.keyboard.keycode == ALLEGRO_KEY_PAD_PLUS && (evento.keyboard.modifiers & ALLEGRO_KEYMOD_CTRL)) {
                 espessura++;
@@ -243,6 +301,9 @@ int main() {
             }
             else if (evento.keyboard.keycode == ALLEGRO_KEY_Z && (evento.keyboard.modifiers & ALLEGRO_KEYMOD_CTRL)) {
                 undo(filaDeTracos, canvas, tela);
+                if (cliente) {
+                    transpCliente(&dados, "UNDO");
+                }
             }
         }
         else if (evento.type == ALLEGRO_EVENT_DISPLAY_CLOSE) {

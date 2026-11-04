@@ -91,7 +91,7 @@ void *sock(ALLEGRO_THREAD *thread, void *arg) {
                     // Espera a main consumir a mensagem anterior
                     while (fila->evento && !al_get_thread_should_stop(thread)) {
                         al_unlock_mutex(fila->mutex);
-                        al_rest(0.001);
+                        al_rest(0.005);
                         al_lock_mutex(fila->mutex);
                     }
 
@@ -136,7 +136,7 @@ short parseText(char *msg, int *idx) {
 
     return (short)atoi(cord);
 }
-RESP tratamento (char msg[]) {
+RESP tratamento (char msg[]/*, RESP respAnt*/) {
     printf("%s\n", msg);
     RESP resp;
     char comando[5];
@@ -159,11 +159,17 @@ RESP tratamento (char msg[]) {
     int idx = 5;
 
     resp.p1.x = parseText(msg, &idx);
+    //if (abs(respAnt.p1.x - resp.p1.x) > 50) resp.p1.x = respAnt.p1.x;
+
     resp.p1.y = parseText(msg, &idx);
+    //if (abs(respAnt.p1.y - resp.p1.y) > 50) resp.p1.y = respAnt.p1.y;
+
     resp.espessura = parseText(msg, &idx);
     resp.corR = parseText(msg, &idx);
     resp.corG = parseText(msg, &idx);
     resp.corB = parseText(msg, &idx);
+
+    resp.completa = true;
 
     return resp;
 }
