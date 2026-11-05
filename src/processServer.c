@@ -102,7 +102,13 @@ void *sock(ALLEGRO_THREAD *thread, void *arg) {
                         al_lock_mutex(fila->mutex);
                         while (fila->evento && !al_get_thread_should_stop(thread)) {
                             al_unlock_mutex(fila->mutex);
-                            al_rest(0.001);
+
+                            /*SE NÃO FOR O MATHEUS IGNORE
+                             * Capeta, abaixo está a função que dá um gap no desenho.
+                             * POR HIPOTESE ALGUMA MEXA!!
+                             * Se vc fazer isso vc tá fudido
+                             */
+                            al_rest(0.005);
                             al_lock_mutex(fila->mutex);
                         }
 
