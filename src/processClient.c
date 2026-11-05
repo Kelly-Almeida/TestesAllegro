@@ -22,8 +22,8 @@
 #endif
 
 #include <allegro5/threads.h>
-#include "sock.h"
-#include "sockClient.h"
+#include "processServer.h"
+#include "processClient.h"
 
 #define PORT 5000
 
@@ -75,6 +75,14 @@ void *client(ALLEGRO_THREAD *thread, void *arg) {
 
     printf("Cliente conectado ao servidor!\n");
 
+        MSG_C chat;
+        chat.contador = 0;
+        chat.evento = false;
+        chat.mutex = al_create_mutex();
+        chat.conexao = sock;
+        ALLEGRO_THREAD *chatCliente = al_create_thread(chatClient, &chat);
+        al_start_thread(chatCliente);
+
     while (!al_get_thread_should_stop(thread)) {
         al_lock_mutex(fila->mutex);
 
@@ -84,13 +92,8 @@ void *client(ALLEGRO_THREAD *thread, void *arg) {
             al_wait_cond_until(fila->cond, fila->mutex, &timeout);
         }
 
-        if (al_get_thread_should_stop(thread)) {
-            al_unlock_mutex(fila->mutex);
-            break;
-        }
-
         char msg_env[256];
-        strncpy(msg_env, fila->msg, sizeof(msg_env) - 1);
+        strncpy(msg_env, fila->msg_in, sizeof(msg_env) - 1);
         msg_env[sizeof(msg_env) - 1] = '\0';
 
         fila->evento = false;
@@ -107,8 +110,33 @@ void *client(ALLEGRO_THREAD *thread, void *arg) {
                 break;
             }
         }
+        /*
+        #if defined(_WIN32) || defined(WIN32)
+        //Não bloquear o socket na hora de leitura
+            u_long mode;
+            ioctlsocket(sock, FIONBIO, &mode);
+            int receb = recv(sock, buffer_ten, sizeof(buffer_ten) -1, 0);
+        #else
+            int receb = recv(sock, buffer_ten, sizeof(buffer_ten) - 1, MSG_DONTWAIT);
+        #endif
+
+        if (receb > 0) {
+            buffer_ten[receb] = '\0';
+
+            al_lock_mutex(fila->mutex);
+            strcpy(fila->msg_in, buffer_ten);
+            fila->chat_env = true;
+            al_unlock_mutex(fila->mutex);
+
+            printf("%sn", fila->msg_in);
+
+        }
+        */
     }
 
+    al_set_thread_should_stop(chatCliente);
+    al_join_thread(chatCliente, NULL);
+    al_destroy_thread(chatCliente);
     CLOSE_SOCKET(sock);
 
 #if defined(_WIN32) || defined(WIN32)
@@ -127,11 +155,46 @@ void transpCliente(MSG_S *data, const char *msg) {
         al_lock_mutex(data->mutex);
     }
 
-    strncpy(data->msg, msg, sizeof(data->msg) - 1);
-    data->msg[sizeof(data->msg) - 1] = '\0';
+    strncpy(data->msg_in, msg, sizeof(data->msg_in) - 1);
+    data->msg_in[sizeof(data->msg_in) - 1] = '\0';
     data->evento = true;
-    printf("Mensagem no transporte: %s\n", data->msg);
+    printf("Mensagem no transporte: %s\n", data->msg_in);
 
     al_signal_cond(data->cond);
     al_unlock_mutex(data->mutex);
+
+}
+
+void *chatClient(ALLEGRO_THREAD *thread, void *arg) {
+    MSG_C *msg = (MSG_C *)arg;
+
+    while (!al_get_thread_should_stop(thread)) {
+        char buffer_ten[256];
+        al_lock_mutex(msg->mutex);
+        int conexao = msg->conexao;
+        al_unlock_mutex(msg->mutex);
+
+        #if defined(_WIN32) || defined(WIN32)
+                //Não bloquear o socket na hora de leitura
+                u_long mode;
+                ioctlsocket(conexao, FIONBIO, &mode);
+                int receb = recv(conexao, buffer_ten, sizeof(buffer_ten) -1, 0);
+        #else
+                int receb = recv(conexao, buffer_ten, sizeof(buffer_ten) - 1, MSG_DONTWAIT);
+        #endif
+
+        if (receb > 0) {
+            al_lock_mutex(msg->mutex);
+            buffer_ten[receb] = '\0';
+
+            strcpy(msg->msg_in, buffer_ten);
+            //msg->chat_env = true;
+            printf("%s\n", msg->msg_in);
+            al_unlock_mutex(msg->mutex);
+        }else {
+            al_rest(0.001);
+        }
+
+    }
+    return NULL;
 }
