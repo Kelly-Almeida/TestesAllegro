@@ -7,15 +7,45 @@
 
 #include "processServer.h"
 #include "infra.h"
+#include "csv.h"
 #include "processClient.h"
 
 #define FPS 60
 
 int main() {
+
+    srand(time(NULL));
+
     bool round = true, desenhar = false, redesenhar = false;
+
+    printf("Abrindo o arquivo...!\n");
+    FILE *file = fopen("resources/palavra em ingles_dicas preenchidas.csv", "r");
+    if (!file){
+        printf("Erro ao abrir o arquivo!\n");
+        return -1;
+    }
+    deck *faceis =    novo_deck(file, '0');
+    deck *medias =    novo_deck(file, '1');
+    deck *dificeis =  novo_deck(file, '2');
+    deck *dificuldades[3] = {faceis, medias, dificeis};
+
+
+    fclose(file);
 
     if (!al_init() || !al_init_primitives_addon() || !al_init_image_addon()) {
         printf("Falha ao inicializar o Allegro!\n");
+        return -1;
+    }
+
+    // Inicializando a biblioteca de primitivas gráficas
+    if (!al_init_primitives_addon()) {
+        printf("Falha ao inicializar a biblioteca de primitivas!\n");
+        return -1;
+    }
+
+    // Inicializando a biblioteca de IO de imagens
+    if (!al_init_image_addon()) {
+        printf("Falha ao inicializar a biblioteca de IO de imagens!\n");
         return -1;
     }
 
@@ -31,6 +61,7 @@ int main() {
 
     ALLEGRO_TIMER *timer = al_create_timer(1.0 / FPS);
     if (!timer) {
+        al_destroy_timer(timer);
         al_destroy_display(tela);
         return -1;
     }
@@ -46,7 +77,26 @@ int main() {
     ALLEGRO_EVENT_QUEUE* fila_eventos = al_create_event_queue();
     if (!al_init_font_addon() || !al_init_ttf_addon()) return -1;
 
+    //Inicializando as fontes
+    if (!al_init_font_addon()) {
+        printf("Erro ao inicializar a biblioteca de fontes\n");
+        al_destroy_timer(timer);
+        al_destroy_display(tela);
+        return -1;
+    }
+    if (!al_init_ttf_addon()) {
+        printf("Erro ao inicializar a biblioteca de fontes ttf\n");
+        al_destroy_timer(timer);
+        al_destroy_display(tela);
+        return -1;
+    }
     ALLEGRO_FONT *font = al_load_font("./resources/Roboto-Regular.ttf", 20, 0);
+    if (!font) {
+        printf("Não foi possível carregar a fonte!\n");
+        al_destroy_timer(timer);
+        al_destroy_display(tela);
+        return -1;
+    }
 
     al_register_event_source(fila_eventos, al_get_mouse_event_source());
     al_register_event_source(fila_eventos, al_get_display_event_source(tela));
@@ -67,9 +117,11 @@ int main() {
     struct COR ROXO_PALE = {al_map_rgb(ROXO.r, ROXO.g, ROXO.b), {20, 450, 90, 500}};
     struct COR BRANCO_PALE = {al_map_rgb(BRANCO.r, BRANCO.g, BRANCO.b), {20, 530, 90, 580}};
 
-    COR_RGB COR = AZUL;
+    COR_RGB COR = PRETO;
     short espessura = 3;
     VEC ponto = {0, 0}, ponto_inicial, ponto_canvas;
+    int DIFICULDADE = 0;
+    int indice = rand() % dificuldades[DIFICULDADE]->tamanho;
 
     float scaling = 0.25;
     float border[4] = { telinha.x * 0.15, telinha.y * 0.15, telinha.x - border[0], telinha.y - border[1] };
@@ -108,7 +160,7 @@ int main() {
     }
 
     al_start_thread(socket);
-
+    //RESP respostaAntiga;
 
     while (round) {
 
@@ -117,24 +169,77 @@ int main() {
             if (dados.evento == 1) {
                 RESP resposta = tratamento(dados.msg_in);
 
-                if (strcmp(resposta.comando, "TRSP") == 0) {
-                    COR_RGB cor = {resposta.corR, resposta.corG, resposta.corB};
-                    al_set_target_bitmap(canvas);
-                    al_draw_filled_circle(resposta.p1.x, resposta.p1.y, resposta.espessura, al_map_rgb(cor.r, cor.g, cor.b));
-                    al_set_target_backbuffer(tela);
-
-                    traco_novo = criarTraco(cor, resposta.espessura, resposta.p1);
-                    ponto_inicial = resposta.p1;
-                }
-                else if (strcmp(resposta.comando, "NEWP") == 0) {
-                    if (traco_novo != NULL) {
-                        COR_RGB cor = {resposta.corR, resposta.corG, resposta.corB};
-                        al_set_target_bitmap(canvas);
-                        addPontos(traco_novo, resposta.p1);
-                        desenharCirc(ponto_inicial, resposta.p1, cor, resposta.espessura);
-                        al_set_target_backbuffer(tela);
-                        ponto_inicial = resposta.p1;
+                /*
+                if (resposta.corR < 0 || resposta.corR > 255) {
+                    if (resposta.corR < 0 || resposta.corR > 255) {
+                        resposta.corR = 255;
+                    }else {
+                        resposta.corR = respostaAntiga.corR;
                     }
+                }
+
+                if (resposta.corG < 0 || resposta.corG > 255) {
+                    if (resposta.corG < 0 || resposta.corG > 255) {
+                        resposta.corG = 255;
+                    }else {
+                        resposta.corG = respostaAntiga.corG;
+                    }
+                }
+
+                if (resposta.corB < 0 || resposta.corB > 255) {
+                    if (resposta.corB < 0 || resposta.corB > 255) {
+                        resposta.corB = 255;
+                    }else {
+                        resposta.corB = respostaAntiga.corB;
+                    }
+                }
+
+                if (resposta.espessura < 0 || resposta.espessura > 10) {
+                    if (respostaAntiga.espessura < 0 || respostaAntiga.espessura > 10) resposta.espessura = 1;
+                    else resposta.espessura = respostaAntiga.espessura;
+                }
+
+                if (resposta.p1.x < 0 || resposta.p1.x > 800) {
+                    if (respostaAntiga.p1.x < 0 || respostaAntiga.p1.x > 800) resposta.p1.x = 1;
+                    else resposta.p1.x = respostaAntiga.p1.x;
+                }
+
+                if (resposta.p1.y < 0 || resposta.p1.y > 800) {
+                    if (respostaAntiga.p1.y < 0 || respostaAntiga.p1.y > 800) resposta.p1.y = 1;
+                    else resposta.p1.y = respostaAntiga.p1.y;
+                }
+                */
+
+                if (strcmp(resposta.comando, "TRSP") == 0 || strcmp(resposta.comando, "NEWP") == 0) {
+                    if (resposta.corR >= 0 && resposta.corR <= 255 &&
+                        resposta.corG >= 0 && resposta.corG <= 255 &&
+                        resposta.corB >= 0 && resposta.corB <= 255) {
+
+                        if (strcmp(resposta.comando, "TRSP") == 0) {
+                            COR_RGB cor = {resposta.corR, resposta.corG, resposta.corB};
+                            al_set_target_bitmap(canvas);
+                            al_draw_filled_circle(resposta.p1.x, resposta.p1.y, resposta.espessura, al_map_rgb(cor.r, cor.g, cor.b));
+                            al_set_target_backbuffer(tela);
+
+                            traco_novo = criarTraco(cor, resposta.espessura, resposta.p1);
+                            ponto_inicial = resposta.p1;
+                        }
+                        else if (strcmp(resposta.comando, "NEWP") == 0) {
+                            if (traco_novo != NULL) {
+
+                                if (resposta.p1.x >=0 && resposta.p1.y >= 0) {
+                                    COR_RGB cor = {resposta.corR, resposta.corG, resposta.corB};
+                                    al_set_target_bitmap(canvas);
+                                    addPontos(traco_novo, resposta.p1);
+                                    desenharCirc(ponto_inicial, resposta.p1, cor, resposta.espessura);
+                                    al_set_target_backbuffer(tela);
+                                    ponto_inicial = resposta.p1;
+                                }
+
+                            }
+                        }
+
+                        }
                 }
                 else if (strcmp(resposta.comando, "NEWT") == 0) {
                     if (traco_novo != NULL) {
@@ -148,7 +253,11 @@ int main() {
                 else if (strcmp(resposta.comando, "UNDO") == 0) {
                     undo(filaDeTracos, canvas, tela);
                 }
+                else if (strcmp(resposta.comando, "FIMP") == 0) {
+                    round = false;
+                }
 
+                //respostaAntiga = resposta;
                 dados.evento = 0;
             }
             al_unlock_mutex(dados.mutex);
@@ -206,13 +315,21 @@ int main() {
                 addPontos(traco_novo, ponto_canvas);
                 desenharCirc(ponto_inicial, ponto_canvas, COR, espessura);
                 al_set_target_backbuffer(tela);
-                ponto_inicial = ponto_canvas;
 
                 if (cliente) {
-                    char msg_env[256];
-                    snprintf(msg_env, sizeof(msg_env), "NEWP %d %d %d %d %d %d",
-                             ponto_canvas.x, ponto_canvas.y, espessura, COR.r, COR.g, COR.b);
-                    transpCliente(&dados, msg_env);
+                    int dx = abs(ponto_canvas.x - ponto_inicial.x);
+                    int dy = abs(ponto_canvas.y - ponto_inicial.y);
+
+                    if (dx >= 2 || dy >= 2) {
+                        char msg_env[256];
+                        snprintf(msg_env, sizeof(msg_env), "NEWP %d %d %d %d %d %d",
+                                 ponto_canvas.x, ponto_canvas.y, espessura, COR.r, COR.g, COR.b);
+                        transpCliente(&dados, msg_env);
+
+                        ponto_inicial = ponto_canvas;
+                    }
+                }else {
+                    ponto_inicial = ponto_canvas;
                 }
             }
         }
@@ -229,10 +346,18 @@ int main() {
         else if (evento.type == ALLEGRO_EVENT_KEY_DOWN) {
             if (evento.keyboard.keycode == ALLEGRO_KEY_Q && (evento.keyboard.modifiers & ALLEGRO_KEYMOD_CTRL)) {
                 al_save_bitmap("teste.bmp", canvas);
+
+                if (cliente) {
+                        transpCliente(&dados, "FIMP");
+                }
+
                 round = false;
             }
             else if (evento.keyboard.keycode == ALLEGRO_KEY_R && (evento.keyboard.modifiers & ALLEGRO_KEYMOD_CTRL)) {
                 limparCanvas(canvas, BRANCO, tela, filaDeTracos);
+                if (cliente) {
+                    transpCliente(&dados, "LIMP");
+                }
             }
             else if (evento.keyboard.keycode == ALLEGRO_KEY_PAD_PLUS && (evento.keyboard.modifiers & ALLEGRO_KEYMOD_CTRL)) {
                 espessura++;
@@ -244,6 +369,9 @@ int main() {
             }
             else if (evento.keyboard.keycode == ALLEGRO_KEY_Z && (evento.keyboard.modifiers & ALLEGRO_KEYMOD_CTRL)) {
                 undo(filaDeTracos, canvas, tela);
+                if (cliente) {
+                    transpCliente(&dados, "UNDO");
+                }
             }
         }
         else if (evento.type == ALLEGRO_EVENT_DISPLAY_CLOSE) {
@@ -254,7 +382,7 @@ int main() {
         if (redesenhar && al_is_event_queue_empty(fila_eventos)) {
             redesenhar = false;
 
-            telaPrincipal(telinha);
+            telaPrincipal(telinha, font, dificuldades[DIFICULDADE], indice);
             al_draw_text(font, al_map_rgb(0, 50, 255), 20, 600, 0, "Teste texto\n");
 
             al_draw_filled_rectangle(telinha.x * 0.01, telinha.y * 0.85, telinha.x * 0.01 + 75, (telinha.y * 0.85) + 75, al_map_rgb(BRANCO.r, BRANCO.g, BRANCO.b));
