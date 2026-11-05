@@ -146,7 +146,7 @@ int main() {
     dados.mutex = al_create_mutex();
 
     /*ALTERAÇÃO*/
-    bool cliente = true;
+    bool cliente = false;
 
     if (cliente) {
         dados.cond = al_create_cond();
