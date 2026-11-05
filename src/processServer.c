@@ -3,6 +3,8 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "processClient.h"
+
 #if defined(_WIN32) || defined(WIN32)
     #include <winsock2.h>
     #include <ws2tcpip.h>
@@ -12,17 +14,18 @@
     #include <netinet/in.h>
 #endif
 
-#include "sock.h"
+#include "processServer.h"
 
 void *sock(ALLEGRO_THREAD *thread, void *arg) {
         MSG_S *fila = (MSG_S *)arg;
 
-        bool round = true;
-        /*const char *saida = "CABOOO";
-        const char *limpar = "LIMPAR";
-        const char *desfazer = "UNDO";*/
-        char bufferInfoClient[256];
+        MSG_C chat;
+        chat.contador = 0;
+        chat.evento = false;
+        chat.mutex = al_create_mutex();
 
+        bool round = true;
+        char bufferInfoClient[256];
         #if defined(_WIN32) || defined(WIN32)
             WSADATA wsaData;
             if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0) {
@@ -70,16 +73,26 @@ void *sock(ALLEGRO_THREAD *thread, void *arg) {
         listen(server, 5);
 
         printf("Servidor inicializado\n");
-
         while (!al_get_thread_should_stop(thread) && round) {
             cliente = accept(server, (struct sockaddr *) &socket_cliente, &tam_sock_Cliente);
 
             if (cliente < 0) {
                 continue;
             }
+
+            chat.conexao = cliente;
+            ALLEGRO_THREAD *chatzinho = al_create_thread(chatComun, &chat);
+            al_start_thread(chatzinho);
+
             while (!al_get_thread_should_stop(thread) && round) {
                 ssize_t x = recv(cliente, bufferInfoClient, sizeof(bufferInfoClient) -1, 0);
-                if (x <= 0) break;
+                if (x <= 0) {
+                    if (x== 0) {
+                        printf("Cliente desconectou\n");
+                        break;
+                    }
+                    continue;
+                }
 
                 bufferInfoClient[x] = '\0';
                 char *linha = strtok(bufferInfoClient, "\r\n");
@@ -95,16 +108,20 @@ void *sock(ALLEGRO_THREAD *thread, void *arg) {
 
                         fila->contador++;
                         fila->evento = true;
-                        strncpy(fila->msg, linha, sizeof(fila->msg) -1);
-                        fila->msg[sizeof(fila->msg) - 1] = '\0';
+                        strncpy(fila->msg_in, linha, sizeof(fila->msg_in) -1);
+                        fila->msg_in[sizeof(fila->msg_in) - 1] = '\0';
                         al_unlock_mutex(fila->mutex);
                     }
                     linha = strtok(NULL, "\r\n");
                 }
             }
+            al_set_thread_should_stop(chatzinho);
+            al_join_thread(chatzinho, NULL);
+            al_destroy_thread(chatzinho);
 
             close(cliente);
         }
+
         close(server);
         #if defined(_WIN32) || defined(WIN32)
             WSACleanup();
@@ -162,4 +179,31 @@ RESP tratamento (char msg[]) {
     resp.corB = parseText(msg, &idx);
 
     return resp;
+}
+
+void *chatComun(ALLEGRO_THREAD *thread, void *arg) {
+    MSG_C *chat = (MSG_C *) arg;
+
+    while (!al_get_thread_should_stop(thread)) {
+        al_lock_mutex(chat->mutex);
+        bool temMsg = chat->evento;
+
+        al_unlock_mutex(chat->mutex);
+
+        if (temMsg) {
+            al_lock_mutex(chat->mutex);
+
+            send(chat->conexao, chat->msg_in, strlen(chat->msg_in), 0);
+            printf("Mensagem de chat enviada\n");
+
+            chat->contador++;
+            chat->evento = false;
+
+            al_unlock_mutex(chat->mutex);
+        }else {
+            al_rest(0.001);
+        }
+
+    }
+    return NULL;
 }

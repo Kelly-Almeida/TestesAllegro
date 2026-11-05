@@ -15,11 +15,11 @@ add_executable(Test
   #--      src/sock.c
         src/graficos.c
         src/infra.c
-        src/sockClient.h
-        src/sockClient.c)
+        src/processClient.h
+        src/processClient.c)
 
 if(NOT WIN32)
-  target_sources(Test PRIVATE src/sock.c)
+  target_sources(Test PRIVATE src/processServer.c)
 endif()
 
 

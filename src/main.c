@@ -5,9 +5,9 @@
 #include <allegro5/allegro_primitives.h>
 #include <allegro5/allegro_ttf.h>
 
-#include "sock.h"
+#include "processServer.h"
 #include "infra.h"
-#include "sockClient.h"
+#include "processClient.h"
 
 #define FPS 60
 
@@ -94,7 +94,7 @@ int main() {
     dados.mutex = al_create_mutex();
 
     /*ALTERAÇÃO*/
-    bool cliente = true;
+    bool cliente = false;
 
     if (cliente) {
         dados.cond = al_create_cond();
@@ -109,12 +109,13 @@ int main() {
 
     al_start_thread(socket);
 
+
     while (round) {
 
         if (!cliente) {
             al_lock_mutex(dados.mutex);
             if (dados.evento == 1) {
-                RESP resposta = tratamento(dados.msg);
+                RESP resposta = tratamento(dados.msg_in);
 
                 if (strcmp(resposta.comando, "TRSP") == 0) {
                     COR_RGB cor = {resposta.corR, resposta.corG, resposta.corB};
