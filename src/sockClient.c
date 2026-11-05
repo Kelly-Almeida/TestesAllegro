@@ -84,10 +84,7 @@ void *client(ALLEGRO_THREAD *thread, void *arg) {
             al_wait_cond_until(fila->cond, fila->mutex, &timeout);
         }
 
-        if (al_get_thread_should_stop(thread)) {
-            al_unlock_mutex(fila->mutex);
-            break;
-        }
+
 
         char msg_env[256];
         strncpy(msg_env, fila->msg, sizeof(msg_env) - 1);
