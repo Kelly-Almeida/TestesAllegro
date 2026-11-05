@@ -19,6 +19,8 @@ typedef struct {
     int corG;
     int corB;
     bool completa;
+    char rsp_F[256];
+    bool acertou;
 }RESP;
 
 typedef struct {

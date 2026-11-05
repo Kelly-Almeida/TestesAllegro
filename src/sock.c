@@ -138,7 +138,18 @@ short parseText(char *msg, int *idx) {
 
     return (short)atoi(cord);
 }
-RESP tratamento (char msg[]/*, RESP respAnt*/) {
+
+void busqText(char *resp, char msg[], int tam) {
+    for (int i = 5; i < tam; i++) {
+        resp[i] = msg[i - 5];
+
+        if (i == tam -1) resp[i] = '\0';
+    }
+
+    printf("MSG: %s\n", resp);
+}
+
+RESP tratamento (char msg[]) {
     printf("%s\n", msg);
     RESP resp;
     char comando[5];
@@ -155,10 +166,20 @@ RESP tratamento (char msg[]/*, RESP respAnt*/) {
 
     strcpy(resp.comando, comando);
 
-    if (strcmp (resp.comando, "TRSP") != 0 && strcmp(resp.comando, "NEWP") != 0) return resp;
+    if (strcmp (resp.comando, "TRSP") != 0 && strcmp(resp.comando, "NEWP") != 0 && strcmp(resp.comando, "RESP") != 0) return resp;
     if (strlen(msg) <= 5) return resp;
 
     int idx = 5;
+
+    if (strcmp(msg, "RESP") == 0) {
+        char resp_F[256];
+        int tam = strlen(msg);
+        busqText(resp_F, msg, tam);
+        strcpy(resp.rsp_F, resp_F);
+
+        printf("%s\n", resp.rsp_F);
+        return resp;
+    }
 
     resp.p1.x = parseText(msg, &idx);
     //if (abs(respAnt.p1.x - resp.p1.x) > 50) resp.p1.x = respAnt.p1.x;
