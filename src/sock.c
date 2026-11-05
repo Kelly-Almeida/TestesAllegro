@@ -79,6 +79,8 @@ void *sock(ALLEGRO_THREAD *thread, void *arg) {
             }
 
             bufferInfoClient[x] = '\0';
+
+            //send(cliente, "njbwef", strlen("njbwef"), 0);
             printf("[Servidor Recv]: %s", bufferInfoClient); // Log para depuração
 
             char *saveptr;
