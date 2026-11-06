@@ -169,13 +169,16 @@ RESP tratamento (char msg[]) {
         comando[i] = msg[i];
         if (i == 4) comando[i] = '\0';
     }
-
+    int idx = 5;
     strcpy(resp.comando, comando);
 
-    if (strcmp (resp.comando, "TRSP") != 0 && strcmp(resp.comando, "NEWP") != 0) return resp;
+    if (strcmp (resp.comando, "TRSP") != 0 && strcmp(resp.comando, "NEWP") != 0 && strcmp(resp.comando, "TENT") != 0) return resp;
     if (strlen(msg) <= 5) return resp;
 
-    int idx = 5;
+
+    if (strcmp(resp.comando, "TENT") == 0) {
+        resp.acertou = parseText(msg, &idx);
+    }
 
     resp.p1.x = parseText(msg, &idx);
     resp.p1.y = parseText(msg, &idx);

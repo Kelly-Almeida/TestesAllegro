@@ -43,6 +43,8 @@ typedef struct {
     int corR;
     int corG;
     int corB;
+
+    bool acertou;
 } RESP;
 
 typedef struct {
