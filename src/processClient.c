@@ -191,6 +191,7 @@ void *chatClient(ALLEGRO_THREAD *thread, void *arg) {
             //msg->chat_env = true;
             printf("%s\n", msg->msg_in);
             al_unlock_mutex(msg->mutex);
+            printf("Correios!!! %s \n", buffer_ten);
         }else {
             al_rest(0.001);
         }

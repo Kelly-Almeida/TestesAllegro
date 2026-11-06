@@ -140,10 +140,18 @@ int main() {
     TRACO* traco_novo = NULL;
     FILA *filaDeTracos = criarFila();
 
+
+    MSG_C dadosC;
+    dadosC.contador = 0;
+    dadosC.evento = false;
+    dadosC.mutex = al_create_mutex();
+    dadosC.cond = al_create_cond();
+
     MSG_S dados;
     dados.contador = 0;
     dados.evento = false;
     dados.mutex = al_create_mutex();
+    dados.msg_c = &dadosC;
 
     /*ALTERAÇÃO*/
     bool cliente = false;
@@ -174,7 +182,10 @@ int main() {
                     if (resposta.corR < 0 || resposta.corR > 255) {
                         resposta.corR = 255;
                     }else {
-                        resposta.corR = respostaAntiga.corR;
+                        respostaMSG_S dados;
+    dados.contador = 0;
+    dados.evento = false;
+    dados.mutex = al_create_mutex();.corR = respostaAntiga.corR;
                     }
                 }
 
@@ -223,6 +234,7 @@ int main() {
 
                             traco_novo = criarTraco(cor, resposta.espessura, resposta.p1);
                             ponto_inicial = resposta.p1;
+
                         }
                         else if (strcmp(resposta.comando, "NEWP") == 0) {
                             if (traco_novo != NULL) {
@@ -372,6 +384,16 @@ int main() {
                 if (cliente) {
                     transpCliente(&dados, "UNDO");
                 }
+            }
+            else if (evento.keyboard.keycode == ALLEGRO_KEY_A && (evento.keyboard.modifiers & ALLEGRO_KEYMOD_CTRL)){
+                if (!cliente) {
+                    char msg_env[256];
+
+                    if (scanf("%254[^\n]", msg_env) == 1) {
+                        transpServer(&dadosC, "msg_env");
+                    }
+                }
+
             }
         }
         else if (evento.type == ALLEGRO_EVENT_DISPLAY_CLOSE) {

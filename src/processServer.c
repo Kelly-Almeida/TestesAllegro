@@ -18,11 +18,10 @@
 
 void *sock(ALLEGRO_THREAD *thread, void *arg) {
         MSG_S *fila = (MSG_S *)arg;
-
-        MSG_C chat;
-        chat.contador = 0;
-        chat.evento = false;
-        chat.mutex = al_create_mutex();
+        MSG_C *chat = fila->msg_c;
+        chat->contador = 0;
+        chat->evento = false;
+        chat->mutex = al_create_mutex();
 
         bool round = true;
         char bufferInfoClient[256];
@@ -80,8 +79,8 @@ void *sock(ALLEGRO_THREAD *thread, void *arg) {
                 continue;
             }
 
-            chat.conexao = cliente;
-            ALLEGRO_THREAD *chatzinho = al_create_thread(chatComun, &chat);
+            chat->conexao = cliente;
+            ALLEGRO_THREAD *chatzinho = al_create_thread(chatComun, chat);
             al_start_thread(chatzinho);
 
             while (!al_get_thread_should_stop(thread) && round) {
@@ -95,14 +94,21 @@ void *sock(ALLEGRO_THREAD *thread, void *arg) {
                 }
 
                 bufferInfoClient[x] = '\0';
-                char *linha = strtok(bufferInfoClient, "\r\n");
+                char *saveptr;
+                char *linha = strtok_r(bufferInfoClient, "\r\n", &saveptr);
 
                 while (linha != NULL) {
                     if (strlen(linha) > 0) {
                         al_lock_mutex(fila->mutex);
                         while (fila->evento && !al_get_thread_should_stop(thread)) {
                             al_unlock_mutex(fila->mutex);
-                            al_rest(0.001);
+
+                            /*SE NÃO FOR O MATHEUS IGNORE
+                             * Capeta, abaixo está a função que dá um gap no desenho.
+                             * POR HIPOTESE ALGUMA MEXA!!
+                             * Se vc fazer isso vc tá fudido
+                             */
+                            al_rest(0.006);
                             al_lock_mutex(fila->mutex);
                         }
 
@@ -112,7 +118,7 @@ void *sock(ALLEGRO_THREAD *thread, void *arg) {
                         fila->msg_in[sizeof(fila->msg_in) - 1] = '\0';
                         al_unlock_mutex(fila->mutex);
                     }
-                    linha = strtok(NULL, "\r\n");
+                    linha = strtok_r(NULL, "\r\n", &saveptr);
                 }
             }
             al_set_thread_should_stop(chatzinho);
@@ -129,10 +135,10 @@ void *sock(ALLEGRO_THREAD *thread, void *arg) {
         return NULL;
     }
 
-
 short parseText(char *msg, int *idx) {
     char cord[16];
     int k = 0;
+
     while (msg[*idx] != '\0' && msg[*idx] == ' ') {
         (*idx)++;
     }
@@ -186,24 +192,42 @@ void *chatComun(ALLEGRO_THREAD *thread, void *arg) {
 
     while (!al_get_thread_should_stop(thread)) {
         al_lock_mutex(chat->mutex);
-        bool temMsg = chat->evento;
+        //bool temMsg = chat->evento;
 
-        al_unlock_mutex(chat->mutex);
+        if (chat->evento) {
+            if (chat->conexao > 0) {
+                char buffer[280];
+                snprintf(buffer, sizeof(buffer), "%s\n", chat->msg_in);
 
-        if (temMsg) {
-            al_lock_mutex(chat->mutex);
-
-            send(chat->conexao, chat->msg_in, strlen(chat->msg_in), 0);
-            printf("Mensagem de chat enviada\n");
-
-            chat->contador++;
+                ssize_t envio = send(chat->conexao, buffer, (int)strlen(buffer), 0);
+                if (envio > 0) {
+                    printf("Chat: %s\n", buffer);
+                    chat->contador++;
+                }else {
+                    printf("Erro no chat\n");
+                }
+            }
             chat->evento = false;
-
-            al_unlock_mutex(chat->mutex);
-        }else {
-            al_rest(0.001);
         }
-
+        al_unlock_mutex(chat->mutex);
+        al_rest(0.001);
     }
     return NULL;
+}
+
+void transpServer(MSG_C *data, const char *msg) {
+    al_lock_mutex(data->mutex);
+    while (data->evento) {
+        al_unlock_mutex(data->mutex);
+        al_rest(0.001);
+        al_lock_mutex(data->mutex);
+    }
+
+    strncpy(data->msg_in, msg, sizeof(data->msg_in) - 1);
+    data->msg_in[sizeof(data->msg_in) - 1] = '\0';
+    data->evento = true;
+    printf("Mensagem no transporte: %s\n", data->msg_in);
+
+    al_signal_cond(data->cond);
+    al_unlock_mutex(data->mutex);
 }
