@@ -94,7 +94,8 @@ void *sock(ALLEGRO_THREAD *thread, void *arg) {
                 }
 
                 bufferInfoClient[x] = '\0';
-                char *linha = strtok(bufferInfoClient, "\r\n");
+                char *saveptr;
+                char *linha = strtok_r(bufferInfoClient, "\r\n", &saveptr);
 
                 while (linha != NULL) {
                     if (strlen(linha) > 0) {
@@ -117,7 +118,7 @@ void *sock(ALLEGRO_THREAD *thread, void *arg) {
                         fila->msg_in[sizeof(fila->msg_in) - 1] = '\0';
                         al_unlock_mutex(fila->mutex);
                     }
-                    linha = strtok(NULL, "\r\n");
+                    linha = strtok_r(NULL, "\r\n", &saveptr);
                 }
             }
             al_set_thread_should_stop(chatzinho);
@@ -202,13 +203,11 @@ void *chatComun(ALLEGRO_THREAD *thread, void *arg) {
                 if (envio > 0) {
                     printf("Chat: %s\n", buffer);
                     chat->contador++;
-                    chat->evento = false;
                 }else {
                     printf("Erro no chat\n");
-                    chat->evento = false;
                 }
             }
-
+            chat->evento = false;
         }
         al_unlock_mutex(chat->mutex);
         al_rest(0.001);
