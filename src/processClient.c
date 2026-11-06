@@ -81,6 +81,7 @@ void *client(ALLEGRO_THREAD *thread, void *arg) {
         chat.mutex = al_create_mutex();
         chat.conexao = sock;
         chat.resposta = fila->msg_c->resposta;
+        chat.finalizar = false;
         TENT tent = {false, false};
         chat.tent = &tent;
 
@@ -91,7 +92,7 @@ void *client(ALLEGRO_THREAD *thread, void *arg) {
         ALLEGRO_THREAD *chatCliente = al_create_thread(chatClient, &chat);
         al_start_thread(chatCliente);
 
-    while (!al_get_thread_should_stop(thread)) {
+    while (!al_get_thread_should_stop(thread) && !fila->msg_c->finalizar) {
         al_lock_mutex(fila->mutex);
 
         while (!fila->evento && !al_get_thread_should_stop(thread) && !fila->msg_c->tent->povoado) {
@@ -127,8 +128,10 @@ void *client(ALLEGRO_THREAD *thread, void *arg) {
                 break;
             }
         }
-        printf("Desconectado do servidor :P\n");
+
     }
+
+    printf("Desconectado do servidor :P\n");
 
     al_set_thread_should_stop(chatCliente);
     al_join_thread(chatCliente, NULL);
@@ -193,6 +196,8 @@ void *chatClient(ALLEGRO_THREAD *thread, void *arg) {
             if (strcasecmp(msg->msg_in, msg->resposta) == 0) {
                 printf("Acertou!\n");
                 msg->tent->acertou = true;
+            }else if (strcasecmp(msg->msg_in, "FIM") == 0) {
+                msg->finalizar = true;
             }else {
                 msg->tent->acertou = false;
 

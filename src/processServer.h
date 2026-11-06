@@ -21,6 +21,7 @@ typedef struct {
     int tam_con;
     const char *resposta;
     TENT *tent;
+    bool finalizar;
 } MSG_C;
 
 typedef struct MSG_S {
