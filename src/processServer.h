@@ -14,7 +14,7 @@ typedef struct {
 
     int conexao;
     int tam_con;
-    char *resposta;
+    const char *resposta;
 } MSG_C;
 
 typedef struct MSG_S {
@@ -27,7 +27,6 @@ typedef struct MSG_S {
 
     MSG_C *msg_c;
 } MSG_S;
-
 
 
 typedef struct {

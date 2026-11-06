@@ -29,6 +29,7 @@
 
 void *client(ALLEGRO_THREAD *thread, void *arg) {
     MSG_S *fila = (MSG_S *) arg;
+    MSG_C chat;
 
 #if !defined(_WIN32) && !defined(WIN32)
     // Ignora SIGPIPE globalmente para essa thread
@@ -75,11 +76,12 @@ void *client(ALLEGRO_THREAD *thread, void *arg) {
 
     printf("Cliente conectado ao servidor!\n");
 
-        MSG_C chat;
         chat.contador = 0;
         chat.evento = false;
         chat.mutex = al_create_mutex();
         chat.conexao = sock;
+        chat.resposta = fila->msg_c->resposta;
+
         ALLEGRO_THREAD *chatCliente = al_create_thread(chatClient, &chat);
         al_start_thread(chatCliente);
 
@@ -187,17 +189,19 @@ void *chatClient(ALLEGRO_THREAD *thread, void *arg) {
             al_lock_mutex(msg->mutex);
             buffer_ten[receb] = '\0';
 
+            buffer_ten[strcspn(buffer_ten, "\r\n")] = '\0';
+
             strcpy(msg->msg_in, buffer_ten);
             //msg->chat_env = true;
             printf("%s\n", msg->msg_in);
             al_unlock_mutex(msg->mutex);
             printf("Correios!!! %s \n", buffer_ten);
+            if (strcasecmp(msg->msg_in, msg->resposta) == 0) {
+                printf("Acertou!\n");
+            }
+            //const char *resposta = msg->resposta;
+            printf("%s\n", msg->resposta);
 
-            TENT tentativa;
-            strcpy(tentativa.tent, msg->msg_in);
-
-
-            /*Criar uma tentativa*/
 
         }else {
             al_rest(0.001);

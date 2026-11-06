@@ -16,7 +16,6 @@ int main() {
 
     srand(time(NULL));
 
-
     bool round = true, desenhar = false, redesenhar = false;
 
     printf("Abrindo o arquivo...!\n");
@@ -147,6 +146,9 @@ int main() {
     dadosC.evento = false;
     dadosC.mutex = al_create_mutex();
     dadosC.cond = al_create_cond();
+    const char *respPart = dificuldades[DIFICULDADE]->frases[indice].ingles;
+    dadosC.resposta = respPart;
+    //deck->frases[indice].ingles)
 
     MSG_S dados;
     dados.contador = 0;
@@ -155,7 +157,7 @@ int main() {
     dados.msg_c = &dadosC;
 
     /*ALTERAÇÃO*/
-    bool cliente = false;
+    bool cliente = true;
 
     if (cliente) {
         dados.cond = al_create_cond();
@@ -178,6 +180,50 @@ int main() {
             if (dados.evento == 1) {
                 RESP resposta = tratamento(dados.msg_in);
 
+                /*
+                if (resposta.corR < 0 || resposta.corR > 255) {
+                    if (resposta.corR < 0 || resposta.corR > 255) {
+                        resposta.corR = 255;
+                    }else {
+                        respostaMSG_S dados;
+    dados.contador = 0;
+    dados.evento = false;
+    dados.mutex = al_create_mutex();.corR = respostaAntiga.corR;
+                    }
+                }
+
+                if (resposta.corG < 0 || resposta.corG > 255) {
+                    if (resposta.corG < 0 || resposta.corG > 255) {
+                        resposta.corG = 255;
+                    }else {
+                        resposta.corG = respostaAntiga.corG;
+                    }
+                }
+
+                if (resposta.corB < 0 || resposta.corB > 255) {
+                    if (resposta.corB < 0 || resposta.corB > 255) {
+                        resposta.corB = 255;
+                    }else {
+                        resposta.corB = respostaAntiga.corB;
+                    }
+                }
+
+                if (resposta.espessura < 0 || resposta.espessura > 10) {
+                    if (respostaAntiga.espessura < 0 || respostaAntiga.espessura > 10) resposta.espessura = 1;
+                    else resposta.espessura = respostaAntiga.espessura;
+                }
+
+                if (resposta.p1.x < 0 || resposta.p1.x > 800) {
+                    if (respostaAntiga.p1.x < 0 || respostaAntiga.p1.x > 800) resposta.p1.x = 1;
+                    else resposta.p1.x = respostaAntiga.p1.x;
+                }
+
+                if (resposta.p1.y < 0 || resposta.p1.y > 800) {
+                    if (respostaAntiga.p1.y < 0 || respostaAntiga.p1.y > 800) resposta.p1.y = 1;
+                    else resposta.p1.y = respostaAntiga.p1.y;
+                }
+                */
+
                 if (strcmp(resposta.comando, "TRSP") == 0 || strcmp(resposta.comando, "NEWP") == 0) {
                     if (resposta.corR >= 0 && resposta.corR <= 255 &&
                         resposta.corG >= 0 && resposta.corG <= 255 &&
@@ -191,6 +237,7 @@ int main() {
 
                             traco_novo = criarTraco(cor, resposta.espessura, resposta.p1);
                             ponto_inicial = resposta.p1;
+
                         }
                         else if (strcmp(resposta.comando, "NEWP") == 0) {
                             if (traco_novo != NULL) {
@@ -231,8 +278,14 @@ int main() {
             al_unlock_mutex(dados.mutex);
         }
 
-        ALLEGRO_EVENT evento;
-        al_wait_for_event(fila_eventos, &evento);
+        ALLEGRO_EVENT evento;/*
+        al_wait_for_event(fila_eventos, &evento);*/
+        bool t_evento = al_wait_for_event_timed(fila_eventos, &evento, 0.02);
+
+        if (!t_evento) {
+            continue;
+        }
+
 
         if (evento.type == ALLEGRO_EVENT_TIMER) {
             redesenhar = true;
