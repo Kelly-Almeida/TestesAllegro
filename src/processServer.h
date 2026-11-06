@@ -6,6 +6,11 @@
 #include "graficos.h"
 
 typedef struct {
+    bool acertou;
+    bool povoado;
+} TENT;
+
+typedef struct {
     ALLEGRO_MUTEX *mutex;
     ALLEGRO_COND *cond;
     bool evento;
@@ -15,6 +20,7 @@ typedef struct {
     int conexao;
     int tam_con;
     const char *resposta;
+    TENT *tent;
 } MSG_C;
 
 typedef struct MSG_S {
@@ -28,11 +34,6 @@ typedef struct MSG_S {
     MSG_C *msg_c;
 } MSG_S;
 
-
-typedef struct {
-    char tent[256];
-    bool acertou;
-} TENT;
 
 typedef struct {
     char comando[5];

@@ -81,6 +81,12 @@ void *client(ALLEGRO_THREAD *thread, void *arg) {
         chat.mutex = al_create_mutex();
         chat.conexao = sock;
         chat.resposta = fila->msg_c->resposta;
+        TENT tent = {false, false};
+        chat.tent = &tent;
+
+        al_lock_mutex(fila->mutex);
+        fila->msg_c = &chat;
+        al_unlock_mutex(fila->mutex);
 
         ALLEGRO_THREAD *chatCliente = al_create_thread(chatClient, &chat);
         al_start_thread(chatCliente);
@@ -88,22 +94,31 @@ void *client(ALLEGRO_THREAD *thread, void *arg) {
     while (!al_get_thread_should_stop(thread)) {
         al_lock_mutex(fila->mutex);
 
-        while (!fila->evento && !al_get_thread_should_stop(thread)) {
+        while (!fila->evento && !al_get_thread_should_stop(thread) && !fila->msg_c->tent->povoado) {
             ALLEGRO_TIMEOUT timeout;
             al_init_timeout(&timeout, 0.1);
             al_wait_cond_until(fila->cond, fila->mutex, &timeout);
         }
 
-        char msg_env[256];
+        char msg_env[256] = "";
+
         strncpy(msg_env, fila->msg_in, sizeof(msg_env) - 1);
         msg_env[sizeof(msg_env) - 1] = '\0';
 
         fila->evento = false;
         al_unlock_mutex(fila->mutex);
 
-        if (strlen(msg_env) > 0) {
+        if (strlen(msg_env) > 0 || fila->msg_c->tent->povoado) {
             char buffer_formatado[280];
-            snprintf(buffer_formatado, sizeof(buffer_formatado), "%s\n", msg_env);
+
+            if (fila->msg_c->tent->povoado) {
+                snprintf(buffer_formatado, sizeof(buffer_formatado), "TENT %d\n", fila->msg_c->tent->acertou);
+                al_lock_mutex(fila->mutex);
+                fila->msg_c->tent->povoado = false;
+                al_unlock_mutex(fila->mutex);
+            }else {
+                snprintf(buffer_formatado, sizeof(buffer_formatado), "%s\n", msg_env);
+            }
 
             // Uso de SEND_FLAGS (MSG_NOSIGNAL) previne o crash por SIGPIPE
             ssize_t enviou = send(sock, buffer_formatado, (int)strlen(buffer_formatado), SEND_FLAGS);
@@ -112,28 +127,7 @@ void *client(ALLEGRO_THREAD *thread, void *arg) {
                 break;
             }
         }
-        /*
-        #if defined(_WIN32) || defined(WIN32)
-        //Não bloquear o socket na hora de leitura
-            u_long mode;
-            ioctlsocket(sock, FIONBIO, &mode);
-            int receb = recv(sock, buffer_ten, sizeof(buffer_ten) -1, 0);
-        #else
-            int receb = recv(sock, buffer_ten, sizeof(buffer_ten) - 1, MSG_DONTWAIT);
-        #endif
-
-        if (receb > 0) {
-            buffer_ten[receb] = '\0';
-
-            al_lock_mutex(fila->mutex);
-            strcpy(fila->msg_in, buffer_ten);
-            fila->chat_env = true;
-            al_unlock_mutex(fila->mutex);
-
-            printf("%sn", fila->msg_in);
-
-        }
-        */
+        printf("Desconectado do servidor :P\n");
     }
 
     al_set_thread_should_stop(chatCliente);
@@ -192,15 +186,21 @@ void *chatClient(ALLEGRO_THREAD *thread, void *arg) {
             buffer_ten[strcspn(buffer_ten, "\r\n")] = '\0';
 
             strcpy(msg->msg_in, buffer_ten);
-            //msg->chat_env = true;
             printf("%s\n", msg->msg_in);
-            al_unlock_mutex(msg->mutex);
+
+
             printf("Correios!!! %s \n", buffer_ten);
             if (strcasecmp(msg->msg_in, msg->resposta) == 0) {
                 printf("Acertou!\n");
+                msg->tent->acertou = true;
+            }else {
+                msg->tent->acertou = false;
+
+                printf("%d\n",msg->tent->acertou);
             }
-            //const char *resposta = msg->resposta;
-            printf("%s\n", msg->resposta);
+            msg->tent->povoado = true;
+
+            al_unlock_mutex(msg->mutex);
 
 
         }else {
