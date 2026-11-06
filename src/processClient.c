@@ -192,6 +192,13 @@ void *chatClient(ALLEGRO_THREAD *thread, void *arg) {
             printf("%s\n", msg->msg_in);
             al_unlock_mutex(msg->mutex);
             printf("Correios!!! %s \n", buffer_ten);
+
+            TENT tentativa;
+            strcpy(tentativa.tent, msg->msg_in);
+
+
+            /*Criar uma tentativa*/
+
         }else {
             al_rest(0.001);
         }

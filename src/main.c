@@ -16,6 +16,7 @@ int main() {
 
     srand(time(NULL));
 
+
     bool round = true, desenhar = false, redesenhar = false;
 
     printf("Abrindo o arquivo...!\n");
@@ -154,7 +155,7 @@ int main() {
     dados.msg_c = &dadosC;
 
     /*ALTERAÇÃO*/
-    bool cliente = true;
+    bool cliente = false;
 
     if (cliente) {
         dados.cond = al_create_cond();
@@ -344,7 +345,7 @@ int main() {
                 if (!cliente) {
                     char msg_env[256];
 
-                    if (scanf("%254[^\n]", msg_env) == 1) {
+                    if (scanf(" %254[^\n]", msg_env) == 1) {
                         transpServer(&dadosC, msg_env);
                     }
                 }

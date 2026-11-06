@@ -14,6 +14,7 @@ typedef struct {
 
     int conexao;
     int tam_con;
+    char *resposta;
 } MSG_C;
 
 typedef struct MSG_S {
@@ -31,7 +32,6 @@ typedef struct MSG_S {
 
 typedef struct {
     char tent[256];
-    short quantTent;
     bool acertou;
 } TENT;
 
