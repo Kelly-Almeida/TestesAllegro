@@ -3,7 +3,12 @@
 
 #include <stdbool.h>
 #include <allegro5/allegro.h>
-#include "graficos.h"
+#include "../../grafico/graficos.h"
+
+typedef struct {
+    bool acertou;
+    bool povoado;
+} TENT;
 
 typedef struct {
     ALLEGRO_MUTEX *mutex;
@@ -14,6 +19,9 @@ typedef struct {
 
     int conexao;
     int tam_con;
+    const char *resposta;
+    TENT *tent;
+    bool finalizar;
 } MSG_C;
 
 typedef struct MSG_S {
@@ -28,13 +36,6 @@ typedef struct MSG_S {
 } MSG_S;
 
 
-
-typedef struct {
-    char tent[256];
-    short quantTent;
-    bool acertou;
-} TENT;
-
 typedef struct {
     char comando[5];
     VEC p1;
@@ -42,6 +43,8 @@ typedef struct {
     int corR;
     int corG;
     int corB;
+
+    bool acertou;
 } RESP;
 
 typedef struct {

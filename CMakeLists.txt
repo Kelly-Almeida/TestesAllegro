@@ -12,16 +12,25 @@ endif()
 
 add_executable(Test
         src/main.c
-        #--      src/sock.c
-        src/graficos.c
-        src/infra.c
-        src/processClient.h
-        src/csv.h
-        src/csv.c
-        src/processClient.c)
+
+        src/infraestrutura/infra.c
+        src/infraestrutura/infra.h
+
+        src/grafico/graficos.c
+        src/grafico/graficos.h
+
+        src/dados/csv.h
+        src/dados/csv.c
+
+        src/conexao/desenhista/processClient.c
+        src/conexao/desenhista/processClient.h
+
+        src/conexao/adivinhador/processServer.h
+        src/conexao/adivinhador/processServer.c
+)
 
 if(NOT WIN32)
-  target_sources(Test PRIVATE src/processServer.c)
+  target_sources(Test PRIVATE src/conexao/adivinhador/processServer.c)
 endif()
 
 

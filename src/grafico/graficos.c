@@ -2,12 +2,12 @@
 // Created by sants on 2026-10-21.
 //
 
+#include "graficos.h"
+#include "../infraestrutura/infra.h"
 #include <stdio.h>
 #include <allegro5/allegro.h>
 #include <allegro5/allegro_primitives.h>
 #include <allegro5/allegro_font.h>
-#include "graficos.h"
-#include "infra.h"
 
 
 TRACO* criarTraco(COR_RGB cor, short espessura, VEC ponto ) {

@@ -5,6 +5,7 @@
 #define TESTC_SOCKCLIENT_H
 
 #include <allegro5/threads.h>
+#include "../adivinhador/processServer.h"
 
 #define PORT 5000
 

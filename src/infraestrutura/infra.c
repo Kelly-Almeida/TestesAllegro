@@ -2,12 +2,13 @@
 // Created by sants on 2026-10-21.
 //
 
+#include "infra.h"
 #include <allegro5/allegro.h>
 #include <allegro5/allegro_primitives.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include "graficos.h"
-#include "infra.h"
+#include "../grafico/graficos.h"
+
 
 
 FILA* criarFila() {

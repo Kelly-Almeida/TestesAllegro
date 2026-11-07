@@ -4,7 +4,7 @@
 
 #ifndef TESTC_INFRA_H
 #define TESTC_INFRA_H
-#include "graficos.h"
+#include "../grafico/graficos.h"
 
 
 typedef struct FILA {
