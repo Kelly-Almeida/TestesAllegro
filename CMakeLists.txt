@@ -56,7 +56,9 @@ if(WIN32)
     set(_dir "${_nativo}/v${MSVC_TOOLSET_VERSION}/${_arq}")
 
     foreach(m IN LISTS ALLEGRO_MODULOS)
-      add_library(Allegro::${m} SHARED IMPORTED)
+      add_library(Allegro::${m} SHARED IMPORTED
+              src/grafico/cores/cores.h
+              src/grafico/cores/cores.c)
       set_target_properties(Allegro::${m} PROPERTIES
               INTERFACE_INCLUDE_DIRECTORIES "${_nativo}/include"
               IMPORTED_CONFIGURATIONS       "DEBUG;RELEASE"
