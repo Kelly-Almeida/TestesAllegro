@@ -11,7 +11,7 @@ deck* novo_deck(FILE *fptr, char dificuldade){
   // pulando o cabeçalho e as dificuldades menores.
   // inicio guarda a posição ANTES de cada leitura, então ao sair do laço
   // ele aponta para o começo da linha que está em temp.
-  long int inicio = ftell(fptr);
+  long int inicio = ftell(fptr); /*erro*/
   char *flag = fgets(temp, temp_size, fptr);
   while (flag != NULL && temp[0] != dificuldade) {
     inicio = ftell(fptr);

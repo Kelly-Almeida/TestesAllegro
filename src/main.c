@@ -20,7 +20,9 @@ void mensError(char msg[]) {
 int main() {
 
     /****************** Inicialização *******************/
-        if (!al_init() || !al_init_primitives_addon() || !al_init_image_addon()) {mensError("Falha ao inicializar o Allegro!\n");}
+        if (!al_init() || !al_init_primitives_addon() || !al_init_image_addon()) {
+            mensError("Falha ao inicializar o Allegro!\n");
+        }
         if (!al_init_primitives_addon()) {mensError("Falha ao inicializar a biblioteca de primitivas!\n");}
         if (!al_init_image_addon()) {mensError("Falha ao inicializar a biblioteca de IO de imagens!\n");}
 
@@ -97,55 +99,71 @@ int main() {
         FILE *file = fopen("resources/palavra em ingles_dicas preenchidas.csv", "r");
         if (!file){mensError("Erro ao abrir o arquivo!\n");}
 
+        deck *faceis =    novo_deck(file, '0');
+        deck *medias =    novo_deck(file, '1');
+        deck *dificeis =  novo_deck(file, '2');
+        deck *dificuldades[3] = {faceis, medias, dificeis};
+        fclose(file);
+
+        FILA *filaDeTracos = criarFila();
+
+        MSG_C dadosC = {0};
+        dadosC.mutex = al_create_mutex();
+        dadosC.cond = al_create_cond();
+
+        MSG_S dados = {0};
+        dados.mutex = al_create_mutex();
+        dadosC.cond = al_create_cond();
+
+        TENT tent = {0};
+
+        dados.msg_c = &dadosC;
+        dadosC.tent = &tent;
+        dadosC.resposta = "NADA";
+
+        ALLEGRO_THREAD *socket;
+
     /****************** Loop do jogo *******************/
 
-    deck *faceis =    novo_deck(file, '0');
-    deck *medias =    novo_deck(file, '1');
-    deck *dificeis =  novo_deck(file, '2');
-    deck *dificuldades[3] = {faceis, medias, dificeis};
-    fclose(file);
-
-    /*INSRIR TELA DE ESCOLHA DE DIFICULDADE*/
-
-    int DIFICULDADE = 0;
-    int indice = rand() % dificuldades[DIFICULDADE]->tamanho;
-
-    TRACO* traco_novo = NULL;
-    FILA *filaDeTracos = criarFila();
-
-    MSG_C dadosC;
-    dadosC.contador = 0;
-    dadosC.evento = false;
-    dadosC.mutex = al_create_mutex();
-    dadosC.cond = al_create_cond();
-    const char *respPart = dificuldades[DIFICULDADE]->frases[indice].ingles;
-    dadosC.resposta = respPart;
-
-    MSG_S dados;
-    dados.contador = 0;
-    dados.evento = false;
-    dados.mutex = al_create_mutex();
-    dados.msg_c = &dadosC;
-
-
-    /*INSERIR TELA DE ESCOLHA DE CLIENTE OU SERVIDOR*/
-    bool cliente = false;
-
-
-    if (cliente) {
-        dados.cond = al_create_cond();
-    }
-    ALLEGRO_THREAD *socket;
-    if (cliente) {
-        socket = al_create_thread(client, &dados);
-    } else {
-        socket = al_create_thread(sock, &dados);
-    }
-
-    al_start_thread(socket);
-    int tentativas = 3;
-
     while (round) {
+        /*INSRIR TELA DE ESCOLHA DE DIFICULDADE*/
+
+        int DIFICULDADE = 0;
+        int indice = rand() % dificuldades[DIFICULDADE]->tamanho;
+
+        TRACO* traco_novo = NULL;
+        dadosC.contador = 0;
+        dadosC.evento = false;
+        dadosC.mutex = al_create_mutex();
+        dadosC.cond = al_create_cond();
+        const char *respPart = dificuldades[DIFICULDADE]->frases[indice].ingles;
+        dadosC.resposta = respPart;
+
+        dados.contador = 0;
+        dados.evento = false;
+        dados.mutex = al_create_mutex();
+        dados.msg_c = &dadosC;
+
+
+        /*INSERIR TELA DE ESCOLHA DE CLIENTE OU SERVIDOR*/
+        bool cliente = false;
+
+
+        if (cliente) {
+            dados.cond = al_create_cond();
+        }
+
+        if (cliente) {
+            socket = al_create_thread(client, &dados);
+        } else {
+            socket = al_create_thread(sock, &dados);
+        }
+
+        al_start_thread(socket);
+        int tentativas = 3;
+
+
+        while (tentativas != 0) {
 
         if (!cliente) {
             al_lock_mutex(dados.mutex);
@@ -339,6 +357,7 @@ int main() {
         }
         else if (evento.type == ALLEGRO_EVENT_DISPLAY_CLOSE) {
             round = false;
+            tentativas = 0;
         }
 
         // --- ATUALIZAÇÃO DO DISPLAY ---
@@ -356,17 +375,25 @@ int main() {
         }
     }
 
-    if (cliente) al_destroy_cond(dados.cond);
-    al_set_thread_should_stop(socket);
-    al_join_thread(socket, NULL);
-    al_destroy_thread(socket);
-    al_destroy_mutex(dados.mutex);
+        if (cliente) al_destroy_cond(dados.cond);
+        al_set_thread_should_stop(socket);
+        al_join_thread(socket, NULL);
+        al_destroy_thread(socket);
+        al_destroy_mutex(dados.mutex);
+
+    }
+
+    /*
+     * ADICIONE UMA TELA DE AGUARDE NO CLIENTE
+     */
+
+    destroyFila(filaDeTracos);
     al_destroy_font(font);
     al_destroy_bitmap(canvas);
     al_destroy_event_queue(fila_eventos);
     al_destroy_timer(timer);
     al_destroy_display(tela);
-    destroyFila(filaDeTracos);
+
 
     return 0;
 }
