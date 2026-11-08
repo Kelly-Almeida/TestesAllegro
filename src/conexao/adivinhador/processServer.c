@@ -1,21 +1,17 @@
 #include "processServer.h"
-
-#include <pthread.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
 #include <allegro5/threads.h>
-
-
 #if defined(_WIN32) || defined(WIN32)
+    #define strcasecmp _stricmp
     #include <winsock2.h>
     #include <ws2tcpip.h>
 #else
     #include <unistd.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
+    #include <sys/socket.h>
+    #include <netinet/in.h>
 #endif
-
 
 void *sock(ALLEGRO_THREAD *thread, void *arg) {
         MSG_S *fila = (MSG_S *)arg;
@@ -26,6 +22,7 @@ void *sock(ALLEGRO_THREAD *thread, void *arg) {
 
         bool round = true;
         char bufferInfoClient[256];
+
         #if defined(_WIN32) || defined(WIN32)
             WSADATA wsaData;
             if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0) {
@@ -33,7 +30,6 @@ void *sock(ALLEGRO_THREAD *thread, void *arg) {
                 return NULL;
             }
         #endif
-
 
         struct sockaddr_in socket_cliente;
         struct sockaddr_in enderecoMara = {
@@ -66,7 +62,13 @@ void *sock(ALLEGRO_THREAD *thread, void *arg) {
 
         if (bind(server, (struct sockaddr *) &enderecoMara, sizeof enderecoMara) < 0) {
             printf("Erro no bind!\n");
-            close(server);
+
+            #if defined (_WIN32) || defined(WIN32)
+                closesocket(server);
+                WSACleanup();
+            #else
+                close(server);
+            #endif
             return NULL;
         }
 
@@ -126,12 +128,19 @@ void *sock(ALLEGRO_THREAD *thread, void *arg) {
             al_join_thread(chatzinho, NULL);
             al_destroy_thread(chatzinho);
 
-            close(cliente);
+            #if defined(_WIN32) || defined(WIN32)
+                closesocket(cliente);
+            #else
+                close(cliente);
+            #endif
+
         }
 
-        close(server);
         #if defined(_WIN32) || defined(WIN32)
+            closesocket(server);
             WSACleanup();
+        #else
+            close(server);
         #endif
         return NULL;
     }

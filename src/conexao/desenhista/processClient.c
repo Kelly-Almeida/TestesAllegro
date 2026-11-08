@@ -1,10 +1,9 @@
 #include "processClient.h"
-
 #include <string.h>
 #include <stdio.h>
-#include <stdlib.h>
 
 #if defined(_WIN32) || defined(WIN32)
+    #define strcasecmp _stricmp
     #include <winsock2.h>
     #include <ws2tcpip.h>
     #define CLOSE_SOCKET(s) closesocket(s)
@@ -16,7 +15,6 @@
 #include <arpa/inet.h>
 #include <signal.h>
 #define CLOSE_SOCKET(s) close(s)
-    // Evita o encerramento do processo caso a conexao caia
     #ifndef MSG_NOSIGNAL
         #define MSG_NOSIGNAL 0
     #endif
@@ -33,7 +31,6 @@ void *client(ALLEGRO_THREAD *thread, void *arg) {
     MSG_C chat;
 
     #if !defined(_WIN32) && !defined(WIN32)
-        // Ignora SIGPIPE globalmente para essa thread
         signal(SIGPIPE, SIG_IGN);
     #else
         WSADATA wsaData;
@@ -55,27 +52,18 @@ void *client(ALLEGRO_THREAD *thread, void *arg) {
         sock = socket(AF_INET, SOCK_STREAM, 0);
         if (sock < 0) {
             printf("Erro na criacao do Socket\n");
-            #if defined(_WIN32) || defined(WIN32)
-                        WSACleanup();
-            #endif
             continue;
         }
 
         if (inet_pton(AF_INET, "127.0.0.1", &serv_addr.sin_addr) <= 0) {
             printf("Endereco invalido / nao suportado\n");
             CLOSE_SOCKET(sock);
-        #if defined(_WIN32) || defined(WIN32)
-            WSACleanup();
-        #endif
             continue;
         }
 
         if (connect(sock, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0) {
             printf("Falha na conexao com o servidor\n");
             CLOSE_SOCKET(sock);
-            #if defined(_WIN32) || defined(WIN32)
-                WSACleanup();
-            #endif
             continue;
         }
 
@@ -97,47 +85,43 @@ void *client(ALLEGRO_THREAD *thread, void *arg) {
             chatCliente = al_create_thread(chatClient, &chat);
             al_start_thread(chatCliente);
 
-        while (!al_get_thread_should_stop(thread) && !fila->msg_c->finalizar) {
-            al_lock_mutex(fila->mutex);
+            while (!al_get_thread_should_stop(thread) && !fila->msg_c->finalizar) {
+                al_lock_mutex(fila->mutex);
 
-            while (!fila->evento && !al_get_thread_should_stop(thread) && !fila->msg_c->tent->povoado) {
-                ALLEGRO_TIMEOUT timeout;
-                al_init_timeout(&timeout, 0.1);
-                al_wait_cond_until(fila->cond, fila->mutex, &timeout);
-            }
-
-            char msg_env[256] = "";
-
-            strncpy(msg_env, fila->msg_in, sizeof(msg_env) - 1);
-            msg_env[sizeof(msg_env) - 1] = '\0';
-
-            fila->evento = false;
-            al_unlock_mutex(fila->mutex);
-
-            if (strlen(msg_env) > 0 || fila->msg_c->tent->povoado) {
-                char buffer_formatado[280];
-
-                if (fila->msg_c->tent->povoado) {
-                    snprintf(buffer_formatado, sizeof(buffer_formatado), "TENT %d\n", fila->msg_c->tent->acertou);
-                    al_lock_mutex(fila->mutex);
-                    fila->msg_c->tent->povoado = false;
-                    al_unlock_mutex(fila->mutex);
-                }else {
-                    snprintf(buffer_formatado, sizeof(buffer_formatado), "%s\n", msg_env);
+                while (!fila->evento && !al_get_thread_should_stop(thread) && !fila->msg_c->tent->povoado) {
+                    ALLEGRO_TIMEOUT timeout;
+                    al_init_timeout(&timeout, 0.1);
+                    al_wait_cond_until(fila->cond, fila->mutex, &timeout);
                 }
 
-                // Uso de SEND_FLAGS (MSG_NOSIGNAL) previne o crash por SIGPIPE
-                ssize_t enviou = send(sock, buffer_formatado, (int)strlen(buffer_formatado), SEND_FLAGS);
-                if (enviou <= 0) {
-                    printf("Servidor encerrou a conexao! Finalizando thread do cliente.\n");
-                    break;
+                char msg_env[256] = "";
+
+                strncpy(msg_env, fila->msg_in, sizeof(msg_env) - 1);
+                msg_env[sizeof(msg_env) - 1] = '\0';
+
+                fila->evento = false;
+                al_unlock_mutex(fila->mutex);
+
+                if (strlen(msg_env) > 0 || fila->msg_c->tent->povoado) {
+                    char buffer_formatado[280];
+
+                    if (fila->msg_c->tent->povoado) {
+                        snprintf(buffer_formatado, sizeof(buffer_formatado), "TENT %d\n", fila->msg_c->tent->acertou);
+                        al_lock_mutex(fila->mutex);
+                        fila->msg_c->tent->povoado = false;
+                        al_unlock_mutex(fila->mutex);
+                    }else {
+                        snprintf(buffer_formatado, sizeof(buffer_formatado), "%s\n", msg_env);
+                    }
+                    int enviou = send(sock, buffer_formatado, (int)strlen(buffer_formatado), SEND_FLAGS);
+                    if (enviou <= 0) {
+                        printf("Servidor encerrou a conexao! Finalizando thread do cliente.\n");
+                        break;
+                    }
                 }
+
             }
-
-        }
-
         printf("Desconectado do servidor :P\n");
-
     }
 
     if (chatCliente) {
@@ -151,9 +135,9 @@ void *client(ALLEGRO_THREAD *thread, void *arg) {
     }
     CLOSE_SOCKET(sock);
 
-#if defined(_WIN32) || defined(WIN32)
-    WSACleanup();
-#endif
+    #if defined(_WIN32) || defined(WIN32)
+        WSACleanup();
+    #endif
 
     return NULL;
 }
@@ -187,8 +171,7 @@ void *chatClient(ALLEGRO_THREAD *thread, void *arg) {
         al_unlock_mutex(msg->mutex);
 
         #if defined(_WIN32) || defined(WIN32)
-                //Não bloquear o socket na hora de leitura
-                u_long mode;
+                u_long mode = 1;
                 ioctlsocket(conexao, FIONBIO, &mode);
                 int receb = recv(conexao, buffer_ten, sizeof(buffer_ten) -1, 0);
         #else
@@ -219,8 +202,6 @@ void *chatClient(ALLEGRO_THREAD *thread, void *arg) {
             msg->tent->povoado = true;
 
             al_unlock_mutex(msg->mutex);
-
-
         }else {
             al_rest(0.001);
         }
