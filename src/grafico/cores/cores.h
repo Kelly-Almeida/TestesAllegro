@@ -11,16 +11,4 @@ COR_RGB VERDE = {172, 225, 57}, VERMELHO = {255, 0, 0}, AZUL = {0, 0, 255};
 COR_RGB AMARELO = {255, 255, 0}, BRANCO = {255, 255, 255}, PRETO = {0, 0, 0};
 COR_RGB LARANJA = {255, 128, 0}, ROXO = {128, 0, 255};
 
-
-
-const struct COR PRETO_PALE;
-const struct COR VERMELHO_PALE;
-const struct COR AMARELO_PALE;
-const struct COR AZUL_PALE;
-const struct COR LARANJA_PALE;
-const struct COR ROXO_PALE;
-const struct COR BRANCO_PALE;
-
-
-
 #endif //TESTC_CORES_H
