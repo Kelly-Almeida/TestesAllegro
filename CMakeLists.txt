@@ -27,11 +27,9 @@ add_executable(Test
 
         src/conexao/adivinhador/processServer.h
         src/conexao/adivinhador/processServer.c
-)
 
-if(NOT WIN32)
-  target_sources(Test PRIVATE src/conexao/adivinhador/processServer.c)
-endif()
+        src/grafico/cores/cores.h
+)
 
 
 add_custom_command(TARGET Test POST_BUILD
@@ -56,9 +54,7 @@ if(WIN32)
     set(_dir "${_nativo}/v${MSVC_TOOLSET_VERSION}/${_arq}")
 
     foreach(m IN LISTS ALLEGRO_MODULOS)
-      add_library(Allegro::${m} SHARED IMPORTED
-              src/grafico/cores/cores.h
-              src/grafico/cores/cores.c)
+      add_library(Allegro::${m} SHARED IMPORTED)
       set_target_properties(Allegro::${m} PROPERTIES
               INTERFACE_INCLUDE_DIRECTORIES "${_nativo}/include"
               IMPORTED_CONFIGURATIONS       "DEBUG;RELEASE"
@@ -80,7 +76,7 @@ if(WIN32)
           Allegro::allegro_image
           Allegro::allegro_font
           Allegro::allegro_ttf
-          # ws2_32   # volta quando o socket for portado
+          ws2_32   # Winsock (processServer.c / processClient.c)
   )
 
   # Copia as DLLs para junto do .exe (senão: "allegro-5.2.dll não encontrado")
@@ -95,6 +91,7 @@ else()
           allegro_main-5
           allegro_primitives-5
           allegro_image-5
+          allegro_font-5
           allegro_ttf-5
   )
   target_link_libraries(Test PRIVATE PkgConfig::ALLEGRO)

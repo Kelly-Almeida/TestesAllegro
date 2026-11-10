@@ -15,41 +15,50 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="out\build\x64-debug\cmakefiles\4.3.1-msvc1\compileridc\CMakeCCompilerId.c">
+    <ClCompile Include="src\main.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="out\build\x64-debug\cmakefiles\showincludes\main.c">
+    <ClCompile Include="src\infraestrutura\infra.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\graficos.c">
+    <ClCompile Include="src\grafico\graficos.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\infra.c">
+    <ClCompile Include="src\dados\csv.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\sock.c">
+    <ClCompile Include="src\conexao\desenhista\processClient.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\teste05.c">
+    <ClCompile Include="src\conexao\adivinhador\processServer.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="out\build\x64-debug\cmakefiles\showincludes\foo.h">
+    <ClInclude Include="src\infraestrutura\infra.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\graficos.h">
+    <ClInclude Include="src\grafico\graficos.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\infra.h">
+    <ClInclude Include="src\grafico\cores\cores.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\sock.h">
+    <ClInclude Include="src\dados\csv.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\conexao\desenhista\processClient.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\conexao\adivinhador\processServer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <None Include="out\build\x64-debug\cmakefiles\4.3.1-msvc1\CMakeDetermineCompilerABI_C.bin">
+    <None Include="resources\Roboto-Regular.ttf">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="resources\palavra em ingles_dicas preenchidas.csv">
       <Filter>Resource Files</Filter>
     </None>
   </ItemGroup>

@@ -7,6 +7,9 @@
     #define strcasecmp _stricmp
     #include <winsock2.h>
     #include <ws2tcpip.h>
+    #include <BaseTsd.h>
+    typedef SSIZE_T ssize_t;
+    #define strtok_r strtok_s
 #else
     #include <unistd.h>
     #include <sys/socket.h>

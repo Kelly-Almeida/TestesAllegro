@@ -155,7 +155,7 @@ int main() {
 
 
         /*INSERIR TELA DE ESCOLHA DE CLIENTE OU SERVIDOR*/
-        bool cliente = false;
+        bool cliente = true;
 
 
         if (cliente) {
