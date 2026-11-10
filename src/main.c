@@ -227,11 +227,14 @@ int main() {
                         round = false;
                     }
                     else  if (strcmp(resposta.comando, "TENT") == 0) {
-                        tentativas = (!resposta.acertou) ? tentativas - 1 : tentativas;
-                        printf("%d\n", tentativas);
-
-                        if (tentativas == 0) {
+                        if (resposta.acertou) {
+                            printf("Acertou!!!\n");
                             transpServer(&dadosC, "FIM");
+                            tentativas = 0;
+                        }else {
+                            tentativas--;
+                            printf("Tentativas restantes: %d\n", tentativas);
+
                         }
                     }
 
