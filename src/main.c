@@ -288,7 +288,7 @@ int main() {
                     }
                 }
             }
-            else if (evento.type == ALLEGRO_EVENT_MOUSE_AXES) {
+            else if (evento.type == ALLEGRO_EVENT_MOUSE_AXES && cliente) {
                 ponto.x = evento.mouse.x;
                 ponto.y = evento.mouse.y;
 
