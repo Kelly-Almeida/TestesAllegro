@@ -72,7 +72,7 @@ void limparCanvas(ALLEGRO_BITMAP* canvas, COR_RGB cor,  ALLEGRO_DISPLAY* tela, F
 }
 
 
-void telaPrincipal(TELA telinha, ALLEGRO_FONT *font, deck *deck, int indice ) {
+void telaPrincipal(TELA telinha, ALLEGRO_FONT *font, deck *deck, int indice, bool cliente) {
     ALLEGRO_COLOR VERDE = al_map_rgb(172, 225, 57);
     ALLEGRO_COLOR VERMELHO = al_map_rgb(255, 0, 0);
     ALLEGRO_COLOR AZUL = al_map_rgb(0, 0, 255);
@@ -102,7 +102,7 @@ void telaPrincipal(TELA telinha, ALLEGRO_FONT *font, deck *deck, int indice ) {
     al_draw_filled_rectangle(LARANJA_PALE.coordenadas[0], LARANJA_PALE.coordenadas[1], LARANJA_PALE.coordenadas[2], LARANJA_PALE.coordenadas[3], LARANJA_PALE.cor);
     al_draw_filled_rectangle(ROXO_PALE.coordenadas[0], ROXO_PALE.coordenadas[1], ROXO_PALE.coordenadas[2], ROXO_PALE.coordenadas[3], ROXO_PALE.cor);
 
-    al_draw_text(font, al_map_rgb(0,50,255), 900, 50, ALLEGRO_ALIGN_CENTRE, deck->frases[indice].ingles);
+    if (cliente) al_draw_text(font, al_map_rgb(0,50,255), 900, 50, ALLEGRO_ALIGN_CENTRE, deck->frases[indice].ingles);
 
     al_draw_filled_rounded_rectangle(telinha.x * 0.80, telinha.y*0.15,telinha.x * 0.98,telinha.y * 0.85,15,15, al_map_rgba(0,0,0,100));
 }

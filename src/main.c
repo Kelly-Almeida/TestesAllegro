@@ -171,6 +171,7 @@ int main() {
         al_start_thread(socket);
         int tentativas = 3;
 
+        limparCanvas(canvas, BRANCO, tela, filaDeTracos);
 
         while (tentativas != 0) {
 
@@ -243,6 +244,10 @@ int main() {
                 }
                 al_unlock_mutex(dados.mutex);
             }
+            else if (dados.msg_c->finalizar) {
+                tentativas = 0;
+                dados.msg_c->finalizar = false;
+            }
 
             ALLEGRO_EVENT evento;/*
             al_wait_for_event(fila_eventos, &evento);*/
@@ -288,14 +293,14 @@ int main() {
                     }
                 }
             }
-            else if (evento.type == ALLEGRO_EVENT_MOUSE_AXES) {
+            else if (evento.type == ALLEGRO_EVENT_MOUSE_AXES && cliente) {
                 ponto.x = evento.mouse.x;
                 ponto.y = evento.mouse.y;
 
                 ponto_canvas.x = (ponto.x - x_offset) * scaling;
                 ponto_canvas.y = (ponto.y - y_offset) * scaling;
 
-                if (desenhar && traco_novo && cliente) {
+                if (desenhar && traco_novo) {
                     al_set_target_bitmap(canvas);
                     addPontos(traco_novo, ponto_canvas);
                     desenharCirc(ponto_inicial, ponto_canvas, COR, espessura);
@@ -368,7 +373,7 @@ int main() {
             if (redesenhar && al_is_event_queue_empty(fila_eventos)) {
                 redesenhar = false;
 
-                telaPrincipal(telinha, font, dificuldades[DIFICULDADE], indice);
+                telaPrincipal(telinha, font, dificuldades[DIFICULDADE], indice, cliente);
                 al_draw_text(font, al_map_rgb(0, 50, 255), 20, 600, 0, "Teste texto\n");
 
                 al_draw_filled_rectangle(telinha.x * 0.01, telinha.y * 0.85, telinha.x * 0.01 + 75, (telinha.y * 0.85) + 75, al_map_rgb(BRANCO.r, BRANCO.g, BRANCO.b));
