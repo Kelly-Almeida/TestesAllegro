@@ -28,7 +28,7 @@
 
 void *client(ALLEGRO_THREAD *thread, void *arg) {
     MSG_S *fila = (MSG_S *) arg;
-    MSG_C chat;
+    MSG_C chat = {0};
 
     #if !defined(_WIN32) && !defined(WIN32)
         signal(SIGPIPE, SIG_IGN);
@@ -45,25 +45,32 @@ void *client(ALLEGRO_THREAD *thread, void *arg) {
     serv_addr.sin_family = AF_INET;
     serv_addr.sin_port = htons(PORT);
 
-    ALLEGRO_THREAD *chatCliente;
-    int sock;
+    // Inicializados para que a limpeza no final seja segura mesmo se
+    // nunca houver conexão (antes eram lixo de pilha -> crash ao fechar).
+    ALLEGRO_THREAD *chatCliente = NULL;
+    int sock = -1;
 
     while (!al_get_thread_should_stop(thread)) {
         sock = socket(AF_INET, SOCK_STREAM, 0);
         if (sock < 0) {
             printf("Erro na criacao do Socket\n");
+            al_rest(1.0);
             continue;
         }
 
-        if (inet_pton(AF_INET, "127.0.0.1", &serv_addr.sin_addr) <= 0) {
+        if (inet_pton(AF_INET, "10.135.113.51", &serv_addr.sin_addr) <= 0) {
             printf("Endereco invalido / nao suportado\n");
             CLOSE_SOCKET(sock);
+            sock = -1;
+            al_rest(1.0);
             continue;
         }
 
         if (connect(sock, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0) {
             printf("Falha na conexao com o servidor\n");
             CLOSE_SOCKET(sock);
+            sock = -1;
+            al_rest(1.0); // evita loop ocupado (100% CPU) enquanto o servidor não sobe
             continue;
         }
 
@@ -90,7 +97,7 @@ void *client(ALLEGRO_THREAD *thread, void *arg) {
 
                 while (!fila->evento && !al_get_thread_should_stop(thread) && !fila->msg_c->tent->povoado) {
                     ALLEGRO_TIMEOUT timeout;
-                    al_init_timeout(&timeout, 0.1);
+                    al_init_timeout(&timeout, 0.5);
                     al_wait_cond_until(fila->cond, fila->mutex, &timeout);
                 }
 
@@ -121,6 +128,19 @@ void *client(ALLEGRO_THREAD *thread, void *arg) {
                 }
 
             }
+
+            // Limpa ESTA conexão antes de tentar outra: senão cada reconexão
+            // deixava uma thread chatClient antiga rodando e vazava mutex/socket.
+            al_set_thread_should_stop(chatCliente);
+            al_join_thread(chatCliente, NULL);
+            al_destroy_thread(chatCliente);
+            chatCliente = NULL;
+
+            al_destroy_mutex(chat.mutex);
+            chat.mutex = NULL;
+            CLOSE_SOCKET(sock);
+            sock = -1;
+
         printf("Desconectado do servidor :P\n");
     }
 
@@ -133,7 +153,7 @@ void *client(ALLEGRO_THREAD *thread, void *arg) {
     if (chat.mutex) {
         al_destroy_mutex(chat.mutex);
     }
-    CLOSE_SOCKET(sock);
+    if (sock >= 0) CLOSE_SOCKET(sock);
 
     #if defined(_WIN32) || defined(WIN32)
         WSACleanup();
@@ -147,7 +167,7 @@ void transpCliente(MSG_S *data, const char *msg) {
 
     while (data->evento) {
         al_unlock_mutex(data->mutex);
-        al_rest(0.001);
+        al_rest(0.01);
         al_lock_mutex(data->mutex);
     }
 

@@ -21,7 +21,8 @@ void *sock(ALLEGRO_THREAD *thread, void *arg) {
         MSG_C *chat = fila->msg_c;
         chat->contador = 0;
         chat->evento = false;
-        chat->mutex = al_create_mutex();
+        // chat->mutex é criado uma única vez no main(); recriar aqui
+        // trocava o mutex enquanto o main podia estar segurando o antigo.
 
         bool round = true;
         char bufferInfoClient[256];

@@ -113,7 +113,7 @@ int main() {
 
         MSG_S dados = {0};
         dados.mutex = al_create_mutex();
-        dadosC.cond = al_create_cond();
+        dados.cond = al_create_cond();
 
         TENT tent = {0};
 
@@ -143,24 +143,18 @@ int main() {
         TRACO* traco_novo = NULL;
         dadosC.contador = 0;
         dadosC.evento = false;
-        dadosC.mutex = al_create_mutex();
-        dadosC.cond = al_create_cond();
+        dadosC.finalizar = false;
         const char *respPart = dificuldades[DIFICULDADE]->frases[indice].ingles;
         dadosC.resposta = respPart;
 
         dados.contador = 0;
         dados.evento = false;
-        dados.mutex = al_create_mutex();
+        dados.msg_in[0] = '\0';
         dados.msg_c = &dadosC;
 
 
         /*INSERIR TELA DE ESCOLHA DE CLIENTE OU SERVIDOR*/
         bool cliente = true;
-
-
-        if (cliente) {
-            dados.cond = al_create_cond();
-        }
 
         if (cliente) {
             socket = al_create_thread(client, &dados);
@@ -385,13 +379,22 @@ int main() {
 
     }
 
-        if (cliente) al_destroy_cond(dados.cond);
+        // Primeiro para e espera a thread de rede terminar; só depois disso
+        // é seguro destruir o mutex/cond que ela usa (senão: access violation).
         al_set_thread_should_stop(socket);
         al_join_thread(socket, NULL);
         al_destroy_thread(socket);
-        al_destroy_mutex(dados.mutex);
+        dados.msg_c = &dadosC; // msg_c apontava para a pilha da thread que acabou
 
     }
+
+    al_destroy_cond(dados.cond);
+    al_destroy_mutex(dados.mutex);
+    al_destroy_cond(dadosC.cond);
+    al_destroy_mutex(dadosC.mutex);
+    destroy_deck(faceis);
+    destroy_deck(medias);
+    destroy_deck(dificeis);
 
     destroyFila(filaDeTracos);
     al_destroy_font(font);
