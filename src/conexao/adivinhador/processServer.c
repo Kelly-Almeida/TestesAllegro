@@ -114,7 +114,7 @@ void *sock(ALLEGRO_THREAD *thread, void *arg) {
                              * POR HIPOTESE ALGUMA MEXA!!
                              * Se vc fazer isso vc tá fudido
                              */
-                            al_rest(0.006);
+                            al_rest(0.01);
                             al_lock_mutex(fila->mutex);
                         }
 
