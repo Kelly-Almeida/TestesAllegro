@@ -155,7 +155,11 @@ int main() {
 
 
         /*INSERIR TELA DE ESCOLHA DE CLIENTE OU SERVIDOR*/
-        bool cliente = true;
+        int escol;
+
+        scanf("%d", &escol);
+
+        bool cliente = escol > 0 ? true : false;
 
 
         if (cliente) {
