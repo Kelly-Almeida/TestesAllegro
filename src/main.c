@@ -372,7 +372,7 @@ int main() {
             if (redesenhar && al_is_event_queue_empty(fila_eventos)) {
                 redesenhar = false;
 
-                telaPrincipal(telinha, font, dificuldades[DIFICULDADE], indice);
+                telaPrincipal(telinha, font, dificuldades[DIFICULDADE], indice, cliente);
                 al_draw_text(font, al_map_rgb(0, 50, 255), 20, 600, 0, "Teste texto\n");
 
                 al_draw_filled_rectangle(telinha.x * 0.01, telinha.y * 0.85, telinha.x * 0.01 + 75, (telinha.y * 0.85) + 75, al_map_rgb(BRANCO.r, BRANCO.g, BRANCO.b));
