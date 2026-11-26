@@ -94,17 +94,20 @@ void telaPrincipal(TELA telinha, ALLEGRO_FONT *font, deck *deck, int indice, boo
     al_draw_filled_rectangle(0, 0, telinha.x, telinha.y, VERDE);
 
     /*cores*/
-    al_draw_filled_rectangle(PRETO_PALE.coordenadas[0],PRETO_PALE.coordenadas[1], PRETO_PALE.coordenadas[2], PRETO_PALE.coordenadas[3], PRETO_PALE.cor);
-    al_draw_filled_rectangle(VERMELHO_PALE.coordenadas[0],VERMELHO_PALE.coordenadas[1], VERMELHO_PALE.coordenadas[2], VERMELHO_PALE.coordenadas[3], VERMELHO_PALE.cor);
-    al_draw_filled_rectangle(AMARELO_PALE.coordenadas[0],AMARELO_PALE.coordenadas[1], AMARELO_PALE.coordenadas[2], AMARELO_PALE.coordenadas[3], AMARELO_PALE.cor);
-    al_draw_filled_rectangle(AZUL_PALE.coordenadas[0],AZUL_PALE.coordenadas[1], AZUL_PALE.coordenadas[2], AZUL_PALE.coordenadas[3], AZUL_PALE.cor);
-    al_draw_filled_rectangle(BRANCO_PALE.coordenadas[0],BRANCO_PALE.coordenadas[1], BRANCO_PALE.coordenadas[2], BRANCO_PALE.coordenadas[3], BRANCO_PALE.cor);
-    al_draw_filled_rectangle(LARANJA_PALE.coordenadas[0], LARANJA_PALE.coordenadas[1], LARANJA_PALE.coordenadas[2], LARANJA_PALE.coordenadas[3], LARANJA_PALE.cor);
-    al_draw_filled_rectangle(ROXO_PALE.coordenadas[0], ROXO_PALE.coordenadas[1], ROXO_PALE.coordenadas[2], ROXO_PALE.coordenadas[3], ROXO_PALE.cor);
+    if (cliente) {
+        al_draw_filled_rectangle(PRETO_PALE.coordenadas[0],PRETO_PALE.coordenadas[1], PRETO_PALE.coordenadas[2], PRETO_PALE.coordenadas[3], PRETO_PALE.cor);
+        al_draw_filled_rectangle(VERMELHO_PALE.coordenadas[0],VERMELHO_PALE.coordenadas[1], VERMELHO_PALE.coordenadas[2], VERMELHO_PALE.coordenadas[3], VERMELHO_PALE.cor);
+        al_draw_filled_rectangle(AMARELO_PALE.coordenadas[0],AMARELO_PALE.coordenadas[1], AMARELO_PALE.coordenadas[2], AMARELO_PALE.coordenadas[3], AMARELO_PALE.cor);
+        al_draw_filled_rectangle(AZUL_PALE.coordenadas[0],AZUL_PALE.coordenadas[1], AZUL_PALE.coordenadas[2], AZUL_PALE.coordenadas[3], AZUL_PALE.cor);
+        al_draw_filled_rectangle(BRANCO_PALE.coordenadas[0],BRANCO_PALE.coordenadas[1], BRANCO_PALE.coordenadas[2], BRANCO_PALE.coordenadas[3], BRANCO_PALE.cor);
+        al_draw_filled_rectangle(LARANJA_PALE.coordenadas[0], LARANJA_PALE.coordenadas[1], LARANJA_PALE.coordenadas[2], LARANJA_PALE.coordenadas[3], LARANJA_PALE.cor);
+        al_draw_filled_rectangle(ROXO_PALE.coordenadas[0], ROXO_PALE.coordenadas[1], ROXO_PALE.coordenadas[2], ROXO_PALE.coordenadas[3], ROXO_PALE.cor);
+    }
+
 
     /*Cad de nível*/
-    al_draw_filled_rectangle(1600,50, 1750, 100, BRANCO_PALE.cor);
-    char textNivel[];
+    al_draw_filled_rounded_rectangle(1580,25, 1750, 110, 15, 15 ,al_map_rgba(255,255,255,100));
+    char textNivel[10];
     int quant;
     switch (nivel) {
         case 0:
@@ -113,7 +116,7 @@ void telaPrincipal(TELA telinha, ALLEGRO_FONT *font, deck *deck, int indice, boo
             break;
         case 1:
             strcpy(textNivel, "Médio");
-            quant = 5;
+            quant = 10;
             break;
         case 2:
             strcpy(textNivel, "Difícil");
@@ -122,8 +125,7 @@ void telaPrincipal(TELA telinha, ALLEGRO_FONT *font, deck *deck, int indice, boo
 
     }
 
-    al_draw_text(font, al_map_rgb(0, 50, 255),1660 - quant,60, 0, nivel);
-
+    al_draw_text(font, al_map_rgba(0,0,0,170),1645 - quant,50, 0, textNivel);
 
     if (cliente) al_draw_text(font, al_map_rgb(0,50,255), 900, 50, ALLEGRO_ALIGN_CENTRE, deck->frases[indice].ingles);
 

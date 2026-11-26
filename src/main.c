@@ -1,3 +1,4 @@
+#include <math.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <allegro5/allegro.h>
@@ -60,7 +61,8 @@ int main() {
             al_destroy_display(tela);
             mensError("Erro ao inicializar a biblioteca de fontes ttf\n");
         }
-        ALLEGRO_FONT *font = al_load_font("./resources/Roboto-Regular.ttf", 20, 0);
+        ALLEGRO_FONT *font = al_load_font("./resources/Roboto-Regular.ttf", 25, 0);
+        ALLEGRO_FONT *fontMaior = al_load_font("./resources/Roboto-Regular.ttf", 35, 0);
         if (!font) {
             al_destroy_timer(timer);
             al_destroy_display(tela);
@@ -104,6 +106,25 @@ int main() {
         deck *dificeis =  novo_deck(file, '2');
         deck *dificuldades[3] = {faceis, medias, dificeis};
         fclose(file);
+
+        /*Imagens*/
+        al_init_image_addon();
+
+        ALLEGRO_BITMAP *coracao = al_load_bitmap("resources/coracao.png");
+        ALLEGRO_BITMAP *logo = al_load_bitmap("resources/logo.png");
+        ALLEGRO_BITMAP *machaLara = al_load_bitmap("resources/macha.png");
+        if (!coracao) {
+            printf("Falha ao carregar a imagem");
+            return -1;
+        }
+        if (!logo) {
+            printf("Falha ao carregar a imagem");
+            return -1;
+        }
+        if (!machaLara) {
+            printf("Falha ao carregar a imagem");
+            return -1;
+        }
 
         FILA *filaDeTracos = criarFila();
 
@@ -386,11 +407,26 @@ int main() {
             if (redesenhar && al_is_event_queue_empty(fila_eventos)) {
                 redesenhar = false;
 
-                telaPrincipal(telinha, font, dificuldades[DIFICULDADE], indice, cliente);
+                telaPrincipal(telinha, font, dificuldades[DIFICULDADE], indice, cliente, DIFICULDADE);
+
+                if (cliente) {
+                    al_draw_filled_rectangle(telinha.x * 0.01, telinha.y * 0.85, telinha.x * 0.01 + 75, (telinha.y * 0.85) + 75, al_map_rgb(BRANCO.r, BRANCO.g, BRANCO.b));
+                    al_draw_filled_circle(telinha.x * 0.01 + 37, telinha.y * 0.85 + 35.5, espessura / scaling, al_map_rgb(COR.r, COR.g, COR.b));
 
 
-                al_draw_filled_rectangle(telinha.x * 0.01, telinha.y * 0.85, telinha.x * 0.01 + 75, (telinha.y * 0.85) + 75, al_map_rgb(BRANCO.r, BRANCO.g, BRANCO.b));
-                al_draw_filled_circle(telinha.x * 0.01 + 37, telinha.y * 0.85 + 35.5, espessura / scaling, al_map_rgb(COR.r, COR.g, COR.b));
+                }else {
+                    if (cliente)al_draw_scaled_bitmap(machaLara, 0, 0, 350, 344, -100, telinha.y - 200, 300, 300, 0);
+
+                    al_draw_filled_rounded_rectangle(telinha.x * 0.42, -20, 280 + telinha.x * 0.5, 110,15, 15, al_map_rgba(0,0,0,90));
+                    char tentativasChar[2];
+                    snprintf(tentativasChar, sizeof(tentativasChar), "%d", tentativas);
+                    al_draw_text(fontMaior, PRETO_PALE.cor,telinha.x * 0.5,35, 0, tentativasChar);
+                    al_draw_scaled_bitmap(coracao, 0, 0, 250, 250,1000 , 20, 75, 75, 0);
+                }
+
+                al_draw_filled_rounded_rectangle( 30, 20, 250, 120, 15, 15,BRANCO_PALE.cor);
+                al_draw_scaled_bitmap(logo, 0, 0, 600, 220, 30, 30, 220, 80, 0);
+
 
                 al_draw_scaled_bitmap(canvas, 0.0, 0.0, canvas_w * scaling, canvas_h * scaling, x_offset, y_offset, canvas_w, canvas_h, 0);
                 al_flip_display();
@@ -408,6 +444,7 @@ int main() {
 
     destroyFila(filaDeTracos);
     al_destroy_font(font);
+    al_destroy_bitmap(coracao);
     al_destroy_bitmap(canvas);
     al_destroy_event_queue(fila_eventos);
     al_destroy_timer(timer);
