@@ -21,6 +21,9 @@ add_executable(Test
 
         src/dados/csv.h
         src/dados/csv.c
+        
+        src/conexao/checkip.c        
+        src/conexao/checkip.h
 
         src/conexao/desenhista/processClient.c
         src/conexao/desenhista/processClient.h
@@ -29,7 +32,7 @@ add_executable(Test
         src/conexao/adivinhador/processServer.c
 
         src/grafico/cores/cores.h
-)
+ "src/conexao/checkip.c" "src/conexao/checkip.h")
 
 
 add_custom_command(TARGET Test POST_BUILD

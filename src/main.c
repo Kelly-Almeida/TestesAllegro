@@ -5,6 +5,7 @@
 #include <allegro5/allegro_primitives.h>
 #include <allegro5/allegro_ttf.h>
 
+#include "conexao/checkip.h"
 #include "conexao/adivinhador/processServer.h"
 #include "infraestrutura/infra.h"
 #include "dados/csv.h"
@@ -33,6 +34,32 @@ int main() {
         telinha.y = info.y2 - info.y1 - 50;
         ALLEGRO_DISPLAY* tela = al_create_display(telinha.x, telinha.y);
         if (!tela) return -1;
+
+    /****************** Check IP *******************/
+        char ip[INET_ADDRSTRLEN];
+        int r;
+
+#ifdef _WIN32
+        WSADATA wsa;
+        if (WSAStartup(MAKEWORD(2, 2), &wsa) != 0) {
+            fprintf(stderr, "WSAStartup falhou\n");
+            return 1;
+        }
+#endif
+
+        r = obter_ip_ethernet(ip, sizeof(ip));
+
+#ifdef _WIN32
+        WSACleanup();
+#endif
+
+        if (r != 0) {
+            fprintf(stderr, "Nenhuma interface Ethernet com IPv4 encontrada\n");
+            return 1;
+        }
+
+        printf("IP Ethernet: %s\n", ip);
+
 
         ALLEGRO_TIMER *timer = al_create_timer(1.0 / FPS);
         if (!timer) {
