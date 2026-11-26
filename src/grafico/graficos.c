@@ -72,7 +72,7 @@ void limparCanvas(ALLEGRO_BITMAP* canvas, COR_RGB cor,  ALLEGRO_DISPLAY* tela, F
 }
 
 
-void telaPrincipal(TELA telinha, ALLEGRO_FONT *font, deck *deck, int indice, bool cliente) {
+void telaPrincipal(TELA telinha, ALLEGRO_FONT *font, deck *deck, int indice, bool cliente, int nivel) {
     ALLEGRO_COLOR VERDE = al_map_rgb(172, 225, 57);
     ALLEGRO_COLOR VERMELHO = al_map_rgb(255, 0, 0);
     ALLEGRO_COLOR AZUL = al_map_rgb(0, 0, 255);
@@ -101,6 +101,29 @@ void telaPrincipal(TELA telinha, ALLEGRO_FONT *font, deck *deck, int indice, boo
     al_draw_filled_rectangle(BRANCO_PALE.coordenadas[0],BRANCO_PALE.coordenadas[1], BRANCO_PALE.coordenadas[2], BRANCO_PALE.coordenadas[3], BRANCO_PALE.cor);
     al_draw_filled_rectangle(LARANJA_PALE.coordenadas[0], LARANJA_PALE.coordenadas[1], LARANJA_PALE.coordenadas[2], LARANJA_PALE.coordenadas[3], LARANJA_PALE.cor);
     al_draw_filled_rectangle(ROXO_PALE.coordenadas[0], ROXO_PALE.coordenadas[1], ROXO_PALE.coordenadas[2], ROXO_PALE.coordenadas[3], ROXO_PALE.cor);
+
+    /*Cad de nível*/
+    al_draw_filled_rectangle(1600,50, 1750, 100, BRANCO_PALE.cor);
+    char textNivel[];
+    int quant;
+    switch (nivel) {
+        case 0:
+            strcpy(textNivel, "Fácil");
+            quant = 5;
+            break;
+        case 1:
+            strcpy(textNivel, "Médio");
+            quant = 5;
+            break;
+        case 2:
+            strcpy(textNivel, "Difícil");
+            quant = 7;
+            break;
+
+    }
+
+    al_draw_text(font, al_map_rgb(0, 50, 255),1660 - quant,60, 0, nivel);
+
 
     if (cliente) al_draw_text(font, al_map_rgb(0,50,255), 900, 50, ALLEGRO_ALIGN_CENTRE, deck->frases[indice].ingles);
 

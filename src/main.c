@@ -133,6 +133,7 @@ int main() {
         const struct COR BRANCO_PALE = {al_map_rgb(BRANCO.r, BRANCO.g, BRANCO.b), {20, 530, 90, 580}};
 
     /****************** Loop do jogo *******************/
+    int pontuacao = 0;
 
     while (round) {
         /*INSRIR TELA DE ESCOLHA DE DIFICULDADE*/
@@ -155,7 +156,7 @@ int main() {
 
 
         /*INSERIR TELA DE ESCOLHA DE CLIENTE OU SERVIDOR*/
-        bool cliente = true;
+        bool cliente = false;
 
 
         if (cliente) {
@@ -231,6 +232,18 @@ int main() {
                         if (resposta.acertou) {
                             printf("Acertou!!!\n");
                             transpServer(&dadosC, "FIM");
+                            switch (tentativas) {
+                                case 1:
+                                    pontuacao += 10;
+                                    break;
+                                case 2:
+                                    pontuacao += 50;
+                                    break;
+                                case 3:
+                                    pontuacao += 100;
+                                    break;
+                            }
+                            printf("Pontuacao: %d\n", pontuacao);
                             tentativas = 0;
                         }else {
                             tentativas--;
@@ -374,7 +387,7 @@ int main() {
                 redesenhar = false;
 
                 telaPrincipal(telinha, font, dificuldades[DIFICULDADE], indice, cliente);
-                al_draw_text(font, al_map_rgb(0, 50, 255), 20, 600, 0, "Teste texto\n");
+
 
                 al_draw_filled_rectangle(telinha.x * 0.01, telinha.y * 0.85, telinha.x * 0.01 + 75, (telinha.y * 0.85) + 75, al_map_rgb(BRANCO.r, BRANCO.g, BRANCO.b));
                 al_draw_filled_circle(telinha.x * 0.01 + 37, telinha.y * 0.85 + 35.5, espessura / scaling, al_map_rgb(COR.r, COR.g, COR.b));
