@@ -1,6 +1,7 @@
 #include <math.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <time.h>
 #include <allegro5/allegro.h>
 #include <allegro5/allegro_image.h>
 #include <allegro5/allegro_primitives.h>
@@ -11,178 +12,180 @@
 #include "dados/csv.h"
 #include "conexao/desenhista/processClient.h"
 #include "grafico/cores/cores.h"
+#include "conexao/chat/chat.h"
 
 #define FPS 60
 
-void mensError(char msg[]) {
+void mensError(const char msg[]) {
     perror(msg);
 }
 
 int main() {
-
     /****************** Inicialização *******************/
-        if (!al_init() || !al_init_primitives_addon() || !al_init_image_addon()) {
-            mensError("Falha ao inicializar o Allegro!\n");
-        }
-        if (!al_init_primitives_addon()) {mensError("Falha ao inicializar a biblioteca de primitivas!\n");}
-        if (!al_init_image_addon()) {mensError("Falha ao inicializar a biblioteca de IO de imagens!\n");}
+    if (!al_init()) {
+        mensError("Falha ao inicializar o Allegro!\n");
+        return -1;
+    }
+    if (!al_init_primitives_addon()) {
+        mensError("Falha ao inicializar a biblioteca de primitivas!\n");
+        return -1;
+    }
+    if (!al_init_image_addon()) {
+        mensError("Falha ao inicializar a biblioteca de IO de imagens!\n");
+        return -1;
+    }
+    if (!al_init_font_addon() || !al_init_ttf_addon()) {
+        mensError("Erro ao inicializar as bibliotecas de fontes!\n");
+        return -1;
+    }
 
-        ALLEGRO_MONITOR_INFO info;
-        TELA telinha;
-        al_get_monitor_info(0, &info);
-        telinha.x = info.x2 - info.x1 - 100;
-        telinha.y = info.y2 - info.y1 - 50;
-        ALLEGRO_DISPLAY* tela = al_create_display(telinha.x, telinha.y);
-        if (!tela) return -1;
+    ALLEGRO_MONITOR_INFO info;
+    TELA telinha;
+    al_get_monitor_info(0, &info);
+    telinha.x = info.x2 - info.x1 - 100;
+    telinha.y = info.y2 - info.y1 - 50;
 
-        ALLEGRO_TIMER *timer = al_create_timer(1.0 / FPS);
-        if (!timer) {
-            al_destroy_timer(timer);
-            al_destroy_display(tela);
-            return -1;
-        }
-        if (!al_install_mouse() || !al_install_keyboard()) {
-            al_destroy_timer(timer);
-            al_destroy_display(tela);
-            return -1;
-        }
-        al_set_system_mouse_cursor(tela, ALLEGRO_SYSTEM_MOUSE_CURSOR_DEFAULT);
+    ALLEGRO_DISPLAY *tela = al_create_display(telinha.x, telinha.y);
+    if (!tela) return -1;
 
-        ALLEGRO_EVENT_QUEUE* fila_eventos = al_create_event_queue();
-        if (!al_init_font_addon() || !al_init_ttf_addon()) return -1;
+    ALLEGRO_TIMER *timer = al_create_timer(1.0 / FPS);
+    if (!timer) {
+        al_destroy_display(tela);
+        return -1;
+    }
 
-        if (!al_init_font_addon()) {
-            al_destroy_timer(timer);
-            al_destroy_display(tela);
-            mensError("Erro ao inicializar a biblioteca de fontes\n");
-        }
-        if (!al_init_ttf_addon()) {
-            al_destroy_timer(timer);
-            al_destroy_display(tela);
-            mensError("Erro ao inicializar a biblioteca de fontes ttf\n");
-        }
-        ALLEGRO_FONT *font = al_load_font("./resources/Roboto-Regular.ttf", 25, 0);
-        ALLEGRO_FONT *fontMaior = al_load_font("./resources/Roboto-Regular.ttf", 35, 0);
-        if (!font) {
-            al_destroy_timer(timer);
-            al_destroy_display(tela);
-            mensError("Não foi possível carregar a fonte!\n");
-        }
+    if (!al_install_mouse() || !al_install_keyboard()) {
+        al_destroy_timer(timer);
+        al_destroy_display(tela);
+        return -1;
+    }
+    al_set_system_mouse_cursor(tela, ALLEGRO_SYSTEM_MOUSE_CURSOR_DEFAULT);
 
-        al_register_event_source(fila_eventos, al_get_mouse_event_source());
-        al_register_event_source(fila_eventos, al_get_display_event_source(tela));
-        al_register_event_source(fila_eventos, al_get_timer_event_source(timer));
-        al_register_event_source(fila_eventos, al_get_keyboard_event_source());
+    ALLEGRO_EVENT_QUEUE *fila_eventos = al_create_event_queue();
+    if (!fila_eventos) {
+        al_destroy_timer(timer);
+        al_destroy_display(tela);
+        return -1;
+    }
 
-        al_start_timer(timer);
+    ALLEGRO_FONT *font = al_load_font("./resources/Roboto-Regular.ttf", 25, 0);
+    ALLEGRO_FONT *fontMaior = al_load_font("./resources/Roboto-Regular.ttf", 35, 0);
+    if (!font || !fontMaior) {
+        if (font) al_destroy_font(font);
+        if (fontMaior) al_destroy_font(fontMaior);
+        al_destroy_event_queue(fila_eventos);
+        al_destroy_timer(timer);
+        al_destroy_display(tela);
+        mensError("Não foi possível carregar as fontes!\n");
+        return -1;
+    }
 
-        COR_RGB COR = PRETO;
-        short espessura = 3;
-        VEC ponto = {0, 0}, ponto_inicial, ponto_canvas;
+    ALLEGRO_BITMAP *coracao = al_load_bitmap("resources/coracao.png");
+    ALLEGRO_BITMAP *logo = al_load_bitmap("resources/logo.png");
+    ALLEGRO_BITMAP *livros = al_load_bitmap("resources/livros.png");
+    if (!coracao || !logo || !livros) {
+        if (coracao) al_destroy_bitmap(coracao);
+        if (logo) al_destroy_bitmap(logo);
+        if (livros) al_destroy_bitmap(livros);
+        al_destroy_font(font);
+        al_destroy_font(fontMaior);
+        al_destroy_event_queue(fila_eventos);
+        al_destroy_timer(timer);
+        al_destroy_display(tela);
+        mensError("Falha ao carregar as imagens!\n");
+        return -1;
+    }
 
-        float scaling = 0.25;
-        float border[4] = { telinha.x * 0.15, telinha.y * 0.15, telinha.x - border[0], telinha.y - border[1] };
+    al_register_event_source(fila_eventos, al_get_mouse_event_source());
+    al_register_event_source(fila_eventos, al_get_display_event_source(tela));
+    al_register_event_source(fila_eventos, al_get_timer_event_source(timer));
+    al_register_event_source(fila_eventos, al_get_keyboard_event_source());
 
-        double canvas_w = border[2] - border[0];
-        double canvas_h = border[3] - border[1];
+    al_start_timer(timer);
 
-        int x_offset = border[0];
-        int y_offset = border[1];
+    COR_RGB COR = PRETO;
+    short espessura = 3;
+    VEC ponto = {0, 0}, ponto_inicial = {0, 0}, ponto_canvas = {0, 0};
 
-        ALLEGRO_BITMAP* canvas = al_create_bitmap(canvas_w * scaling, canvas_h * scaling);
-        al_set_target_bitmap(canvas);
-        al_clear_to_color(al_map_rgb(BRANCO.r, BRANCO.g, BRANCO.b));
-        al_set_target_backbuffer(tela);
+    float scaling = 0.25f;
+    float x_offset = telinha.x * 0.15f;
+    float y_offset = telinha.y * 0.15f;
+    float border[4] = { x_offset, y_offset, telinha.x - x_offset, telinha.y - y_offset };
 
-        srand(time(NULL));
+    double canvas_w = border[2] - border[0];
+    double canvas_h = border[3] - border[1];
 
-        bool round = true, desenhar = false, redesenhar = false;
-        printf("Abrindo o arquivo...!\n");
-        FILE *file = fopen("resources/palavra em ingles_dicas preenchidas.csv", "r");
-        if (!file){mensError("Erro ao abrir o arquivo!\n");}
+    ALLEGRO_BITMAP *canvas = al_create_bitmap(canvas_w * scaling, canvas_h * scaling);
+    al_set_target_bitmap(canvas);
+    al_clear_to_color(al_map_rgb(BRANCO.r, BRANCO.g, BRANCO.b));
+    al_set_target_backbuffer(tela);
 
-        deck *faceis =    novo_deck(file, '0');
-        deck *medias =    novo_deck(file, '1');
-        deck *dificeis =  novo_deck(file, '2');
-        deck *dificuldades[3] = {faceis, medias, dificeis};
-        fclose(file);
+    srand(time(NULL));
 
-        /*Imagens*/
-        al_init_image_addon();
+    bool round = true, desenhar = false, redesenhar = false;
+    printf("Abrindo o arquivo...!\n");
+    FILE *file = fopen("resources/palavra em ingles_dicas preenchidas.csv", "r");
+    if (!file) {
+        mensError("Erro ao abrir o arquivo!\n");
+    }
 
-        ALLEGRO_BITMAP *coracao = al_load_bitmap("resources/coracao.png");
-        ALLEGRO_BITMAP *logo = al_load_bitmap("resources/logo.png");
-        ALLEGRO_BITMAP *machaLara = al_load_bitmap("resources/macha.png");
-        if (!coracao) {
-            printf("Falha ao carregar a imagem");
-            return -1;
-        }
-        if (!logo) {
-            printf("Falha ao carregar a imagem");
-            return -1;
-        }
-        if (!machaLara) {
-            printf("Falha ao carregar a imagem");
-            return -1;
-        }
+    deck *faceis   = novo_deck(file, '0');
+    deck *medias   = novo_deck(file, '1');
+    deck *dificeis = novo_deck(file, '2');
+    deck *dificuldades[3] = {faceis, medias, dificeis};
+    if (file) fclose(file);
 
-        FILA *filaDeTracos = criarFila();
+    FILA *filaDeTracos = criarFila();
 
-        MSG_C dadosC = {0};
-        dadosC.mutex = al_create_mutex();
-        dadosC.cond = al_create_cond();
+    MSG_C dadosC = {0};
+    dadosC.mutex = al_create_mutex();
+    dadosC.cond  = al_create_cond();
 
-        MSG_S dados = {0};
-        dados.mutex = al_create_mutex();
-        dadosC.cond = al_create_cond();
+    MSG_S dados = {0};
+    dados.mutex = al_create_mutex();
+    dados.cond  = al_create_cond();
 
-        TENT tent = {0};
+    TENT tent = {0};
+    dados.msg_c = &dadosC;
+    dadosC.tent = &tent;
+    dadosC.resposta = "NADA";
 
-        dados.msg_c = &dadosC;
-        dadosC.tent = &tent;
-        dadosC.resposta = "NADA";
+    ALLEGRO_THREAD *socket = NULL;
 
-        ALLEGRO_THREAD *socket;
-
-
-        const struct COR PRETO_PALE = {al_map_rgb(PRETO.r, PRETO.g, PRETO.b), {20, 20, 90, 75}};
-        const struct COR VERMELHO_PALE = {al_map_rgb(VERMELHO.r, VERMELHO.g, VERMELHO.b), {20, 105, 90, 160}};
-        const struct COR AMARELO_PALE = {al_map_rgb(AMARELO.r, AMARELO.g, AMARELO.b), {20, 190, 90, 245}};
-        const struct COR AZUL_PALE = {al_map_rgb(AZUL.r, AZUL.g, AZUL.b), {20, 280, 90, 335}};
-        const struct COR LARANJA_PALE = {al_map_rgb(LARANJA.r, LARANJA.g, LARANJA.b), {20, 370, 90, 425}};
-        const struct COR ROXO_PALE = {al_map_rgb(ROXO.r, ROXO.g, ROXO.b), {20, 450, 90, 500}};
-        const struct COR BRANCO_PALE = {al_map_rgb(BRANCO.r, BRANCO.g, BRANCO.b), {20, 530, 90, 580}};
+    const struct COR PRETO_PALE    = {al_map_rgb(PRETO.r, PRETO.g, PRETO.b),       {40, 200, 200, 250}};
+    const struct COR VERMELHO_PALE = {al_map_rgb(VERMELHO.r, VERMELHO.g, VERMELHO.b), {40, 265, 200, 315}};
+    const struct COR AMARELO_PALE  = {al_map_rgb(AMARELO.r, AMARELO.g, AMARELO.b),  {40, 330, 200, 380}};
+    const struct COR AZUL_PALE     = {al_map_rgb(AZUL.r, AZUL.g, AZUL.b),           {40, 395, 200, 445}};
+    const struct COR LARANJA_PALE  = {al_map_rgb(LARANJA.r, LARANJA.g, LARANJA.b),  {40, 460, 200, 510}};
+    const struct COR ROXO_PALE     = {al_map_rgb(ROXO.r, ROXO.g, ROXO.b),           {40, 525, 200, 575}};
+    const struct COR BRANCO_PALE   = {al_map_rgb(BRANCO.r, BRANCO.g, BRANCO.b),     {40, 590, 200, 640}};
 
     /****************** Loop do jogo *******************/
     int pontuacao = 0;
 
     while (round) {
-        /*INSRIR TELA DE ESCOLHA DE DIFICULDADE*/
-
+        /* INSERIR TELA DE ESCOLHA DE DIFICULDADE */
         int DIFICULDADE = 0;
         int indice = rand() % dificuldades[DIFICULDADE]->tamanho;
 
-        TRACO* traco_novo = NULL;
+        TRACO *traco_novo = NULL;
+        desenhar = false;
+
+        /* Apenas reseta os estados sem realocar mutex/cond */
+        al_lock_mutex(dadosC.mutex);
         dadosC.contador = 0;
         dadosC.evento = false;
-        dadosC.mutex = al_create_mutex();
-        dadosC.cond = al_create_cond();
-        const char *respPart = dificuldades[DIFICULDADE]->frases[indice].ingles;
-        dadosC.resposta = respPart;
+        dadosC.finalizar = false;
+        dadosC.resposta = dificuldades[DIFICULDADE]->frases[indice].ingles;
+        al_unlock_mutex(dadosC.mutex);
 
+        al_lock_mutex(dados.mutex);
         dados.contador = 0;
         dados.evento = false;
-        dados.mutex = al_create_mutex();
-        dados.msg_c = &dadosC;
+        al_unlock_mutex(dados.mutex);
 
-
-        /*INSERIR TELA DE ESCOLHA DE CLIENTE OU SERVIDOR*/
+        /* INSERIR TELA DE ESCOLHA DE CLIENTE OU SERVIDOR */
         bool cliente = false;
-
-
-        if (cliente) {
-            dados.cond = al_create_cond();
-        }
 
         if (cliente) {
             socket = al_create_thread(client, &dados);
@@ -191,12 +194,15 @@ int main() {
         }
 
         al_start_thread(socket);
+
         int tentativas = 3;
+        CHATM chat;
+        chat.chatzinho = false;
+        chat.quant = 0;
 
         limparCanvas(canvas, BRANCO, tela, filaDeTracos);
 
         while (tentativas != 0) {
-
             if (!cliente) {
                 al_lock_mutex(dados.mutex);
                 if (dados.evento == 1) {
@@ -208,6 +214,10 @@ int main() {
                             resposta.corB >= 0 && resposta.corB <= 255) {
 
                             if (strcmp(resposta.comando, "TRSP") == 0) {
+                                /* Se havia um traço anterior não finalizado, salva na fila */
+                                if (traco_novo != NULL) {
+                                    pushFila(filaDeTracos, traco_novo);
+                                }
                                 COR_RGB cor = {resposta.corR, resposta.corG, resposta.corB};
                                 al_set_target_bitmap(canvas);
                                 al_draw_filled_circle(resposta.p1.x, resposta.p1.y, resposta.espessura, al_map_rgb(cor.r, cor.g, cor.b));
@@ -215,24 +225,18 @@ int main() {
 
                                 traco_novo = criarTraco(cor, resposta.espessura, resposta.p1);
                                 ponto_inicial = resposta.p1;
-
                             }
                             else if (strcmp(resposta.comando, "NEWP") == 0) {
-                                if (traco_novo != NULL) {
-
-                                    if (resposta.p1.x >=0 && resposta.p1.y >= 0) {
-                                        COR_RGB cor = {resposta.corR, resposta.corG, resposta.corB};
-                                        al_set_target_bitmap(canvas);
-                                        addPontos(traco_novo, resposta.p1);
-                                        desenharCirc(ponto_inicial, resposta.p1, cor, resposta.espessura);
-                                        al_set_target_backbuffer(tela);
-                                        ponto_inicial = resposta.p1;
-                                    }
-
+                                if (traco_novo != NULL && resposta.p1.x >= 0 && resposta.p1.y >= 0) {
+                                    COR_RGB cor = {resposta.corR, resposta.corG, resposta.corB};
+                                    al_set_target_bitmap(canvas);
+                                    addPontos(traco_novo, resposta.p1);
+                                    desenharCirc(ponto_inicial, resposta.p1, cor, resposta.espessura);
+                                    al_set_target_backbuffer(tela);
+                                    ponto_inicial = resposta.p1;
                                 }
                             }
-
-                            }
+                        }
                     }
                     else if (strcmp(resposta.comando, "NEWT") == 0) {
                         if (traco_novo != NULL) {
@@ -241,6 +245,10 @@ int main() {
                         }
                     }
                     else if (strcmp(resposta.comando, "LIMP") == 0) {
+                        if (traco_novo != NULL) {
+                            pushFila(filaDeTracos, traco_novo);
+                            traco_novo = NULL;
+                        }
                         limparCanvas(canvas, BRANCO, tela, filaDeTracos);
                     }
                     else if (strcmp(resposta.comando, "UNDO") == 0) {
@@ -248,32 +256,29 @@ int main() {
                     }
                     else if (strcmp(resposta.comando, "FIMP") == 0) {
                         round = false;
+                        tentativas = 0;
                     }
-                    else  if (strcmp(resposta.comando, "TENT") == 0) {
+                    else if (strcmp(resposta.comando, "TENT") == 0) {
                         if (resposta.acertou) {
                             printf("Acertou!!!\n");
-                            transpServer(&dadosC, "FIM");
                             switch (tentativas) {
-                                case 1:
-                                    pontuacao += 10;
-                                    break;
-                                case 2:
-                                    pontuacao += 50;
-                                    break;
-                                case 3:
-                                    pontuacao += 100;
-                                    break;
+                                case 1: pontuacao += 10; break;
+                                case 2: pontuacao += 50; break;
+                                case 3: pontuacao += 100; break;
                             }
                             printf("Pontuacao: %d\n", pontuacao);
                             tentativas = 0;
-                        }else {
+                            transpServer(&dadosC, "FIM");
+                        } else {
                             tentativas--;
                             printf("Tentativas restantes: %d\n", tentativas);
+                        }
 
+                        if (tentativas == 0) {
+                            transpServer(&dadosC, "FIM");
                         }
                     }
 
-                    //respostaAntiga = resposta;
                     dados.evento = 0;
                 }
                 al_unlock_mutex(dados.mutex);
@@ -283,14 +288,12 @@ int main() {
                 dados.msg_c->finalizar = false;
             }
 
-            ALLEGRO_EVENT evento;/*
-            al_wait_for_event(fila_eventos, &evento);*/
+            ALLEGRO_EVENT evento;
             bool t_evento = al_wait_for_event_timed(fila_eventos, &evento, 0.02);
 
             if (!t_evento) {
                 continue;
             }
-
 
             if (evento.type == ALLEGRO_EVENT_TIMER) {
                 redesenhar = true;
@@ -300,18 +303,46 @@ int main() {
                     ponto.x = evento.mouse.x;
                     ponto.y = evento.mouse.y;
 
-                    if (ponto.x >= PRETO_PALE.coordenadas[0] && ponto.x <= PRETO_PALE.coordenadas[2] && ponto.y >= PRETO_PALE.coordenadas[1] && ponto.y <= PRETO_PALE.coordenadas[3]) COR = PRETO;
-                    else if (ponto.x >= VERMELHO_PALE.coordenadas[0] && ponto.x <= VERMELHO_PALE.coordenadas[2] && ponto.y >= VERMELHO_PALE.coordenadas[1] && ponto.y <= VERMELHO_PALE.coordenadas[3]) COR = VERMELHO;
-                    else if (ponto.x >= AMARELO_PALE.coordenadas[0] && ponto.x <= AMARELO_PALE.coordenadas[2] && ponto.y >= AMARELO_PALE.coordenadas[1] && ponto.y <= AMARELO_PALE.coordenadas[3]) COR = AMARELO;
-                    else if (ponto.x >= AZUL_PALE.coordenadas[0] && ponto.x <= AZUL_PALE.coordenadas[2] && ponto.y >= AZUL_PALE.coordenadas[1] && ponto.y <= AZUL_PALE.coordenadas[3]) COR = AZUL;
-                    else if (ponto.x >= BRANCO_PALE.coordenadas[0] && ponto.x <= BRANCO_PALE.coordenadas[2] && ponto.y >= BRANCO_PALE.coordenadas[1] && ponto.y <= BRANCO_PALE.coordenadas[3]) COR = BRANCO;
-                    else if (ponto.x >= LARANJA_PALE.coordenadas[0] && ponto.x <= LARANJA_PALE.coordenadas[2] && ponto.y >= LARANJA_PALE.coordenadas[1] && ponto.y <= LARANJA_PALE.coordenadas[3]) COR = LARANJA;
-                    else if (ponto.x >= ROXO_PALE.coordenadas[0] && ponto.x <= ROXO_PALE.coordenadas[2] && ponto.y >= ROXO_PALE.coordenadas[1] && ponto.y <= ROXO_PALE.coordenadas[3]) COR = ROXO;
+                    if (ponto.x >= PRETO_PALE.coordenadas[0] && ponto.x <= PRETO_PALE.coordenadas[2] && ponto.y >= PRETO_PALE.coordenadas[1] && ponto.y <= PRETO_PALE.coordenadas[3] && cliente) COR = PRETO;
+                    else if (ponto.x >= VERMELHO_PALE.coordenadas[0] && ponto.x <= VERMELHO_PALE.coordenadas[2] && ponto.y >= VERMELHO_PALE.coordenadas[1] && ponto.y <= VERMELHO_PALE.coordenadas[3] && cliente) COR = VERMELHO;
+                    else if (ponto.x >= AMARELO_PALE.coordenadas[0] && ponto.x <= AMARELO_PALE.coordenadas[2] && ponto.y >= AMARELO_PALE.coordenadas[1] && ponto.y <= AMARELO_PALE.coordenadas[3] && cliente) COR = AMARELO;
+                    else if (ponto.x >= AZUL_PALE.coordenadas[0] && ponto.x <= AZUL_PALE.coordenadas[2] && ponto.y >= AZUL_PALE.coordenadas[1] && ponto.y <= AZUL_PALE.coordenadas[3] && cliente) COR = AZUL;
+                    else if (ponto.x >= BRANCO_PALE.coordenadas[0] && ponto.x <= BRANCO_PALE.coordenadas[2] && ponto.y >= BRANCO_PALE.coordenadas[1] && ponto.y <= BRANCO_PALE.coordenadas[3] && cliente) COR = BRANCO;
+                    else if (ponto.x >= LARANJA_PALE.coordenadas[0] && ponto.x <= LARANJA_PALE.coordenadas[2] && ponto.y >= LARANJA_PALE.coordenadas[1] && ponto.y <= LARANJA_PALE.coordenadas[3] && cliente) COR = LARANJA;
+                    else if (ponto.x >= ROXO_PALE.coordenadas[0] && ponto.x <= ROXO_PALE.coordenadas[2] && ponto.y >= ROXO_PALE.coordenadas[1] && ponto.y <= ROXO_PALE.coordenadas[3] && cliente) COR = ROXO;
+                    else if (ponto.x >= 120 && ponto.y >= (telinha.y * 0.9) && ponto.x <= 160 && ponto.y <= (40 + telinha.y * 0.9) && cliente) {
+                        espessura++;
+                        if (espessura > 10) espessura = 10;
+                    } else if (ponto.x >= 190 && ponto.y >= (telinha.y * 0.9) && ponto.x <= 230 && ponto.y <= (40 + telinha.y * 0.9) && cliente) {
+                        espessura--;
+                        if (espessura < 1) espessura = 1;
+                    }else if (!cliente && ponto.x >= 350 && ponto.y >= telinha.y - 120 && ponto.x <= telinha.x - 300 && ponto.y <= telinha.y - 40 ) {
+                        printf("Teclado\n");
+                        fflush(stdout);
+
+                        char msg_env[256];
+                        if (scanf(" %254[^\n]", msg_env) == 1) {
+                            if (chat.quant < 3) {
+                                strcpy(chat.msg[chat.quant], msg_env);
+                                chat.quant++;
+                            } else {
+                                strcpy(chat.msg[0], chat.msg[1]);
+                                strcpy(chat.msg[1], chat.msg[2]);
+                                strcpy(chat.msg[2], msg_env);
+                            }
+                            transpServer(&dadosC, msg_env);
+                        }
+                    }
 
                     ponto_canvas.x = (ponto.x - x_offset) * scaling;
                     ponto_canvas.y = (ponto.y - y_offset) * scaling;
 
-                    if (ponto.x - x_offset >= 0 && ponto.x - x_offset <= canvas_w && ponto.y - y_offset >= 0 && ponto.y - y_offset <= canvas_h && cliente) {
+                    if (ponto.x - x_offset >= 0 && ponto.x - x_offset <= canvas_w &&
+                        ponto.y - y_offset >= 0 && ponto.y - y_offset <= canvas_h && cliente) {
+
+                        if (traco_novo != NULL) {
+                            pushFila(filaDeTracos, traco_novo);
+                        }
                         ponto_inicial = ponto_canvas;
                         traco_novo = criarTraco(COR, espessura, ponto_canvas);
                         desenhar = true;
@@ -351,13 +382,16 @@ int main() {
 
                         ponto_inicial = ponto_canvas;
                     }
-                }else {
+                } else {
                     ponto_inicial = ponto_canvas;
                 }
             }
             else if (evento.type == ALLEGRO_EVENT_MOUSE_BUTTON_UP) {
                 if (evento.mouse.button == 1 && desenhar && cliente) {
-                    pushFila(filaDeTracos, traco_novo);
+                    if (traco_novo != NULL) {
+                        pushFila(filaDeTracos, traco_novo);
+                        traco_novo = NULL;
+                    }
                     desenhar = false;
                     transpCliente(&dados, "NEWT");
                 }
@@ -367,12 +401,17 @@ int main() {
                     al_save_bitmap("teste.bmp", canvas);
 
                     if (cliente) {
-                            transpCliente(&dados, "FIMP");
+                        transpCliente(&dados, "FIMP");
                     }
 
                     round = false;
+                    tentativas = 0;
                 }
                 else if (evento.keyboard.keycode == ALLEGRO_KEY_R && (evento.keyboard.modifiers & ALLEGRO_KEYMOD_CTRL) && cliente) {
+                    if (traco_novo != NULL) {
+                        pushFila(filaDeTracos, traco_novo);
+                        traco_novo = NULL;
+                    }
                     limparCanvas(canvas, BRANCO, tela, filaDeTracos);
                     transpCliente(&dados, "LIMP");
                 }
@@ -386,17 +425,9 @@ int main() {
                 }
                 else if (evento.keyboard.keycode == ALLEGRO_KEY_Z && (evento.keyboard.modifiers & ALLEGRO_KEYMOD_CTRL) && cliente) {
                     undo(filaDeTracos, canvas, tela);
-                    if (cliente) {
-                        transpCliente(&dados, "UNDO");
-                    }
+                    transpCliente(&dados, "UNDO");
                 }
-                else if (evento.keyboard.keycode == ALLEGRO_KEY_A && (evento.keyboard.modifiers & ALLEGRO_KEYMOD_CTRL) && !cliente){
-                    char msg_env[256];
 
-                    if (scanf(" %254[^\n]", msg_env) == 1) {
-                        transpServer(&dadosC, msg_env);
-                    }
-                }
             }
             else if (evento.type == ALLEGRO_EVENT_DISPLAY_CLOSE) {
                 round = false;
@@ -410,46 +441,65 @@ int main() {
                 telaPrincipal(telinha, font, dificuldades[DIFICULDADE], indice, cliente, DIFICULDADE);
 
                 if (cliente) {
-                    al_draw_filled_rectangle(telinha.x * 0.01, telinha.y * 0.85, telinha.x * 0.01 + 75, (telinha.y * 0.85) + 75, al_map_rgb(BRANCO.r, BRANCO.g, BRANCO.b));
-                    al_draw_filled_circle(telinha.x * 0.01 + 37, telinha.y * 0.85 + 35.5, espessura / scaling, al_map_rgb(COR.r, COR.g, COR.b));
+                    al_draw_filled_rectangle(telinha.x * 0.01 - 5, telinha.y * 0.88 - 5, telinha.x * 0.01 + 80, (telinha.y * 0.88) + 80, al_map_rgb(BRANCO.r, BRANCO.g, BRANCO.b));
+                    al_draw_filled_circle(telinha.x * 0.01 + 37, telinha.y * 0.88 + 35.5, espessura / scaling, al_map_rgb(COR.r, COR.g, COR.b));
 
-
-                }else {
-                    if (cliente)al_draw_scaled_bitmap(machaLara, 0, 0, 350, 344, -100, telinha.y - 200, 300, 300, 0);
-
-                    al_draw_filled_rounded_rectangle(telinha.x * 0.42, -20, 280 + telinha.x * 0.5, 110,15, 15, al_map_rgba(0,0,0,90));
-                    char tentativasChar[2];
+                } else {
+                    al_draw_filled_rounded_rectangle(telinha.x * 0.42, -20, 280 + telinha.x * 0.5, 110, 15, 15, al_map_rgba(0, 0, 0, 90));
+                    char tentativasChar[4];
                     snprintf(tentativasChar, sizeof(tentativasChar), "%d", tentativas);
-                    al_draw_text(fontMaior, PRETO_PALE.cor,telinha.x * 0.5,35, 0, tentativasChar);
-                    al_draw_scaled_bitmap(coracao, 0, 0, 250, 250,1000 , 20, 75, 75, 0);
+                    al_draw_text(fontMaior, PRETO_PALE.cor, telinha.x * 0.5, 35, 0, tentativasChar);
+                    al_draw_scaled_bitmap(coracao, 0, 0, 250, 250, 1000, 20, 75, 75, 0);
+                    al_draw_scaled_bitmap(livros, 0, 0, al_get_bitmap_width(livros), al_get_bitmap_height(livros), 50, telinha.y - 250,200, 200, 0);
+
+                    /*Barra de texto*/
+                    al_draw_filled_rounded_rectangle( 350, telinha.y - 120, telinha.x - 300, telinha.y - 40, 15, 15, al_map_rgba(0, 0, 0, 90));
                 }
 
-                al_draw_filled_rounded_rectangle( 30, 20, 250, 120, 15, 15,BRANCO_PALE.cor);
+                al_draw_filled_rounded_rectangle(30, 20, 250, 120, 15, 15, BRANCO_PALE.cor);
                 al_draw_scaled_bitmap(logo, 0, 0, 600, 220, 30, 30, 220, 80, 0);
-
-
                 al_draw_scaled_bitmap(canvas, 0.0, 0.0, canvas_w * scaling, canvas_h * scaling, x_offset, y_offset, canvas_w, canvas_h, 0);
+
+
+                chatzinho(&chat,telinha, 150, font);
+
                 al_flip_display();
             }
+        } /* Fim do while (tentativas != 0) */
 
+        /* Garante que qualquer traço pendente seja colocado na fila antes de limpar */
+        if (traco_novo != NULL) {
+            pushFila(filaDeTracos, traco_novo);
+            traco_novo = NULL;
+        }
+
+        /* Encerra e libera a thread DENTRO do loop de rodadas */
+        if (socket != NULL) {
+            al_set_thread_should_stop(socket);
+            al_join_thread(socket, NULL);
+            al_destroy_thread(socket);
+            socket = NULL;
+        }
     }
 
-        if (cliente) al_destroy_cond(dados.cond);
-        al_set_thread_should_stop(socket);
-        al_join_thread(socket, NULL);
-        al_destroy_thread(socket);
-        al_destroy_mutex(dados.mutex);
-
-    }
+    /****************** Limpeza Final *******************/
+    al_destroy_mutex(dados.mutex);
+    al_destroy_cond(dados.cond);
+    al_destroy_mutex(dadosC.mutex);
+    al_destroy_cond(dadosC.cond);
 
     destroyFila(filaDeTracos);
     al_destroy_font(font);
+    al_destroy_font(fontMaior);
+
     al_destroy_bitmap(coracao);
+    al_destroy_bitmap(logo);
+    al_destroy_bitmap(livros);
+
     al_destroy_bitmap(canvas);
     al_destroy_event_queue(fila_eventos);
     al_destroy_timer(timer);
     al_destroy_display(tela);
-
 
     return 0;
 }

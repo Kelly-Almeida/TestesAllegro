@@ -19,9 +19,11 @@
 void *sock(ALLEGRO_THREAD *thread, void *arg) {
         MSG_S *fila = (MSG_S *)arg;
         MSG_C *chat = fila->msg_c;
+
+        al_lock_mutex(chat->mutex);
         chat->contador = 0;
         chat->evento = false;
-        chat->mutex = al_create_mutex();
+        al_unlock_mutex(chat->mutex);
 
         bool round = true;
         char bufferInfoClient[256];

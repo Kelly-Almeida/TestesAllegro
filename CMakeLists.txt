@@ -29,6 +29,7 @@ add_executable(Test
         src/conexao/adivinhador/processServer.c
 
         src/grafico/cores/cores.h
+        src/conexao/chat/chat.h
 )
 
 
@@ -54,7 +55,10 @@ if(WIN32)
     set(_dir "${_nativo}/v${MSVC_TOOLSET_VERSION}/${_arq}")
 
     foreach(m IN LISTS ALLEGRO_MODULOS)
-      add_library(Allegro::${m} SHARED IMPORTED)
+      add_library(Allegro::${m} SHARED IMPORTED
+              src/conexao/chat/chat.h
+              src/conexao/chat/chat.h
+              src/conexao/chat/chat.h)
       set_target_properties(Allegro::${m} PROPERTIES
               INTERFACE_INCLUDE_DIRECTORIES "${_nativo}/include"
               IMPORTED_CONFIGURATIONS       "DEBUG;RELEASE"

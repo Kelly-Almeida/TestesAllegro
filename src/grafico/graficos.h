@@ -9,6 +9,7 @@
 #include <allegro5/allegro_font.h>
 
 #include "../dados/csv.h"
+#include "../conexao/chat/chat.h"
 
 typedef struct TELA {
     int x, y;
@@ -48,7 +49,7 @@ void addPontos(TRACO* traco, VEC coordenada);
 void desenharCirc(VEC ponto_inicial, VEC ponto, COR_RGB cor, float espessura);
 void telaPrincipal(TELA telinha, ALLEGRO_FONT *font, deck *frases, int frase, bool cliente, int nivel);
 void limparCanvas(ALLEGRO_BITMAP* canvas, COR_RGB cor,  ALLEGRO_DISPLAY* tela,struct FILA *filaDeTracos);
-
+void chatzinho(CHATM *msg,TELA telinha, int y, ALLEGRO_FONT *font);
 
 
 #endif //TESTC_GRAFICOS_H
