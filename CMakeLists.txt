@@ -30,6 +30,9 @@ add_executable(Test
 
         src/grafico/cores/cores.h
         src/conexao/chat/chat.h
+        src/grafico/telas/telas.h
+        src/grafico/telas/telas.c
+
 )
 
 
@@ -58,7 +61,11 @@ if(WIN32)
       add_library(Allegro::${m} SHARED IMPORTED
               src/conexao/chat/chat.h
               src/conexao/chat/chat.h
-              src/conexao/chat/chat.h)
+              src/conexao/chat/chat.h
+              src/grafico/telas/telas.h
+              src/grafico/telas/telas.h
+              src/grafico/telas/telas.c
+      )
       set_target_properties(Allegro::${m} PROPERTIES
               INTERFACE_INCLUDE_DIRECTORIES "${_nativo}/include"
               IMPORTED_CONFIGURATIONS       "DEBUG;RELEASE"

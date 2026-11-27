@@ -13,6 +13,7 @@
 #include "conexao/desenhista/processClient.h"
 #include "grafico/cores/cores.h"
 #include "conexao/chat/chat.h"
+#include "grafico/telas/telas.h"
 
 #define FPS 60
 
@@ -163,6 +164,12 @@ int main() {
     /****************** Loop do jogo *******************/
     int pontuacao = 0;
 
+    /*INICIO MENU*/
+    bool cliente = false;
+
+    al_draw_filled_rectangle(0, 0, telinha.x, telinha.y, al_map_rgb(172, 225, 57));
+    round = telaBase(telinha,"botão" , fontMaior, fila_eventos);
+
     while (round) {
         /* INSERIR TELA DE ESCOLHA DE DIFICULDADE */
         int DIFICULDADE = 0;
@@ -185,7 +192,7 @@ int main() {
         al_unlock_mutex(dados.mutex);
 
         /* INSERIR TELA DE ESCOLHA DE CLIENTE OU SERVIDOR */
-        bool cliente = true;
+
 
         if (cliente) {
             socket = al_create_thread(client, &dados);
@@ -196,6 +203,7 @@ int main() {
         al_start_thread(socket);
 
         int tentativas = 3;
+        bool vitoria = false;
         CHATM chat;
         chat.chatzinho = false;
         chat.quant = 0;
@@ -260,6 +268,8 @@ int main() {
                     }
                     else if (strcmp(resposta.comando, "TENT") == 0) {
                         if (resposta.acertou) {
+                            vitoria = true;
+
                             printf("Acertou!!!\n");
                             switch (tentativas) {
                                 case 1: pontuacao += 10; break;
@@ -504,6 +514,8 @@ int main() {
             al_destroy_thread(socket);
             socket = NULL;
         }
+        if (vitoria) round = telaBase(telinha,"botão" , fontMaior, fila_eventos);
+
     }
 
     /****************** Limpeza Final *******************/

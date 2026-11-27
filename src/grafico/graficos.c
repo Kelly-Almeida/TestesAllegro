@@ -205,3 +205,4 @@ void chatzinho(CHATM *chat, TELA telinha, int y, ALLEGRO_FONT *font) {
         posY += (linhas * alturaLinha) + 15;
     }
 }
+

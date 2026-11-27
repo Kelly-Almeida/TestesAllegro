@@ -6,8 +6,6 @@
 #define TESTC_CHAT_H
 #include <stdbool.h>
 
-
-
 typedef struct CHATM {
     int quant;
     bool chatzinho;
