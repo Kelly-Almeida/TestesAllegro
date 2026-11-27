@@ -181,18 +181,19 @@ void *chatClient(ALLEGRO_THREAD *thread, void *arg) {
             buffer_ten[strcspn(buffer_ten, "\r\n")] = '\0';
 
             strcpy(msg->msg_in, buffer_ten);
+            strcpy(msg->msg_out, buffer_ten);
             printf("Correios!!! %s\n", buffer_ten);
 
             if (strcasecmp(msg->msg_in, "FIM") == 0) {
-                msg->finalizar = true; // Não marca tent->povoado como true!
+                msg->finalizar = true;
             } else if (strcasecmp(msg->msg_in, msg->resposta) == 0) {
                 printf("Acertou!\n");
                 msg->tent->acertou = true;
-                msg->tent->povoado = true;
             } else {
                 msg->tent->acertou = false;
-                msg->tent->povoado = true;
             }
+            msg->tent->povoado = true;
+            msg->evento = true;
             al_unlock_mutex(msg->mutex);
         } else {
             al_rest(0.001);

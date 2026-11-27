@@ -16,6 +16,7 @@ typedef struct {
     bool evento;
     int contador;
     char msg_in[256];
+    char msg_out[256];
 
     int conexao;
     int tam_con;

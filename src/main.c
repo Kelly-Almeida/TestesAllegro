@@ -185,7 +185,7 @@ int main() {
         al_unlock_mutex(dados.mutex);
 
         /* INSERIR TELA DE ESCOLHA DE CLIENTE OU SERVIDOR */
-        bool cliente = false;
+        bool cliente = true;
 
         if (cliente) {
             socket = al_create_thread(client, &dados);
@@ -286,6 +286,30 @@ int main() {
             else if (dados.msg_c->finalizar) {
                 tentativas = 0;
                 dados.msg_c->finalizar = false;
+            }
+            else if (dados.msg_c->tent->povoado) {
+                al_lock_mutex(dados.msg_c->mutex);
+
+                if (dados.msg_c->finalizar) {
+                    tentativas = 0;
+                    dados.msg_c->finalizar = false;
+                }
+
+                if (dados.msg_c->evento) {
+                    if (chat.quant < 3) {
+                        strncpy(chat.msg[chat.quant], dados.msg_c->msg_out, 255);
+                        chat.msg[chat.quant][255] = '\0';
+                        chat.quant++;
+                    } else {
+                        strcpy(chat.msg[0], chat.msg[1]);
+                        strcpy(chat.msg[1], chat.msg[2]);
+                        strncpy(chat.msg[2], dados.msg_c->msg_out, 255);
+                        chat.msg[2][255] = '\0';
+                    }
+                    dados.msg_c->evento = false;
+                }
+
+                al_unlock_mutex(dados.msg_c->mutex);
             }
 
             ALLEGRO_EVENT evento;
