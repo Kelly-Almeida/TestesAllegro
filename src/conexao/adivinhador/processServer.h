@@ -23,6 +23,7 @@ typedef struct {
     const char *resposta;
     TENT *tent;
     bool finalizar;
+    bool venceu;
 } MSG_C;
 
 typedef struct MSG_S {

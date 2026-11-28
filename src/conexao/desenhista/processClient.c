@@ -81,6 +81,7 @@ void *client(ALLEGRO_THREAD *thread, void *arg) {
         chat->finalizar = false;
         chat->tent->acertou = false;
         chat->tent->povoado = false;
+        chat->venceu = false;
         al_unlock_mutex(chat->mutex);
 
         ALLEGRO_THREAD *chatCliente = al_create_thread(chatClient, chat);
@@ -188,6 +189,7 @@ void *chatClient(ALLEGRO_THREAD *thread, void *arg) {
                 msg->finalizar = true;
             } else if (strcasecmp(msg->msg_in, msg->resposta) == 0) {
                 printf("Acertou!\n");
+                msg->venceu = true;
                 msg->tent->acertou = true;
             } else {
                 msg->tent->acertou = false;

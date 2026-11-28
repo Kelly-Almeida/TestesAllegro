@@ -71,6 +71,7 @@ int main() {
 
     ALLEGRO_FONT *font = al_load_font("./resources/Roboto-Regular.ttf", 25, 0);
     ALLEGRO_FONT *fontMaior = al_load_font("./resources/Roboto-Regular.ttf", 35, 0);
+    ALLEGRO_FONT *fontPixel = al_load_font("./resources/PressStart2P.ttf", 40, 0);
     if (!font || !fontMaior) {
         if (font) al_destroy_font(font);
         if (fontMaior) al_destroy_font(fontMaior);
@@ -168,7 +169,7 @@ int main() {
     bool cliente = false;
 
     al_draw_filled_rectangle(0, 0, telinha.x, telinha.y, al_map_rgb(172, 225, 57));
-    round = telaBase(telinha,"botão" , fontMaior, fila_eventos);
+    round = telaBase(telinha,"Iniciar" , fontPixel, fila_eventos, false, true, 0);
 
     while (round) {
         /* INSERIR TELA DE ESCOLHA DE DIFICULDADE */
@@ -210,7 +211,7 @@ int main() {
 
         limparCanvas(canvas, BRANCO, tela, filaDeTracos);
 
-        while (tentativas != 0) {
+        while (tentativas != 0 && !vitoria) {
             if (!cliente) {
                 al_lock_mutex(dados.mutex);
                 if (dados.evento == 1) {
@@ -277,7 +278,6 @@ int main() {
                                 case 3: pontuacao += 100; break;
                             }
                             printf("Pontuacao: %d\n", pontuacao);
-                            tentativas = 0;
                             transpServer(&dadosC, "FIM");
                         } else {
                             tentativas--;
@@ -296,6 +296,7 @@ int main() {
             else if (dados.msg_c->finalizar) {
                 tentativas = 0;
                 dados.msg_c->finalizar = false;
+                vitoria = dadosC.venceu;
             }
             else if (dados.msg_c->tent->povoado) {
                 al_lock_mutex(dados.msg_c->mutex);
@@ -514,7 +515,7 @@ int main() {
             al_destroy_thread(socket);
             socket = NULL;
         }
-        if (vitoria) round = telaBase(telinha,"botão" , fontMaior, fila_eventos);
+        if (vitoria) round = telaBase(telinha,"continuar" , fontPixel, fila_eventos, vitoria, false, pontuacao);
 
     }
 
