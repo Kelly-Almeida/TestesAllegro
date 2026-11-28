@@ -302,9 +302,21 @@ int main() {
                 al_lock_mutex(dados.msg_c->mutex);
 
                 if (dados.msg_c->finalizar) {
+                    switch (tentativas) {
+                        case 3:
+                            pontuacao += 100;
+                            break;
+                        case 2:
+                            pontuacao += 50;
+                            break;
+                        case 1:
+                            pontuacao += 10;
+                            break;
+                    }
                     tentativas = 0;
                     dados.msg_c->finalizar = false;
-                }
+                }else tentativas--;
+
 
                 if (dados.msg_c->evento) {
                     if (chat.quant < 3) {
