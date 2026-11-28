@@ -166,7 +166,7 @@ int main() {
     int pontuacao = 0;
 
     /*INICIO MENU*/
-    bool cliente = false;
+    bool cliente = true;
 
     al_draw_filled_rectangle(0, 0, telinha.x, telinha.y, al_map_rgb(172, 225, 57));
     round = telaBase(telinha,"Iniciar" , fontPixel, fila_eventos, false, true, 0);
@@ -293,30 +293,8 @@ int main() {
                 }
                 al_unlock_mutex(dados.mutex);
             }
-            else if (dados.msg_c->finalizar) {
-                tentativas = 0;
-                dados.msg_c->finalizar = false;
-                vitoria = dadosC.venceu;
-            }
             else if (dados.msg_c->tent->povoado) {
                 al_lock_mutex(dados.msg_c->mutex);
-
-                if (dados.msg_c->finalizar) {
-                    switch (tentativas) {
-                        case 3:
-                            pontuacao += 100;
-                            break;
-                        case 2:
-                            pontuacao += 50;
-                            break;
-                        case 1:
-                            pontuacao += 10;
-                            break;
-                    }
-                    tentativas = 0;
-                    dados.msg_c->finalizar = false;
-                }else tentativas--;
-
 
                 if (dados.msg_c->evento) {
                     if (chat.quant < 3) {
@@ -332,6 +310,25 @@ int main() {
                     dados.msg_c->evento = false;
                 }
 
+                al_unlock_mutex(dados.msg_c->mutex);
+            }
+
+            if (dados.msg_c->finalizar) {
+                switch (tentativas) {
+                    case 3:
+                        pontuacao += 100;
+                        break;
+                    case 2:
+                        pontuacao += 50;
+                        break;
+                    case 1:
+                        pontuacao += 10;
+                        break;
+                }
+                tentativas = 0;
+                al_lock_mutex(dados.msg_c->mutex);
+                dados.msg_c->finalizar = false;
+                vitoria = dadosC.venceu;
                 al_unlock_mutex(dados.msg_c->mutex);
             }
 
@@ -527,6 +524,7 @@ int main() {
             al_destroy_thread(socket);
             socket = NULL;
         }
+        printf("%d", pontuacao);
         if (vitoria) round = telaBase(telinha,"continuar" , fontPixel, fila_eventos, vitoria, false, pontuacao);
 
     }
